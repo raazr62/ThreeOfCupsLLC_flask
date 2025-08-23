@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<h3>Pending Assessments</h3>
+{% if assessments %}
+    <ul>
+    {% for assessment in assessments %}
+        <li>
+            <strong>Assessment ID:</strong> {{ assessment.id }}<br>
+            <strong>User ID:</strong> {{ assessment.user_id }}<br>
+            <strong>Answers:</strong> {{ assessment.answers }}<br>
+            <form method="POST">
+                <input type="hidden" name="assessment_id" value="{{ assessment.id }}">
+                <label>Match with User ID:</label>
+                <input type="number" name="matched_user_id" required>
+                <input type="submit" value="Match">
+            </form>
+            <hr>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No pending assessments at the moment.</p>
+{% endif %}
+{% endblock %}

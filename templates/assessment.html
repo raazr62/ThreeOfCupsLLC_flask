@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Submit Your Assessment</h2>
+<form method="POST">
+    <label>Your Answers:</label><br>
+    <textarea name="answers" rows="6" cols="50" required></textarea><br><br>
+    <input type="submit" value="Submit Assessment">
+</form>
+{% endblock %}
