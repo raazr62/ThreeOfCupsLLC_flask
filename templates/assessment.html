@@ -1,10 +1,50 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Submit Your Assessment</h2>
-<form method="POST">
-    <label>Your Answers:</label><br>
-    <textarea name="answers" rows="6" cols="50" required></textarea><br><br>
-    <input type="submit" value="Submit Assessment">
-</form>
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Friendship Assessment</h2>
+            <p class="text-gray-600">Tell us about yourself to find compatible friends</p>
+        </div>
+        
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-purple-100">
+            <div class="mb-6">
+                <div class="bg-gradient-to-r from-purple-100 to-cyan-100 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Assessment Questions</h3>
+                    <div class="text-sm text-gray-700 space-y-2">
+                        <p>• What are your main hobbies and interests?</p>
+                        <p>• How do you prefer to spend your free time?</p>
+                        <p>• What values are most important to you in friendships?</p>
+                        <p>• What kind of social activities do you enjoy?</p>
+                        <p>• How do you handle conflicts or disagreements?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST" class="space-y-6">
+                <div>
+                    <label for="answers" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Detailed Answers
+                    </label>
+                    <textarea name="answers" id="answers" rows="12" required
+                              placeholder="Please provide thoughtful answers to help us match you with compatible friends..."
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-vertical"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Be as detailed as possible to get better matches</p>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-primary hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl">
+                    Submit Assessment
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Your assessment will be reviewed by our admin team to find your perfect friendship matches.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
