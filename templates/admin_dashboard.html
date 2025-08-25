@@ -4,12 +4,98 @@
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h2>
-            <p class="text-gray-600">Manage user assessments and create friendship matches</p>
+            <h2 class="text-3xl font-bold gradient-text mb-2">Admin Dashboard</h2>
+            <p class="text-text-accent opacity-90">Manage user assessments and create friendship matches</p>
         </div>
         
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-purple-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-purple-600 to-cyan-600 px-6 py-4">
+        <!-- Completed Matches Section -->
+        <div class="dark-card rounded-2xl shadow-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 shadow-lg">
+                <h3 class="text-xl font-semibold text-white">Completed Matches</h3>
+            </div>
+            
+            <div class="p-6">
+                {% if completed_matches %}
+                    <div class="space-y-4">
+                        {% for match in completed_matches %}
+                            <div class="bg-card-light rounded-xl p-6 border border-green-300/30 shadow-lg">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center space-x-6">
+                                        <!-- User 1 -->
+                                        {% for user in users %}
+                                            {% if user.id == match.user_id %}
+                                                <div class="flex items-center space-x-3">
+                                                    {% if user.profile_picture %}
+                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                             alt="{{ user.first_name }}'s Profile" 
+                                                             class="w-12 h-12 rounded-full object-cover">
+                                                    {% else %}
+                                                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                                                            <span class="text-white font-bold text-sm">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h4 class="font-semibold text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
+                                                        <p class="text-sm text-text-accent">{{ user.email }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        <!-- Match Icon -->
+                                        <div class="flex items-center">
+                                            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                            </svg>
+                                        </div>
+                                        
+                                        <!-- User 2 -->
+                                        {% for user in users %}
+                                            {% if user.id == match.matched_user_id %}
+                                                <div class="flex items-center space-x-3">
+                                                    {% if user.profile_picture %}
+                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                             alt="{{ user.first_name }}'s Profile" 
+                                                             class="w-12 h-12 rounded-full object-cover">
+                                                    {% else %}
+                                                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+                                                            <span class="text-white font-bold text-sm">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h4 class="font-semibold text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
+                                                        <p class="text-sm text-text-accent">{{ user.email }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <span class="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">Matched</span>
+                                        <span class="text-sm text-text-accent">Assessment #{{ match.id }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">No Matches Yet</h3>
+                        <p class="text-text-accent">Completed matches will appear here once you start matching users.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Pending Assessments Section -->
+        <div class="dark-card rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 shadow-lg">
                 <h3 class="text-xl font-semibold text-white">Pending Assessments</h3>
             </div>
             
@@ -17,42 +103,87 @@
                 {% if assessments %}
                     <div class="space-y-6">
                         {% for assessment in assessments %}
-                            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                            <div class="bg-card-light rounded-xl p-6 border border-soft-purple/30 shadow-lg">
                                 <div class="flex justify-between items-start mb-4">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                                             <span class="text-white font-semibold text-sm">{{ assessment.id }}</span>
                                         </div>
                                         <div>
-                                            <h4 class="font-semibold text-gray-900">Assessment #{{ assessment.id }}</h4>
-                                            <p class="text-sm text-gray-600">User ID: {{ assessment.user_id }}</p>
+                                            <h4 class="font-semibold text-text-primary">Assessment #{{ assessment.id }}</h4>
+                                            {% for user in users %}
+                                                {% if user.id == assessment.user_id %}
+                                                    <p class="text-sm text-text-accent">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</p>
+                                                {% endif %}
+                                            {% endfor %}
                                         </div>
                                     </div>
                                     <span class="bg-amber-100 text-amber-800 text-xs font-medium px-3 py-1 rounded-full">Pending Review</span>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <h5 class="font-medium text-gray-900 mb-2">User's Answers:</h5>
-                                    <div class="bg-white rounded-lg p-4 border border-gray-200">
-                                        <p class="text-gray-700 text-sm leading-relaxed">{{ assessment.answers }}</p>
+                                    <h5 class="font-medium text-text-primary mb-2">Assessment Summary:</h5>
+                                    <div class="bg-white rounded-lg p-4 border border-soft-purple/30">
+                                        <div class="assessment-display" data-assessment-answers="{{ assessment.answers|e }}">
+                                            <!-- Assessment content will be populated by JavaScript -->
+                                        </div>
                                     </div>
                                 </div>
                                 
-                                <form method="POST" class="bg-white rounded-lg p-4 border border-gray-200">
+                                <form method="POST" class="bg-white rounded-lg p-4 border border-soft-purple/30">
                                     <input type="hidden" name="assessment_id" value="{{ assessment.id }}">
-                                    <div class="flex items-end space-x-4">
-                                        <div class="flex-1">
-                                            <label for="matched_user_{{ assessment.id }}" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Match with User ID:
-                                            </label>
-                                            <input type="number" 
-                                                   name="matched_user_id" 
-                                                   id="matched_user_{{ assessment.id }}"
-                                                   required 
-                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                                    <div class="space-y-4">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            Match with User:
+                                        </label>
+                                        
+                                        <!-- User Cards Grid -->
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                                            {% for user in users %}
+                                                {% if user.id != assessment.user_id and not user.is_admin %}
+                                                    <div class="relative">
+                                                        <label for="user_{{ assessment.id }}_{{ user.id }}" class="cursor-pointer block">
+                                                            <input type="radio" 
+                                                                   name="matched_user_id" 
+                                                                   value="{{ user.id }}" 
+                                                                   id="user_{{ assessment.id }}_{{ user.id }}"
+                                                                   class="sr-only peer"
+                                                                   required>
+                                                            <div class="p-3 border-2 border-lavender rounded-lg hover:border-primary hover:shadow-md transition-all peer-checked:border-primary peer-checked:bg-lavender">
+                                                                <div class="flex items-center space-x-3">
+                                                                    {% if user.profile_picture %}
+                                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                                             alt="{{ user.first_name }}'s Profile" 
+                                                                             class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                                                                    {% else %}
+                                                                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                                                                            <span class="text-white font-bold text-xs">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                                        </div>
+                                                                    {% endif %}
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <p class="font-semibold text-text-primary text-sm truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                                                                        <p class="text-xs text-text-accent truncate">{{ user.email }}</p>
+                                                                        {% if user.bio %}
+                                                                            <p class="text-xs text-gray-600 mt-1 truncate">{{ user.bio[:30] }}{% if user.bio|length > 30 %}...{% endif %}</p>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                        <button type="button" 
+                                                                class="compare-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors"
+                                                                data-assessment-id="{{ assessment.id }}"
+                                                                data-user-id="{{ user.id }}"
+                                                                data-user-name="{{ user.first_name }} {{ user.last_name }}">
+                                                            Compare
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
                                         </div>
+                                        
                                         <button type="submit" 
-                                                class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-300 shadow-sm hover:shadow-md">
+                                                class="w-full bg-primary hover:bg-secondary text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-300 shadow-sm hover:shadow-md">
                                             Create Match
                                         </button>
                                     </div>
@@ -67,12 +198,278 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">No Pending Assessments</h3>
-                        <p class="text-gray-600">All assessments have been reviewed. New submissions will appear here.</p>
+                        <h3 class="text-lg font-medium text-text-primary mb-2">No Pending Assessments</h3>
+                        <p class="text-text-accent">All assessments have been reviewed. New submissions will appear here.</p>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Comparison Modal -->
+<div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-screen overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Assessment Comparison</h3>
+                <button onclick="closeComparison()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-96">
+                <div id="comparisonContent" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-lavender border-t flex justify-end">
+                <button onclick="closeComparison()" 
+                        class="px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAssessmentData = {};
+
+// Display assessment data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Display assessments
+    document.querySelectorAll('.assessment-display').forEach(display => {
+        const answersData = display.getAttribute('data-assessment-answers');
+        const assessmentHtml = renderAssessmentData(answersData);
+        display.innerHTML = assessmentHtml;
+    });
+
+    // Add event listeners for compare buttons
+    document.querySelectorAll('.compare-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const assessmentId = this.getAttribute('data-assessment-id');
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            showComparison(parseInt(assessmentId), parseInt(userId), userName);
+        });
+    });
+});
+
+function renderAssessmentData(answersData) {
+    if (!answersData) return '<p class="text-gray-500">No assessment data available</p>';
+    
+    try {
+        // Try to parse as JSON (new format)
+        const assessment = JSON.parse(answersData);
+        return renderStructuredAssessment(assessment);
+    } catch (e) {
+        // Fall back to old format
+        return renderLegacyAssessment(answersData);
+    }
+}
+
+function renderStructuredAssessment(assessment) {
+    let html = '<div class="space-y-4">';
+    
+    // Friendship Readiness Scores
+    if (assessment.friendship_readiness) {
+        html += '<div class="border-l-4 border-purple-400 pl-4">';
+        html += '<h6 class="font-semibold text-gray-800 mb-2">Friendship Readiness</h6>';
+        html += '<div class="grid grid-cols-2 gap-2 text-sm">';
+        
+        const readinessLabels = {
+            'emotional_energy': 'Emotional Energy',
+            'share_feelings': 'Sharing Feelings',
+            'bounce_back': 'Bounce Back',
+            'interested_others': 'Interest in Others',
+            'make_time': 'Makes Time',
+            'follow_through': 'Follow Through',
+            'maintain_effort': 'Maintenance Effort',
+            'good_listener': 'Good Listener',
+            'express_needs': 'Express Needs',
+            'handle_disagreements': 'Handle Conflicts'
+        };
+        
+        Object.entries(assessment.friendship_readiness).forEach(([key, value]) => {
+            if (value) {
+                const label = readinessLabels[key] || key;
+                html += `<div class="flex justify-between"><span>${label}:</span><span class="font-medium">${value}/5</span></div>`;
+            }
+        });
+        html += '</div></div>';
+    }
+    
+    // Social Preferences
+    if (assessment.social_preferences) {
+        html += '<div class="border-l-4 border-blue-400 pl-4">';
+        html += '<h6 class="font-semibold text-gray-800 mb-2">Social Preferences</h6>';
+        html += '<div class="text-sm space-y-1">';
+        
+        const prefs = assessment.social_preferences;
+        if (prefs.introversion) html += `<div>Introversion Level: ${prefs.introversion}/5</div>`;
+        if (prefs.group_size) html += `<div>Prefers: ${prefs.group_size.replace('_', ' ')}</div>`;
+        if (prefs.communication_freq) html += `<div>Communication: ${prefs.communication_freq}</div>`;
+        
+        html += '</div></div>';
+    }
+    
+    // Activities
+    if (assessment.activities && assessment.activities.length > 0) {
+        html += '<div class="border-l-4 border-green-400 pl-4">';
+        html += '<h6 class="font-semibold text-gray-800 mb-2">Interests</h6>';
+        html += '<div class="flex flex-wrap gap-1">';
+        assessment.activities.forEach(activity => {
+            html += `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">${activity}</span>`;
+        });
+        html += '</div></div>';
+    }
+    
+    // Personality Traits
+    if (assessment.personality) {
+        html += '<div class="border-l-4 border-yellow-400 pl-4">';
+        html += '<h6 class="font-semibold text-gray-800 mb-2">Personality</h6>';
+        html += '<div class="text-sm space-y-1">';
+        
+        const personality = assessment.personality;
+        if (personality.humor_style) html += `<div>Humor: ${personality.humor_style.replace('_', ' ')}</div>`;
+        if (personality.risk_taking) html += `<div>Risk Taking: ${personality.risk_taking}/5</div>`;
+        if (personality.optimism) html += `<div>Optimism: ${personality.optimism}/5</div>`;
+        
+        html += '</div></div>';
+    }
+    
+    // Gender Preferences
+    if (assessment.gender_preferences && assessment.gender_preferences.length > 0) {
+        html += '<div class="border-l-4 border-pink-400 pl-4">';
+        html += '<h6 class="font-semibold text-gray-800 mb-2">Gender Preferences</h6>';
+        html += '<div class="flex flex-wrap gap-1">';
+        assessment.gender_preferences.forEach(pref => {
+            html += `<span class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">${pref.replace('-', ' ')}</span>`;
+        });
+        html += '</div></div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function renderLegacyAssessment(answersData) {
+    let html = '';
+    const lines = answersData.split('\n\n');
+    
+    lines.forEach(line => {
+        if (line.trim()) {
+            if (line.includes('Q6: What gender(s)')) {
+                const genderAnswer = line.split('A: ')[1] || '';
+                html += '<div class="mb-3">';
+                html += '<h6 class="font-semibold text-gray-800 text-sm mb-2">Gender Preferences:</h6>';
+                html += '<div class="flex flex-wrap gap-2">';
+                genderAnswer.split(', ').forEach(pref => {
+                    if (pref.trim()) {
+                        html += `<span class="bg-purple-100 text-purple-800 text-xs font-medium px-3 py-1 rounded-full">${pref.trim()}</span>`;
+                    }
+                });
+                html += '</div></div>';
+            } else {
+                html += `<div class="mb-3"><p class="text-gray-700 text-sm leading-relaxed">${line}</p></div>`;
+            }
+        }
+    });
+    
+    return html || '<p class="text-gray-500">No assessment data available</p>';
+}
+
+function showComparison(assessmentId, userId, userName) {
+    // Get the current assessment data
+    const currentAssessmentCard = document.querySelector(`input[name="assessment_id"][value="${assessmentId}"]`).closest('.bg-card-light');
+    const currentAssessmentDisplay = currentAssessmentCard.querySelector('.assessment-display');
+    const currentAnswersData = currentAssessmentDisplay.getAttribute('data-assessment-answers');
+    
+    // Store current assessment data
+    currentAssessmentData = {
+        assessmentId: assessmentId,
+        answersData: currentAnswersData
+    };
+    
+    // Fetch the other user's assessment
+    fetch(`/api/user_assessment/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+            
+            displayComparison(currentAnswersData, data, userName);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load user assessment data');
+        });
+}
+
+function displayComparison(currentAnswersData, otherUserData, otherUserName) {
+    const modal = document.getElementById('comparisonModal');
+    const content = document.getElementById('comparisonContent');
+    
+    // Create comparison HTML
+    let comparisonHTML = `
+        <div class="space-y-6">
+            <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Current Assessment</h4>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    ${renderAssessmentData(currentAnswersData)}
+                </div>
+            </div>
+        </div>
+        
+        <div class="space-y-6">
+            <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">${otherUserData.user.name}</h4>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    ${renderAssessmentComparison(otherUserData.assessment)}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    content.innerHTML = comparisonHTML;
+    modal.classList.remove('hidden');
+}
+
+function renderAssessmentComparison(assessment) {
+    // Check if assessment is structured (new format) or legacy
+    if (typeof assessment === 'object' && assessment.friendship_readiness) {
+        return renderStructuredAssessment(assessment);
+    } else if (typeof assessment === 'object') {
+        // Legacy format from API
+        let html = '';
+        Object.keys(assessment).forEach(key => {
+            const qa = assessment[key];
+            html += `
+                <div class="mb-4">
+                    <h5 class="font-medium text-gray-800 text-sm mb-2">${qa.question}</h5>
+                    <p class="text-gray-700 text-sm bg-white p-3 rounded border">${qa.answer}</p>
+                </div>
+            `;
+        });
+        return html || '<p class="text-gray-500">No assessment completed</p>';
+    }
+    
+    return '<p class="text-gray-500">No assessment data available</p>';
+}
+
+function closeComparison() {
+    const modal = document.getElementById('comparisonModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('comparisonModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeComparison();
+    }
+});
+</script>
+
 {% endblock %}

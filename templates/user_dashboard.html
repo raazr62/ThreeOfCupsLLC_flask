@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold gradient-text mb-2">Welcome, {{ current_user.first_name }}!</h2>
+            <p class="text-text-accent opacity-90">Your friendship dashboard and connections</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Profile Section -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Your Profile</h3>
+                </div>
+                
+                <div class="p-6">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <!-- Profile Picture -->
+                        <div class="text-center">
+                            <div class="relative inline-block">
+                                {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                                         alt="Profile Picture" 
+                                         class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg">
+                                {% else %}
+                                    <div class="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-lg">
+                                        <span class="text-white text-2xl font-bold">{{ current_user.first_name[0] }}{{ current_user.last_name[0] }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mt-4">
+                                <label for="profile_picture" class="block text-sm font-medium text-text-primary mb-2">
+                                    Profile Picture
+                                </label>
+                                <input type="file" 
+                                       id="profile_picture" 
+                                       name="profile_picture" 
+                                       accept="image/*"
+                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                            </div>
+                        </div>
+                        
+                        <!-- Bio -->
+                        <div>
+                            <label for="bio" class="block text-sm font-medium text-text-primary mb-2">
+                                Bio
+                            </label>
+                            <textarea id="bio" 
+                                      name="bio" 
+                                      rows="4" 
+                                      placeholder="Tell us about yourself..."
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-none">{{ current_user.bio or '' }}</textarea>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Update Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Matches Section -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Your Matches</h3>
+                </div>
+                
+                <div class="p-6">
+                    {% if matched_users %}
+                        <div class="space-y-4">
+                            {% for user in matched_users %}
+                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center space-x-4">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                 alt="{{ user.first_name }}'s Profile" 
+                                                 class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
+                                                <span class="text-white font-bold text-sm">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
+                                            {% if user.bio %}
+                                                <p class="text-sm text-gray-600 mt-1">{{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}</p>
+                                            {% else %}
+                                                <p class="text-sm text-gray-500 italic">No bio available</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-medium text-text-primary mb-2">No Matches Yet</h3>
+                            <p class="text-gray-600">Your assessment is being reviewed. Matches will appear here once they're made!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Info Section -->
+        <div class="mt-8 dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                <h3 class="text-xl font-semibold text-white">Account Information</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-text-primary mb-2">Contact Information</h4>
+                        <p class="text-gray-600"><strong>Email:</strong> {{ current_user.email }}</p>
+                        <p class="text-gray-600"><strong>Username:</strong> {{ current_user.username }}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-text-primary mb-2">Personal Information</h4>
+                        <p class="text-gray-600"><strong>Name:</strong> {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

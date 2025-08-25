@@ -4,33 +4,33 @@
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
-            <p class="text-gray-600">Sign in to your account</p>
+            <h2 class="text-3xl font-bold gradient-text mb-2">Welcome Back</h2>
+            <p class="text-text-accent opacity-90">Sign in to your account to continue connecting</p>
         </div>
         
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-purple-100">
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
             <form method="POST" class="space-y-6">
                 <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <label for="username" class="block text-sm font-medium text-text-primary mb-2">Username</label>
                     <input type="text" name="username" id="username" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
                 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <label for="password" class="block text-sm font-medium text-text-primary mb-2">Password</label>
                     <input type="password" name="password" id="password" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
                 
                 <button type="submit" 
-                        class="w-full bg-primary hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl">
+                        class="w-full bg-gradient-to-r from-primary to-secondary hover:bg-accent text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105">
                     Sign In
                 </button>
             </form>
             
             <div class="mt-6 text-center">
-                <p class="text-gray-600">Don't have an account? 
-                    <a href="{{ url_for('register') }}" class="text-primary hover:text-purple-700 font-semibold">Register here</a>
+                <p class="text-text-accent">Don't have an account? 
+                    <a href="{{ url_for('register') }}" class="text-primary hover:text-accent font-semibold transition-colors">Register here</a>
                 </p>
             </div>
         </div>

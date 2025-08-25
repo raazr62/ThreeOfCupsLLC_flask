@@ -4,40 +4,124 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three of Cups</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        'handwritten': ['Caveat', 'cursive'],
+                        'script': ['Dancing Script', 'cursive'],
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
                     colors: {
-                        primary: '#8B5CF6',
-                        secondary: '#06B6D4',
-                        accent: '#F59E0B'
+                        primary: '#8B5CF6', // Warm purple
+                        secondary: '#EC4899', // Rose pink
+                        accent: '#F59E0B', // Golden amber (reduced usage)
+                        'light-bg': '#FDF2F8', // Soft pink background
+                        'card-light': '#FAF5FF', // Light lavender card background
+                        'text-primary': '#7C2D12', // Warm brown text
+                        'text-accent': '#BE185D', // Deep rose text
+                        'soft-purple': '#A78BFA', // Soft purple
+                        'warm-cream': '#FEF3C7', // Warm cream
+                        'lavender': '#E9D5FF' // Light lavender
+                    },
+                    animation: {
+                        'chalice-pour': 'chalicePour 4s ease-in-out infinite',
+                        'liquid-flow-1': 'liquidFlow1 4s ease-in-out infinite',
+                        'liquid-flow-2': 'liquidFlow2 4s ease-in-out infinite',
+                        'liquid-flow-3': 'liquidFlow3 4s ease-in-out infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'subtle-glow': 'subtleGlow 3s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        chalicePour: {
+                            '0%, 100%': { transform: 'rotate(0deg) scale(1)' },
+                            '25%': { transform: 'rotate(-5deg) scale(1.02)' },
+                            '50%': { transform: 'rotate(0deg) scale(1)' },
+                            '75%': { transform: 'rotate(5deg) scale(1.02)' }
+                        },
+                        liquidFlow1: {
+                            '0%, 15%': { opacity: '0', transform: 'translateY(-10px) scaleY(0)' },
+                            '20%, 40%': { opacity: '1', transform: 'translateY(20px) scaleY(1)' },
+                            '45%, 100%': { opacity: '0', transform: 'translateY(30px) scaleY(0)' }
+                        },
+                        liquidFlow2: {
+                            '0%, 35%': { opacity: '0', transform: 'translateY(-10px) scaleY(0)' },
+                            '40%, 65%': { opacity: '1', transform: 'translateY(20px) scaleY(1)' },
+                            '70%, 100%': { opacity: '0', transform: 'translateY(30px) scaleY(0)' }
+                        },
+                        liquidFlow3: {
+                            '0%, 60%': { opacity: '0', transform: 'translateY(-10px) scaleY(0)' },
+                            '65%, 85%': { opacity: '1', transform: 'translateY(20px) scaleY(1)' },
+                            '90%, 100%': { opacity: '0', transform: 'translateY(30px) scaleY(0)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        },
+                        subtleGlow: {
+                            '0%': { boxShadow: '0 0 15px rgba(107, 70, 193, 0.3)' },
+                            '100%': { boxShadow: '0 0 25px rgba(107, 70, 193, 0.5)' }
+                        }
                     }
                 }
             }
         }
     </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #FDF2F8 0%, #E9D5FF 50%, #A78BFA 100%);
+            background-attachment: fixed;
+        }
+        .dark-card {
+            background: linear-gradient(145deg, rgba(250, 245, 255, 0.95), rgba(139, 92, 246, 0.1));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav-glass {
+            background: rgba(250, 245, 255, 0.95);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 2px 20px rgba(139, 92, 246, 0.1);
+        }
+        .footer-glass {
+            background: rgba(250, 245, 255, 0.95);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 -2px 20px rgba(139, 92, 246, 0.1);
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-purple-50 to-cyan-50">
-    <nav class="bg-white/80 backdrop-blur-sm shadow-lg border-b border-purple-100">
+<body class="min-h-screen text-text-primary">
+    <nav class="nav-glass shadow-2xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <a href="{{ url_for('home') }}" class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
+                    <a href="{{ url_for('home') }}" class="text-3xl font-bold gradient-text font-script">
                         Three of Cups
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('assessment') }}" class="text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">Assessment</a>
+                        <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Assessment</a>
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin_dashboard') }}" class="text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</a>
+                            <a href="{{ url_for('admin_dashboard') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Admin Dashboard</a>
                         {% endif %}
-                        <a href="{{ url_for('logout') }}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="text-gray-700 hover:text-primary transition-colors px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                        <a href="{{ url_for('register') }}" class="bg-primary hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Register</a>
+                        <a href="{{ url_for('login') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Login</a>
+                        <a href="{{ url_for('register') }}" class="bg-gradient-to-r from-primary to-soft-blue hover:from-blue-700 hover:to-primary text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Register</a>
                     {% endif %}
                 </div>
             </div>
@@ -49,7 +133,7 @@
           {% if messages %}
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
                 {% for message in messages %}
-                  <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-4 shadow-sm">
+                  <div class="dark-card text-text-accent px-4 py-3 rounded-lg mb-4 shadow-xl font-sans">
                       {{ message }}
                   </div>
                 {% endfor %}
@@ -60,9 +144,9 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-white/80 backdrop-blur-sm border-t border-purple-100 mt-auto">
+    <footer class="footer-glass mt-auto shadow-2xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="text-center text-gray-600 text-sm">
+            <div class="text-center text-text-accent text-sm font-sans">
                 <p>&copy; 2024 Three of Cups. Connecting friends through meaningful assessments.</p>
             </div>
         </div>

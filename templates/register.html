@@ -4,42 +4,61 @@
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-            <p class="text-gray-600">Join our friendship community</p>
+            <h2 class="text-3xl font-bold gradient-text mb-2">Create Account</h2>
+            <p class="text-text-accent opacity-90">Join our friendship community today</p>
         </div>
         
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-purple-100">
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
             <form method="POST" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-text-primary mb-2">First Name</label>
+                        <input type="text" name="first_name" id="first_name" required 
+                               class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                    </div>
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-text-primary mb-2">Last Name</label>
+                        <input type="text" name="last_name" id="last_name" required 
+                               class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                    </div>
+                </div>
+                
                 <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <label for="email" class="block text-sm font-medium text-text-primary mb-2">Email</label>
+                    <input type="email" name="email" id="email" required 
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                </div>
+                
+                <div>
+                    <label for="username" class="block text-sm font-medium text-text-primary mb-2">Username</label>
                     <input type="text" name="username" id="username" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
                 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <label for="password" class="block text-sm font-medium text-text-primary mb-2">Password</label>
                     <input type="password" name="password" id="password" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
                 
                 <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <label for="role" class="block text-sm font-medium text-text-primary mb-2">Role</label>
                     <select name="role" id="role"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
                 
                 <button type="submit" 
-                        class="w-full bg-primary hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl">
+                        class="w-full bg-gradient-to-r from-primary to-secondary hover:bg-accent text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105">
                     Create Account
                 </button>
             </form>
             
             <div class="mt-6 text-center">
-                <p class="text-gray-600">Already have an account? 
-                    <a href="{{ url_for('login') }}" class="text-primary hover:text-purple-700 font-semibold">Sign in here</a>
+                <p class="text-text-accent">Already have an account? 
+                    <a href="{{ url_for('login') }}" class="text-primary hover:text-accent font-semibold transition-colors">Sign in here</a>
                 </p>
             </div>
         </div>
