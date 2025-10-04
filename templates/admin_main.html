@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold gradient-text mb-2">Admin Dashboard</h2>
+            <p class="text-text-accent opacity-90">Manage users, assessments and friendship matches</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mb-8 flex justify-center">
+            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+                <a href="{{ url_for('admin_dashboard') }}" 
+                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
+                    Overview
+                </a>
+                <a href="{{ url_for('admin_assessments') }}" 
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Assessments
+                </a>
+                <a href="{{ url_for('admin_matches') }}" 
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Matches
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Users -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Total Users</h3>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2">{{ total_users }}</div>
+                    <p class="text-gray-600">Registered users</p>
+                </div>
+            </div>
+
+            <!-- Total Assessments -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Assessments</h3>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2">{{ total_assessments }}</div>
+                    <p class="text-gray-600">Total completed</p>
+                </div>
+            </div>
+
+            <!-- Pending Reviews -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Pending</h3>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2">{{ pending_assessments }}</div>
+                    <p class="text-gray-600">Need review</p>
+                </div>
+            </div>
+
+            <!-- Completed Matches -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+                    <h3 class="text-lg font-semibold text-white">Matches</h3>
+                </div>
+                <div class="p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2">{{ completed_matches }}</div>
+                    <p class="text-gray-600">Successful matches</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Pending Assessments Card -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Pending Assessments</h3>
+                </div>
+                <div class="p-6">
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-text-primary mb-2">{{ pending_assessments }} Pending Reviews</h4>
+                        <p class="text-gray-600 mb-4">Review assessments and create matches</p>
+                        <a href="{{ url_for('admin_assessments') }}" 
+                           class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Review Assessments
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Matches Card -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Completed Matches</h3>
+                </div>
+                <div class="p-6">
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-text-primary mb-2">{{ completed_matches }} Successful Matches</h4>
+                        <p class="text-gray-600 mb-4">View and manage friendship matches</p>
+                        <a href="{{ url_for('admin_matches') }}" 
+                           class="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            View Matches
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

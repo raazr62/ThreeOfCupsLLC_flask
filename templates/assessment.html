@@ -2,1012 +2,51 @@
 
 {% block content %}
 <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold gradient-text mb-2">Friendship Assessment</h2>
             <p class="text-text-accent opacity-90">Tell us about yourself to find compatible friends</p>
         </div>
-        
+
         <div class="dark-card rounded-2xl shadow-2xl p-8">
             <!-- Progress Bar -->
             <div class="mb-8">
                 <div class="flex justify-between text-sm text-text-accent mb-2">
-                    <span>Question <span id="current-question">1</span> of <span id="total-questions">27</span></span>
-                    <span><span id="progress-percent">4</span>% Complete</span>
+                    <span>Question <span id="current-question">1</span> of <span id="total-questions">67</span></span>
+                    <span><span id="progress-percent">1</span>% Complete</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="progress-bar" class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300" style="width: 4%"></div>
+                    <div id="progress-bar" class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300" style="width: 1%"></div>
                 </div>
             </div>
-            
+
             <form method="POST" id="assessment-form" class="space-y-6">
-                <!-- Question 1: Emotional Energy -->
-                <div class="question-container" id="question-1">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Friendship Readiness</h3>
-                    <p class="text-text-primary mb-6">"I have emotional energy to invest in new friendships"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="emotional_energy" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="emotional_energy" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="emotional_energy" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="emotional_energy" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="emotional_energy" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 2: Share Feelings -->
-                <div class="question-container hidden" id="question-2">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Friendship Readiness</h3>
-                    <p class="text-text-primary mb-6">"I'm comfortable sharing personal thoughts and feelings"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="share_feelings" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="share_feelings" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="share_feelings" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="share_feelings" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="share_feelings" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 3: Bounce Back -->
-                <div class="question-container hidden" id="question-3">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Friendship Readiness</h3>
-                    <p class="text-text-primary mb-6">"I bounce back well from social disappointments"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="bounce_back" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="bounce_back" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="bounce_back" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="bounce_back" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="bounce_back" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 4: Interested in Others -->
-                <div class="question-container hidden" id="question-4">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Friendship Readiness</h3>
-                    <p class="text-text-primary mb-6">"I'm genuinely interested in learning about other people"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="interested_others" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="interested_others" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="interested_others" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="interested_others" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="interested_others" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <!-- Hidden container to store all answers -->
+                <div id="hidden-answers" style="display: none;"></div>
 
-                <!-- Question 5: Make Time -->
-                <div class="question-container hidden" id="question-5">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Time & Commitment</h3>
-                    <p class="text-text-primary mb-6">"I can consistently make time for friend activities"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="make_time" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="make_time" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="make_time" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="make_time" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="make_time" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 6: Follow Through -->
-                <div class="question-container hidden" id="question-6">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Time & Commitment</h3>
-                    <p class="text-text-primary mb-6">"I follow through on social plans I make"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="follow_through" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="follow_through" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="follow_through" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="follow_through" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="follow_through" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 7: Maintain Effort -->
-                <div class="question-container hidden" id="question-7">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Time & Commitment</h3>
-                    <p class="text-text-primary mb-6">"I'm willing to put effort into maintaining friendships"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="maintain_effort" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="maintain_effort" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="maintain_effort" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="maintain_effort" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="maintain_effort" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                <!-- Question will be dynamically generated here -->
+                <div id="question-container" class="min-h-[400px]"></div>
 
-                <!-- Question 8: Good Listener -->
-                <div class="question-container hidden" id="question-8">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Communication Skills</h3>
-                    <p class="text-text-primary mb-6">"I'm a good listener when friends share problems"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="good_listener" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="good_listener" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="good_listener" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="good_listener" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="good_listener" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 9: Express Needs -->
-                <div class="question-container hidden" id="question-9">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Communication Skills</h3>
-                    <p class="text-text-primary mb-6">"I can express my needs clearly in relationships"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="express_needs" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="express_needs" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="express_needs" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="express_needs" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="express_needs" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Question 10: Handle Disagreements -->
-                <div class="question-container hidden" id="question-10">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Communication Skills</h3>
-                    <p class="text-text-primary mb-6">"I handle disagreements constructively"</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Strongly Disagree</span>
-                            <span>Strongly Agree</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="handle_disagreements" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="handle_disagreements" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="handle_disagreements" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="handle_disagreements" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="handle_disagreements" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Life Priorities Ranking -->
-                <div class="question-container hidden" id="question-11">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Values & Lifestyle: Life Priorities</h3>
-                    <p class="text-text-primary mb-4">Rank these life priorities by importance to you (1 = Most Important, 6 = Least Important):</p>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Career advancement</span>
-                            <select name="priority_career" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Family & relationships</span>
-                            <select name="priority_family" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Adventure & travel</span>
-                            <select name="priority_adventure" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Financial stability</span>
-                            <select name="priority_financial" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Personal growth</span>
-                            <select name="priority_growth" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Health & wellness</span>
-                            <select name="priority_health" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question 12: Introversion/Extraversion -->
-                <div class="question-container hidden" id="question-12">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Social Preferences</h3>
-                    <p class="text-text-primary mb-6">Introversion/Extraversion Scale:</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Very Introverted</span>
-                            <span>Very Extraverted</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="introversion" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="introversion" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="introversion" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="introversion" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="introversion" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question 13: Group Size Preference -->
-                <div class="question-container hidden" id="question-13">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Social Preferences</h3>
-                    <p class="text-text-primary mb-6">Preferred group size for activities:</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="group_size" value="one_on_one" required class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">One-on-one activities</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="group_size" value="small_groups" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Small groups (3-5 people)</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="group_size" value="medium_groups" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Medium groups (6-10 people)</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="group_size" value="large_groups" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Large groups (10+ people)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Question 14: Communication Frequency -->
-                <div class="question-container hidden" id="question-14">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Social Preferences</h3>
-                    <p class="text-text-primary mb-6">Communication frequency preference:</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="communication_freq" value="daily" required class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Daily check-ins</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="communication_freq" value="weekly" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Weekly conversations</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="communication_freq" value="biweekly" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Every few weeks</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="communication_freq" value="monthly" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Monthly or less frequent</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Activity Interests Checklist -->
-                <div class="question-container hidden" id="question-15">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Activity Interests</h3>
-                    <p class="text-text-primary mb-4">Select all activities that interest you:</p>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="hiking" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Hiking/Nature</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="fitness" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Fitness/Sports</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="arts" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Arts/Crafts</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="music" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Music/Concerts</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="gaming" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Gaming</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="reading" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Reading/Books</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="cooking" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Cooking/Food</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="travel" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Travel</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="movies" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Movies/TV</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="nightlife" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Nightlife/Bars</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="volunteering" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Volunteering</span>
-                        </label>
-                        <label class="flex items-center p-2 border border-text-gold/30 rounded hover:bg-lavender">
-                            <input type="checkbox" name="activities" value="tech" class="text-primary focus:ring-primary mr-2">
-                            <span class="text-text-primary text-sm">Technology</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Question 16: Indoor vs Outdoor Preference -->
-                <div class="question-container hidden" id="question-16">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Activity Preferences</h3>
-                    <p class="text-text-primary mb-6">Indoor vs. Outdoor preference:</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Indoor Activities</span>
-                            <span>Outdoor Activities</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="indoor_outdoor" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="indoor_outdoor" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="indoor_outdoor" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="indoor_outdoor" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="indoor_outdoor" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question 17: Spontaneous vs Planned -->
-                <div class="question-container hidden" id="question-17">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Activity Preferences</h3>
-                    <p class="text-text-primary mb-6">Spontaneous vs. Planned activities:</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Spontaneous</span>
-                            <span>Well-Planned</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="spontaneous_planned" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="spontaneous_planned" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="spontaneous_planned" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="spontaneous_planned" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="spontaneous_planned" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question 18: Humor Style -->
-                <div class="question-container hidden" id="question-18">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Personality Traits</h3>
-                    <p class="text-text-primary mb-6">Humor style preference:</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="humor_style" value="witty" required class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Witty/Clever humor</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="humor_style" value="playful" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Playful/Silly humor</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="humor_style" value="dry" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Dry/Sarcastic humor</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="humor_style" value="observational" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Observational humor</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="humor_style" value="minimal" class="text-primary focus:ring-primary mr-3">
-                            <span class="text-text-primary">Prefer more serious conversations</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Question 19: Risk Taking -->
-                <div class="question-container hidden" id="question-19">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Personality Traits</h3>
-                    <p class="text-text-primary mb-6">Risk-taking vs. Security-seeking:</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Security-Seeking</span>
-                            <span>Risk-Taking</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="risk_taking" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="risk_taking" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="risk_taking" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="risk_taking" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="risk_taking" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Question 20: Optimism -->
-                <div class="question-container hidden" id="question-20">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Personality Traits</h3>
-                    <p class="text-text-primary mb-6">Optimism vs. Realism:</p>
-                    
-                    <div class="scale-container">
-                        <div class="flex justify-between text-sm text-text-accent mb-4">
-                            <span>Realistic</span>
-                            <span>Optimistic</span>
-                        </div>
-                        <div class="flex justify-center space-x-6">
-                            <label class="scale-option">
-                                <input type="radio" name="optimism" value="1" required class="sr-only">
-                                <div class="scale-button">1</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="optimism" value="2" class="sr-only">
-                                <div class="scale-button">2</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="optimism" value="3" class="sr-only">
-                                <div class="scale-button">3</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="optimism" value="4" class="sr-only">
-                                <div class="scale-button">4</div>
-                            </label>
-                            <label class="scale-option">
-                                <input type="radio" name="optimism" value="5" class="sr-only">
-                                <div class="scale-button">5</div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Multiple Choice Scenario -->
-                <div class="question-container hidden" id="question-21">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Making New Friends</h3>
-                    <p class="text-text-primary mb-4">When making new friends, I prefer to:</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="making_friends" value="organized" required class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Meet through organized activities or groups</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="making_friends" value="naturally" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Connect naturally through work or daily life</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="making_friends" value="introductions" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Be introduced by mutual friends</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="making_friends" value="online_first" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Meet online first, then in person</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Friendship Qualities Ranking -->
-                <div class="question-container hidden" id="question-22">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Friendship Qualities</h3>
-                    <p class="text-text-primary mb-4">Rank these friendship qualities by importance to you (1 = Most Important, 5 = Least Important):</p>
-                    
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Loyalty and trustworthiness</span>
-                            <select name="quality_loyalty" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Shared sense of humor</span>
-                            <select name="quality_humor" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Similar life goals</span>
-                            <select name="quality_goals" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Emotional support and empathy</span>
-                            <select name="quality_support" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center justify-between p-3 border border-text-gold/30 rounded-lg">
-                            <span class="text-text-primary">Shared interests and hobbies</span>
-                            <select name="quality_interests" required class="bg-card-light text-text-primary border border-text-gold/30 rounded px-2 py-1">
-                                <option value="">Rank</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Scenario-Based Question -->
-                <div class="question-container hidden" id="question-23">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Conflict Resolution Scenario</h3>
-                    <p class="text-text-primary mb-4">A friend cancels plans at the last minute for the third time. You would most likely:</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="conflict_scenario" value="express_disappointment" required class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Express your disappointment directly</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="conflict_scenario" value="say_nothing" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Make a mental note but say nothing</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="conflict_scenario" value="ask_if_okay" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Ask if everything is okay in their life</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="conflict_scenario" value="stop_planning" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Stop making plans with them</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Political/Social Views -->
-                <div class="question-container hidden" id="question-24">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Political & Social Views</h3>
-                    <p class="text-text-primary mb-4">How important is it that friends share similar political/social views?</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="political_importance" value="very_important" required class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Very important - we should align on most major issues</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="political_importance" value="somewhat_important" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Somewhat important - similar core values but can disagree on specifics</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="political_importance" value="not_very_important" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Not very important - can be friends despite different views</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="political_importance" value="irrelevant" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Completely irrelevant to friendship</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Religious/Spiritual Orientation -->
-                <div class="question-container hidden" id="question-25">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Religious & Spiritual Orientation</h3>
-                    <p class="text-text-primary mb-4">How do you describe your religious/spiritual orientation?</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="very_religious" required class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Very religious/spiritual - central to my life</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="moderately_religious" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Moderately religious/spiritual - important but flexible</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="somewhat_spiritual" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Somewhat spiritual but not religious</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="agnostic" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Agnostic/Questioning</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="atheist" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Atheist/Non-religious</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="religious_orientation" value="prefer_not_say" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Prefer not to say</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Financial Attitudes -->
-                <div class="question-container hidden" id="question-26">
-                    <h3 class="text-xl font-semibold text-text-primary mb-6">Financial Attitudes</h3>
-                    <p class="text-text-primary mb-4">Which best describes your approach to spending on social activities?</p>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="spending_approach" value="budget_conscious" required class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Budget-conscious - prefer free or low-cost activities</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="spending_approach" value="moderate_spender" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Moderate spender - willing to spend reasonably on good experiences</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="spending_approach" value="generous_spender" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Generous spender - enjoy splurging on special experiences</span>
-                        </label>
-                        <label class="flex items-start p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="radio" name="spending_approach" value="varies_by_situation" class="text-primary focus:ring-primary mt-1 mr-3">
-                            <span class="text-text-primary">Varies by situation - flexible based on the occasion</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Gender Preferences -->
-                <div class="question-container hidden" id="question-27">
-                    <h3 class="text-xl font-semibold text-text-primary mb-4">Gender Preferences</h3>
-                    <p class="text-text-primary mb-4">What gender(s) are you open to being matched with for friendship? Select all that apply:</p>
-                    <div class="space-y-3">
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="checkbox" name="gender_preferences" value="male" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <span class="ml-3 text-text-primary">Male</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="checkbox" name="gender_preferences" value="female" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <span class="ml-3 text-text-primary">Female</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="checkbox" name="gender_preferences" value="non-binary" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <span class="ml-3 text-text-primary">Non-binary</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="checkbox" name="gender_preferences" value="other" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <span class="ml-3 text-text-primary">Other</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-text-gold/30 rounded-lg hover:bg-lavender cursor-pointer">
-                            <input type="checkbox" name="gender_preferences" value="no-preference" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                            <span class="ml-3 text-text-primary">No preference</span>
-                        </label>
-                    </div>
-                </div>
-                
                 <!-- Navigation Buttons -->
                 <div class="flex justify-between mt-8">
-                    <button type="button" id="prev-btn" onclick="previousQuestion()" 
+                    <button type="button" id="prev-btn" onclick="previousQuestion()"
                             class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors hidden">
                         Previous
                     </button>
-                    <button type="button" id="next-btn" onclick="nextQuestion()" 
-                            class="px-6 py-3 bg-primary hover:bg-purple-700 text-white rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl ml-auto">
+                    <button type="button" id="next-btn" onclick="nextQuestion()"
+                            class="px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white rounded-lg transition-all duration-300 shadow-lg ml-auto">
                         Next
                     </button>
                     <button type="submit" id="submit-btn"
-                            class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-300 shadow-lg hover:shadow-xl ml-auto hidden">
+                            class="px-6 py-3 bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white rounded-lg transition-all duration-300 shadow-lg ml-auto hidden">
                         Submit Assessment
                     </button>
                 </div>
             </form>
-            
+
             <div class="mt-6 text-center">
                 <p class="text-sm text-text-accent">
-                    Your assessment will be reviewed by our admin team to find your perfect friendship matches.
+                    Your assessment will be reviewed by our team to find your perfect friendship matches.
                 </p>
             </div>
         </div>
@@ -1015,308 +54,597 @@
 </div>
 
 <style>
-.scale-container {
-    margin: 2rem 0;
-}
-
-.scale-option {
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
+.likert-scale { margin: 2rem 0; }
+.scale-option { cursor: pointer; transition: all 0.2s ease; }
 .scale-button {
-    width: 3.5rem;
-    height: 3.5rem;
-    border: 2px solid #d1d5db;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1.125rem;
-    color: #6b7280;
-    background: white;
-    transition: all 0.3s ease;
+    width: 3.5rem; height: 3.5rem;
+    border: 2px solid #d1d5db; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 1.125rem; color: #6b7280;
+    background: white; transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .scale-option:hover .scale-button {
-    border-color: #8b5cf6;
-    color: #8b5cf6;
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.2);
+    border-color: #C17767; color: #C17767;
+    transform: scale(1.05); box-shadow: 0 4px 8px rgba(193, 119, 103, 0.2);
 }
-
 .scale-option input[type="radio"]:checked + .scale-button {
-    border-color: #8b5cf6;
-    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(139, 92, 246, 0.3);
+    border-color: #C17767; background: linear-gradient(135deg, #C17767, #7A9B8E);
+    color: white; transform: scale(1.1); box-shadow: 0 6px 12px rgba(193, 119, 103, 0.3);
 }
-
-.question-container {
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.question-container.hidden {
-    display: none !important;
-}
+.question-fade-enter { opacity: 0; transform: translateX(20px); }
+.question-fade-enter-active { opacity: 1; transform: translateX(0); transition: all 0.3s ease; }
 
 @media (max-width: 640px) {
-    .scale-button {
-        width: 2.5rem;
-        height: 2.5rem;
-        font-size: 1rem;
-    }
-    
-    .flex.justify-center.space-x-6 {
-        gap: 1rem;
-    }
+    .scale-button { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
 }
 </style>
 
 <script>
-let currentQuestion = 1;
-const totalQuestions = 27;
+const assessmentData = {
+    "sections": [
+        {
+            "id": "friendship_likeness",
+            "title": "Friendship Likeness",
+            "type": "likert",
+            "questions": [
+                "I have significant time to invest in building new friendships right now.",
+                "I am looking for long-term friendships rather than casual acquaintances.",
+                "I am open to new connections.",
+                "I am comfortable with meeting more than just one match.",
+                "I am willing to make time for friendships and community.",
+                "I am in a place where I can be a reliable friend.",
+                "I am willing to be vulnerable and share personal information with new friends.",
+                "I have unresolved issues from past friendships that may affect new friendships.",
+                "I am ready to show up consistently for a new friend, even when it's inconvenient."
+            ]
+        },
+        {
+            "id": "personality",
+            "title": "Personality",
+            "type": "likert",
+            "questions": [
+                "I am comfortable with friendships that have periods of less frequent contact.",
+                "I am willing to be the one who usually initiates plans and reaches out first.",
+                "I find it easy to be vulnerable with my friends.",
+                "I find it easy to hold space for my friends.",
+                "Past friends have told me I am passive-aggressive.",
+                "I have been told I am avoidant.",
+                "I would identify as a people-pleaser.",
+                "I am very independent.",
+                "It's hard for me to accept help.",
+                "I often need reassurance from friends that they value our friendship.",
+                "I prefer to keep some emotional distance, even with close friends.",
+                "I tend to reach out to friends frequently to maintain the connection.",
+                "I push friends away when I feel like we are getting too close.",
+                "I feel secure in my friendships, even when we go a while without talking.",
+                "I view friends as family.",
+                "My partner(s) come(s) before my friends.",
+                "I tend to lean more right in politics.",
+                "I tend to lean more left in politics.",
+                "Politics matter in my friendships.",
+                "I prefer friends who have similar political beliefs as me."
+            ]
+        },
+        {
+            "id": "rupture_repair",
+            "title": "Rupture and Repair",
+            "type": "likert",
+            "questions": [
+                "In conflict, I am willing to initiate repair first.",
+                "I tend to avoid conflict.",
+                "I find it easy to take responsibility for my part in conflict.",
+                "I tend to metaphorically sweep things under the rug.",
+                "I prefer to resolve disagreements immediately rather than taking time to cool off.",
+                "I prefer to address conflicts directly rather than letting issues fade away.",
+                "I can forgive friends easily after they've hurt my feelings.",
+                "I hold onto hurt feelings for a long time, even after an apology.",
+                "After an argument, I need my friend to reach out first to reconcile.",
+                "I am comfortable apologizing first, even if I don't think I was entirely at fault."
+            ]
+        },
+        {
+            "id": "this_or_that",
+            "title": "This or That",
+            "type": "this_or_that",
+            "questions": [
+                { "question": "Indoor activities versus outdoor activities", "options": ["Indoor", "Outdoor", "Both", "Neither"] },
+                { "question": "Cooking together or trying a new restaurant together", "options": ["Cooking", "Restaurant", "Both", "Neither"] },
+                { "question": "Coffee shop versus restaurant", "options": ["Coffee shop", "Restaurant", "Both", "Neither"] },
+                { "question": "Concert versus museum", "options": ["Concert", "Museum", "Both", "Neither"] },
+                { "question": "Clubbing or cozy movie night", "options": ["Clubbing", "Movie night", "Both", "Neither"] },
+                { "question": "Texting versus calling", "options": ["Texting", "Calling", "Both", "Neither"] },
+                { "question": "Video chat catch-up versus in-person hangouts", "options": ["Video chat", "In-person", "Both", "Neither"] },
+                { "question": "Sends reels versus writes me letters", "options": ["Reels", "Letters", "Both", "Neither"] },
+                { "question": "A voice memo versus a yap session", "options": ["Voice memo", "Yap session", "Both", "Neither"] },
+                { "question": "Time alone to recharge versus receiving energy from hanging out", "options": ["Alone time", "Social energy", "Both", "Neither"] },
+                { "question": "Seeing friend once a week versus every once in a while", "options": ["Once a week", "Once in a while", "Both", "Neither"] },
+                { "question": "Spontaneous plans versus planned activities", "options": ["Spontaneous", "Planned", "Both", "Neither"] },
+                { "question": "Group hangouts versus one-on-ones", "options": ["Group", "One-on-one", "Both", "Neither"] },
+                { "question": "I am more realistic/practical versus imaginative/creative", "options": ["Realistic", "Imaginative", "Both", "Neither"] },
+                { "question": "Facts/Logic versus Feelings/Energy", "options": ["Facts/Logic", "Feelings/Energy", "Both", "Neither"] },
+                { "question": "On-time versus always late", "options": ["On-time", "Late", "Both", "Neither"] }
+            ]
+        },
+        {
+            "id": "values",
+            "title": "Values",
+            "type": "multi_select_exact",
+            "instruction": "Select exactly 5 values that are most important to you:",
+            "required_count": 5,
+            "options": [
+                "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+                "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
+                "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
+                "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
+                "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
+                "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
+                "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
+                "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+            ]
+        },
+        {
+            "id": "top_friendship_qualities",
+            "title": "Top Friendship Qualities",
+            "type": "multi_select_exact",
+            "instruction": "Select exactly 5 qualities you value most in friendships:",
+            "required_count": 5,
+            "options": [
+                "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+                "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
+                "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
+                "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
+                "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
+                "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
+                "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
+                "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+            ]
+        },
+        {
+            "id": "preferences",
+            "title": "Preferences",
+            "type": "mixed",
+            "questions": [
+                {
+                    "id": "gender_preference",
+                    "question": "I prefer... (gender preference)",
+                    "type": "multi_select",
+                    "options": ["Men", "Women", "Non-binary", "All genders", "No preference"]
+                },
+                {
+                    "id": "substance_use",
+                    "question": "I prefer... (substance use)",
+                    "type": "multi_select",
+                    "options": ["Straight-edge", "Drinks", "Smokes", "Party drugs", "N/A"]
+                },
+                {
+                    "id": "religious_preference",
+                    "question": "I prefer... (religious preferences)",
+                    "type": "multi_select",
+                    "options": ["Christian", "Jewish", "Muslim", "Hindu", "Buddhist", "Spiritual but not religious", "Atheist/Agnostic", "No preference"]
+                },
+                {
+                    "id": "relationship_status",
+                    "question": "I prefer... (relationship status preferences)",
+                    "type": "multi_select",
+                    "options": ["Single", "In a relationship", "Married", "It's complicated", "No preference"]
+                },
+                {
+                    "id": "sexuality_preference",
+                    "question": "I prefer... (sexuality preferences)",
+                    "type": "multi_select",
+                    "options": ["Straight", "Gay", "Lesbian", "Bisexual", "Pansexual", "Asexual", "Queer", "No preference"]
+                },
+                {
+                    "id": "political_leaning",
+                    "question": "I prefer... (political leanings)",
+                    "type": "multi_select",
+                    "options": ["Very liberal", "Liberal", "Moderate", "Conservative", "Very conservative", "No preference"]
+                },
+                {
+                    "id": "location_preference",
+                    "question": "I prefer... (location)",
+                    "type": "multi_select",
+                    "options": ["Lives 30 mins away", "Lives in Charlotte", "Lives in NC", "Long distance", "No preference"]
+                },
+                {
+                    "id": "experience_hope",
+                    "question": "What do you hope to get out of this experience?",
+                    "type": "text"
+                },
+                {
+                    "id": "team_notes",
+                    "question": "Anything else you want to let our team know",
+                    "type": "text"
+                },
+                {
+                    "id": "dealbreakers",
+                    "question": "Any dealbreakers for you?",
+                    "type": "text"
+                }
+            ]
+        }
+    ]
+};
 
-function updateProgress() {
-    const progressPercent = (currentQuestion / totalQuestions) * 100;
-    document.getElementById('current-question').textContent = currentQuestion;
-    document.getElementById('total-questions').textContent = totalQuestions;
-    document.getElementById('progress-percent').textContent = Math.round(progressPercent);
-    document.getElementById('progress-bar').style.width = progressPercent + '%';
-}
+// Flatten all questions into a single array
+let allQuestions = [];
+let currentQuestionIndex = 0;
 
-function isMultiSelectQuestion(questionNum) {
-    return questionNum === 11 || questionNum === 15 || questionNum === 22 || questionNum === 27;
-}
+function buildQuestionsList() {
+    allQuestions = [];
 
-function setupAutoProgression() {
-    const currentQuestionContainer = document.getElementById(`question-${currentQuestion}`);
-    const radioInputs = currentQuestionContainer.querySelectorAll('input[type="radio"]');
-    const selectInputs = currentQuestionContainer.querySelectorAll('select');
-    
-    if (!isMultiSelectQuestion(currentQuestion)) {
-        radioInputs.forEach(radio => {
-            radio.addEventListener('change', function() {
-                setTimeout(() => {
-                    if (validateCurrentQuestion()) {
-                        nextQuestion();
-                    }
-                }, 500);
+    assessmentData.sections.forEach(section => {
+        if (section.type === 'likert' || section.type === 'this_or_that') {
+            section.questions.forEach((question, idx) => {
+                allQuestions.push({
+                    sectionId: section.id,
+                    sectionTitle: section.title,
+                    type: section.type,
+                    question: question,
+                    fieldName: `${section.id}_q${idx + 1}`,
+                    questionIndex: idx
+                });
             });
-        });
-        
-        selectInputs.forEach(select => {
-            select.addEventListener('change', function() {
-                setTimeout(() => {
-                    if (validateCurrentQuestion()) {
-                        nextQuestion();
-                    }
-                }, 500);
+        } else if (section.type === 'multi_select_exact') {
+            allQuestions.push({
+                sectionId: section.id,
+                sectionTitle: section.title,
+                type: section.type,
+                instruction: section.instruction,
+                required_count: section.required_count,
+                options: section.options,
+                fieldName: section.id
             });
-        });
-    }
-}
-
-function showQuestion(questionNum) {
-    console.log(`Showing question ${questionNum}`);
-    // Hide all questions
-    const allQuestions = document.querySelectorAll('.question-container');
-    console.log(`Found ${allQuestions.length} question containers`);
-    allQuestions.forEach((q, index) => {
-        q.classList.add('hidden');
-        console.log(`Hiding question container ${index + 1}`);
+        } else if (section.type === 'mixed') {
+            section.questions.forEach(question => {
+                allQuestions.push({
+                    sectionId: section.id,
+                    sectionTitle: section.title,
+                    type: 'mixed',
+                    mixedType: question.type,
+                    question: question.question,
+                    questionId: question.id,
+                    options: question.options,
+                    fieldName: `${section.id}_${question.id}`
+                });
+            });
+        }
     });
-    
-    // Show current question
-    const currentQuestionElement = document.getElementById(`question-${questionNum}`);
-    if (currentQuestionElement) {
-        currentQuestionElement.classList.remove('hidden');
-        console.log(`Showing question ${questionNum}`);
-    } else {
-        console.error(`Question ${questionNum} not found!`);
+}
+
+function renderLikertQuestion(questionData) {
+    return `
+        <div class="question-fade-enter-active">
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <div class="likert-scale">
+                <p class="text-text-primary text-lg mb-8">${questionData.question}</p>
+                <div class="flex justify-between text-sm text-text-accent mb-4">
+                    <span>Strongly Disagree</span>
+                    <span>Strongly Agree</span>
+                </div>
+                <div class="flex justify-center space-x-4 md:space-x-6">
+                    ${[1, 2, 3, 4, 5].map(val => `
+                        <label class="scale-option">
+                            <input type="radio" name="${questionData.fieldName}" value="${val}" required class="sr-only single-choice-radio">
+                            <div class="scale-button">${val}</div>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderThisOrThatQuestion(questionData) {
+    return `
+        <div class="question-fade-enter-active">
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <p class="text-text-primary text-lg mb-6">${questionData.question.question}</p>
+            <div class="space-y-3">
+                ${questionData.question.options.map(option => `
+                    <label class="flex items-center p-4 border-2 border-primary/30 rounded-lg hover:bg-accent/10 hover:border-primary/50 cursor-pointer transition-all">
+                        <input type="radio" name="${questionData.fieldName}" value="${option}" required class="text-primary focus:ring-primary mr-3 single-choice-radio">
+                        <span class="text-text-primary text-lg">${option}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderMultiSelectExact(questionData) {
+    const counterId = `${questionData.fieldName}-count`;
+    return `
+        <div class="question-fade-enter-active">
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <p class="text-text-primary text-lg mb-4">${questionData.instruction}</p>
+            <p class="text-sm text-accent mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${questionData.required_count}</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
+                ${questionData.options.map(option => `
+                    <label class="flex items-center p-2 border border-primary/30 rounded hover:bg-accent/10 transition-colors cursor-pointer">
+                        <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                               class="multi-select-checkbox text-primary focus:ring-primary mr-2"
+                               data-field="${questionData.fieldName}" data-max="${questionData.required_count}">
+                        <span class="text-text-primary text-sm">${option}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderMixedQuestion(questionData) {
+    if (questionData.mixedType === 'multi_select') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+                <p class="text-text-primary text-lg mb-4">${questionData.question}</p>
+                <div class="space-y-2">
+                    ${questionData.options.map(option => `
+                        <label class="flex items-center p-3 border border-primary/30 rounded-lg hover:bg-accent/10 cursor-pointer transition-colors">
+                            <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                                   class="text-primary focus:ring-primary mr-3">
+                            <span class="text-text-primary">${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'text') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+                <label class="block text-text-primary text-lg mb-4">${questionData.question}</label>
+                <textarea name="${questionData.fieldName}" rows="5"
+                          class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary"
+                          placeholder="Your answer..."></textarea>
+            </div>
+        `;
     }
-    
-    // Update navigation buttons
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    
-    if (questionNum === 1) {
-        prevBtn.classList.add('hidden');
-    } else {
-        prevBtn.classList.remove('hidden');
+}
+
+function renderQuestion(index) {
+    const questionData = allQuestions[index];
+    const container = document.getElementById('question-container');
+
+    let html = '';
+
+    if (questionData.type === 'likert') {
+        html = renderLikertQuestion(questionData);
+    } else if (questionData.type === 'this_or_that') {
+        html = renderThisOrThatQuestion(questionData);
+    } else if (questionData.type === 'multi_select_exact') {
+        html = renderMultiSelectExact(questionData);
+    } else if (questionData.type === 'mixed') {
+        html = renderMixedQuestion(questionData);
     }
-    
-    if (questionNum === totalQuestions) {
-        nextBtn.classList.add('hidden');
-        submitBtn.classList.remove('hidden');
-    } else {
-        nextBtn.classList.remove('hidden');
-        submitBtn.classList.add('hidden');
-    }
-    
-    // Hide next button for multi-select questions to force manual progression
-    if (isMultiSelectQuestion(questionNum)) {
-        nextBtn.classList.remove('hidden');
-    }
-    
+
+    container.innerHTML = html;
+
+    // Setup event listeners
+    setupAutoNavigation();
+    setupMultiSelectListeners();
+
     updateProgress();
-    setupAutoProgression();
+    updateNavigationButtons();
+}
+
+function setupAutoNavigation() {
+    // Auto-navigate on single-choice radio buttons
+    document.querySelectorAll('.single-choice-radio').forEach(radio => {
+        radio.addEventListener('change', () => {
+            // Save the answer immediately
+            saveCurrentAnswer();
+
+            // Add slight delay for visual feedback
+            setTimeout(() => {
+                if (currentQuestionIndex < allQuestions.length - 1) {
+                    nextQuestion();
+                }
+            }, 400);
+        });
+    });
+}
+
+function saveCurrentAnswer() {
+    const questionData = allQuestions[currentQuestionIndex];
+    const container = document.getElementById('question-container');
+    const hiddenContainer = document.getElementById('hidden-answers');
+
+    if (questionData.type === 'likert' || questionData.type === 'this_or_that') {
+        // Single choice - radio buttons
+        const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
+        if (selectedRadio) {
+            // Remove old hidden input if exists
+            const oldInput = hiddenContainer.querySelector(`input[name="${questionData.fieldName}"]`);
+            if (oldInput) oldInput.remove();
+
+            // Create new hidden input
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = questionData.fieldName;
+            hiddenInput.value = selectedRadio.value;
+            hiddenContainer.appendChild(hiddenInput);
+        }
+    } else if (questionData.type === 'multi_select_exact') {
+        // Multi-select with exact count
+        const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
+
+        // Remove old hidden inputs
+        hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+
+        // Create new hidden inputs for each checked value
+        checkboxes.forEach(checkbox => {
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = questionData.fieldName;
+            hiddenInput.value = checkbox.value;
+            hiddenContainer.appendChild(hiddenInput);
+        });
+    } else if (questionData.type === 'mixed') {
+        if (questionData.mixedType === 'multi_select') {
+            // Multi-select checkboxes
+            const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            checkboxes.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+        } else if (questionData.mixedType === 'text') {
+            // Text area
+            const textarea = container.querySelector(`textarea[name="${questionData.fieldName}"]`);
+            if (textarea) {
+                // Remove old hidden input
+                const oldInput = hiddenContainer.querySelector(`input[name="${questionData.fieldName}"]`);
+                if (oldInput) oldInput.remove();
+
+                // Create new hidden input
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = textarea.value;
+                hiddenContainer.appendChild(hiddenInput);
+            }
+        }
+    }
+}
+
+function setupMultiSelectListeners() {
+    document.querySelectorAll('.multi-select-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const fieldName = this.dataset.field;
+            const maxCount = parseInt(this.dataset.max);
+            const checked = document.querySelectorAll(`input[data-field="${fieldName}"]:checked`).length;
+
+            const counterId = `${fieldName}-count`;
+            const counterElement = document.getElementById(counterId);
+            if (counterElement) {
+                counterElement.textContent = checked;
+            }
+
+            if (checked >= maxCount) {
+                document.querySelectorAll(`input[data-field="${fieldName}"]:not(:checked)`).forEach(cb => {
+                    cb.disabled = true;
+                    cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            } else {
+                document.querySelectorAll(`input[data-field="${fieldName}"]`).forEach(cb => {
+                    cb.disabled = false;
+                    cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+
+            // Save answer when checkbox changes
+            saveCurrentAnswer();
+        });
+    });
+
+    // Also setup listeners for multi-select in mixed questions
+    document.querySelectorAll('input[type="checkbox"]:not(.multi-select-checkbox)').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            saveCurrentAnswer();
+        });
+    });
+
+    // Setup listeners for text areas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('blur', () => {
+            saveCurrentAnswer();
+        });
+    });
 }
 
 function validateCurrentQuestion() {
-    const questionContainer = document.getElementById(`question-${currentQuestion}`);
-    
-    // Get all required radio buttons, checkboxes, and selects in this question
-    const radioGroups = new Set();
-    const checkboxGroups = new Set();
-    const selects = questionContainer.querySelectorAll('select[required]');
-    
-    // Collect radio button group names
-    questionContainer.querySelectorAll('input[type="radio"][required]').forEach(radio => {
-        radioGroups.add(radio.name);
-    });
-    
-    // Check radio button groups
-    for (let groupName of radioGroups) {
-        const checkedRadio = questionContainer.querySelector(`input[name="${groupName}"]:checked`);
-        if (!checkedRadio) {
-            alert('Please answer all questions before proceeding.');
+    const questionData = allQuestions[currentQuestionIndex];
+    const container = document.getElementById('question-container');
+
+    // Check required radio buttons
+    const radioInputs = container.querySelectorAll('input[type="radio"][required]');
+    if (radioInputs.length > 0) {
+        const radioName = radioInputs[0].name;
+        if (!container.querySelector(`input[name="${radioName}"]:checked`)) {
+            alert('Please answer this question before proceeding.');
             return false;
         }
     }
-    
-    // Check required selects
-    for (let select of selects) {
-        if (!select.value) {
-            alert('Please answer all questions before proceeding.');
+
+    // Check multi-select exact count
+    if (questionData.type === 'multi_select_exact') {
+        const checked = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`).length;
+        if (checked !== questionData.required_count) {
+            alert(`Please select exactly ${questionData.required_count} options.`);
             return false;
         }
     }
-    
-    // Special validation for ranking questions - check for duplicates
-    if (currentQuestion === 11) { // Life priorities ranking
-        const priorities = ['priority_career', 'priority_family', 'priority_adventure', 'priority_financial', 'priority_growth', 'priority_health'];
-        const values = priorities.map(name => document.querySelector(`select[name="${name}"]`).value);
-        const uniqueValues = new Set(values);
-        if (uniqueValues.size !== values.length || values.some(v => !v)) {
-            alert('Please rank all priorities with unique values (no duplicates).');
-            return false;
-        }
-    }
-    
-    if (currentQuestion === 22) { // Friendship qualities ranking
-        const qualities = ['quality_loyalty', 'quality_humor', 'quality_goals', 'quality_support', 'quality_interests'];
-        const values = qualities.map(name => document.querySelector(`select[name="${name}"]`).value);
-        const uniqueValues = new Set(values);
-        if (uniqueValues.size !== values.length || values.some(v => !v)) {
-            alert('Please rank all friendship qualities with unique values (no duplicates).');
-            return false;
-        }
-    }
-    
-    // Special validation for activity interests (at least one checkbox)
-    if (currentQuestion === 15) {
-        const checkboxes = questionContainer.querySelectorAll('input[name="activities"]:checked');
-        if (checkboxes.length === 0) {
-            alert('Please select at least one activity that interests you.');
-            return false;
-        }
-    }
-    
-    // Special validation for gender preferences (at least one checkbox)
-    if (currentQuestion === 27) {
-        const checkboxes = questionContainer.querySelectorAll('input[name="gender_preferences"]:checked');
-        if (checkboxes.length === 0) {
-            alert('Please select at least one gender preference.');
-            return false;
-        }
-    }
-    
+
     return true;
 }
 
 function nextQuestion() {
-    if (!validateCurrentQuestion()) {
-        return;
-    }
-    
-    if (currentQuestion < totalQuestions) {
-        currentQuestion++;
-        showQuestion(currentQuestion);
+    if (!validateCurrentQuestion()) return;
+
+    // Save current answer before moving
+    saveCurrentAnswer();
+
+    if (currentQuestionIndex < allQuestions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion(currentQuestionIndex);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
 function previousQuestion() {
-    if (currentQuestion > 1) {
-        currentQuestion--;
-        showQuestion(currentQuestion);
+    // Save current answer before moving back
+    saveCurrentAnswer();
+
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestion(currentQuestionIndex);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
-// Initialize the form
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing assessment...');
-    showQuestion(1);
+function updateProgress() {
+    const totalQuestions = allQuestions.length;
+    const progressPercent = Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100);
+
+    document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+    document.getElementById('total-questions').textContent = totalQuestions;
+    document.getElementById('progress-percent').textContent = progressPercent;
+    document.getElementById('progress-bar').style.width = progressPercent + '%';
+}
+
+function updateNavigationButtons() {
+    document.getElementById('prev-btn').classList.toggle('hidden', currentQuestionIndex === 0);
+    document.getElementById('next-btn').classList.toggle('hidden', currentQuestionIndex === allQuestions.length - 1);
+    document.getElementById('submit-btn').classList.toggle('hidden', currentQuestionIndex !== allQuestions.length - 1);
+}
+
+// Initialize assessment
+document.addEventListener('DOMContentLoaded', () => {
+    buildQuestionsList();
+    renderQuestion(0);
 });
 
-// Form submission handler
-document.getElementById('assessment-form').addEventListener('submit', function(e) {
-    // Validate all questions before submission
-    for (let i = 1; i <= totalQuestions; i++) {
-        const questionContainer = document.getElementById(`question-${i}`);
-        
-        // Get all required radio buttons and selects
-        const radioGroups = new Set();
-        questionContainer.querySelectorAll('input[type="radio"][required]').forEach(radio => {
-            radioGroups.add(radio.name);
-        });
-        
-        // Check radio button groups
-        for (let groupName of radioGroups) {
-            const checkedRadio = questionContainer.querySelector(`input[name="${groupName}"]:checked`);
-            if (!checkedRadio) {
-                e.preventDefault();
-                alert(`Please complete question ${i} before submitting.`);
-                currentQuestion = i;
-                showQuestion(currentQuestion);
-                return;
-            }
-        }
-        
-        // Check required selects
-        const selects = questionContainer.querySelectorAll('select[required]');
-        for (let select of selects) {
-            if (!select.value) {
-                e.preventDefault();
-                alert(`Please complete question ${i} before submitting.`);
-                currentQuestion = i;
-                showQuestion(currentQuestion);
-                return;
-            }
-        }
-        
-        // Check required checkboxes (activities and gender preferences)
-        if (i === 15 || i === 27) {
-            const checkboxName = i === 15 ? 'activities' : 'gender_preferences';
-            const checkboxes = questionContainer.querySelectorAll(`input[name="${checkboxName}"]:checked`);
-            if (checkboxes.length === 0) {
-                e.preventDefault();
-                alert(`Please complete question ${i} before submitting.`);
-                currentQuestion = i;
-                showQuestion(currentQuestion);
-                return;
-            }
-        }
+// Form submission validation
+document.getElementById('assessment-form').addEventListener('submit', (e) => {
+    if (!validateCurrentQuestion()) {
+        e.preventDefault();
+        return;
     }
-    
-    // All questions validated - form will submit normally
+
+    // Save the final answer before submitting
+    saveCurrentAnswer();
+
+    console.log('Submitting form with hidden answers:', document.getElementById('hidden-answers').innerHTML);
 });
 </script>
 {% endblock %}

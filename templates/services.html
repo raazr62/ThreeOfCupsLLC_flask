@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold gradient-text mb-4 font-script">Our Services</h1>
+            <p class="text-xl text-text-accent">Tarot readings and friendship guidance</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Basic Reading via Voice Recording -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service1')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Basic Reading via Voice Recording</h3>
+                        <p class="text-accent mt-1">$15</p>
+                    </div>
+                    <svg id="icon-service1" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service1" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of basic tarot reading service via voice recording will be added here. This section will explain what clients can expect from this service, the format of the reading, and how they will receive their results.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Basic Friendship Reading via Voice Recording -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service2')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Basic Friendship Reading via Voice Recording (4 Cross)</h3>
+                        <p class="text-accent mt-1">$20</p>
+                    </div>
+                    <svg id="icon-service2" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service2" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of friendship-focused tarot reading using the 4-card cross spread will be added here. This will detail how the reading specifically addresses friendship dynamics and relationships.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Basic Friendship Reading + 3 Questions -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service3')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Basic Friendship Reading + 3 Questions</h3>
+                        <p class="text-accent mt-1">$30</p>
+                    </div>
+                    <svg id="icon-service3" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service3" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of basic friendship reading with the addition of three specific questions the client can ask will be added here. This will explain how the questions are incorporated and what kind of guidance clients can expect.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Basic Reading + 3 Questions -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service4')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Basic Reading via Voice Recording + 3 Questions</h3>
+                        <p class="text-accent mt-1">$25</p>
+                    </div>
+                    <svg id="icon-service4" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service4" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of general tarot reading with three additional questions will be added here. This will explain the scope of the general reading and how the Q&A portion works.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Basic Friendship Readings -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service5')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Basic Friendship Readings</h3>
+                        <p class="text-accent mt-1">$10</p>
+                    </div>
+                    <svg id="icon-service5" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service5" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of the most basic friendship reading option will be added here. This will outline what makes this reading accessible and what insights clients can gain from it.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Zoom Call Reading + 3 Questions -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service6')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Zoom Call Reading + 3 Questions (45 minutes)</h3>
+                        <p class="text-accent mt-1">$40</p>
+                    </div>
+                    <svg id="icon-service6" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service6" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of live Zoom reading session will be added here. This will explain the interactive nature of the reading, what to expect during the 45-minute session, and how the three questions are incorporated.]</em>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Joint Friendship Zoom Call Reading -->
+            <div class="dark-card rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+                <button onclick="toggleService('service7')" class="w-full p-6 text-left flex justify-between items-center hover:bg-accent/5 transition-colors">
+                    <div>
+                        <h3 class="text-xl font-semibold text-text-primary font-handwritten">Joint Friendship Zoom Call Reading (1 hour)</h3>
+                        <p class="text-accent mt-1">$60 - 2 questions each</p>
+                    </div>
+                    <svg id="icon-service7" class="w-6 h-6 text-primary transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="service7" class="hidden px-6 pb-6">
+                    <p class="text-text-accent leading-relaxed">
+                        <em>[Description of joint friendship reading for two people will be added here. This will explain how the session works with two participants, how the reading addresses the friendship dynamic between them, and what each person can expect from their two questions.]</em>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="mt-12 dark-card rounded-xl shadow-xl p-8 text-center">
+            <h2 class="text-2xl font-semibold text-text-primary mb-4 font-handwritten">Ready to Book a Reading?</h2>
+            <p class="text-text-accent mb-6">Contact us to schedule your tarot reading or learn more about our services.</p>
+            <a href="mailto:contact@threeofcups.com" class="inline-block bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-xl transform hover:scale-105">
+                Get in Touch
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleService(serviceId) {
+    const element = document.getElementById(serviceId);
+    const icon = document.getElementById('icon-' + serviceId);
+
+    // Close all other services
+    document.querySelectorAll('[id^="service"]').forEach(service => {
+        if (service.id !== serviceId && !service.classList.contains('hidden')) {
+            service.classList.add('hidden');
+            const otherIcon = document.getElementById('icon-' + service.id);
+            if (otherIcon) {
+                otherIcon.classList.remove('rotate-180');
+            }
+        }
+    });
+
+    // Toggle current service
+    element.classList.toggle('hidden');
+    icon.classList.toggle('rotate-180');
+}
+</script>
+{% endblock %}

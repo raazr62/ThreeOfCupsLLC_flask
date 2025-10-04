@@ -1,0 +1,233 @@
+{
+  "sections": [
+    {
+      "id": "friendship_likeness",
+      "title": "Friendship Likeness",
+      "type": "likert",
+      "questions": [
+        "I have significant time to invest in building new friendships right now.",
+        "I am looking for long-term friendships rather than casual acquaintances.",
+        "I am open to new connections.",
+        "I am comfortable with meeting more than just one match.",
+        "I am willing to make time for friendships and community.",
+        "I am in a place where I can be a reliable friend.",
+        "I am willing to be vulnerable and share personal information with new friends.",
+        "I have unresolved issues from past friendships that may affect new friendships.",
+        "I am ready to show up consistently for a new friend, even when it's inconvenient."
+      ]
+    },
+    {
+      "id": "personality",
+      "title": "Personality",
+      "type": "likert",
+      "questions": [
+        "I am comfortable with friendships that have periods of less frequent contact.",
+        "I am willing to be the one who usually initiates plans and reaches out first.",
+        "I find it easy to be vulnerable with my friends.",
+        "I find it easy to hold space for my friends.",
+        "Past friends have told me I am passive-aggressive.",
+        "I have been told I am avoidant.",
+        "I would identify as a people-pleaser.",
+        "I am very independent.",
+        "It's hard for me to accept help.",
+        "I often need reassurance from friends that they value our friendship.",
+        "I prefer to keep some emotional distance, even with close friends.",
+        "I tend to reach out to friends frequently to maintain the connection.",
+        "I push friends away when I feel like we are getting too closed.",
+        "I feel secure in my friendships, even when we go a while without talking.",
+        "I view friends as family.",
+        "My partner(s) come(s) before my friends.",
+        "I tend to lean more right in politics.",
+        "I tend to lean more left in politics.",
+        "Politics matter in my friendships.",
+        "I prefer friends who have similar political beliefs as me."
+      ]
+    },
+    {
+      "id": "rupture_repair",
+      "title": "Rupture and Repair",
+      "type": "likert",
+      "questions": [
+        "In conflict, I am willing to initiate repair first.",
+        "I tend to avoid conflict.",
+        "I find it easy to take responsibility for my part in conflict.",
+        "I tend to metaphorically sweep things under the rug.",
+        "I prefer to resolve disagreements immediately rather than taking time to cool off.",
+        "I prefer to address conflicts directly rather than letting issues face away.",
+        "I can forgive friends easily after they've hurt my feelings.",
+        "I hold onto hurt feelings for a long time, even after an apology.",
+        "After an argument, I need my friend to reach out first to reconcile.",
+        "I am comfortable apologizing first, even if I don't think I was entirely at fault."
+      ]
+    },
+    {
+      "id": "this_or_that",
+      "title": "This or That",
+      "type": "this_or_that",
+      "questions": [
+        {
+          "question": "Indoor activities versus outdoor activities",
+          "options": ["Indoor", "Outdoor", "Both", "Neither"]
+        },
+        {
+          "question": "Cooking together or trying a new restaurant together",
+          "options": ["Cooking", "Restaurant", "Both", "Neither"]
+        },
+        {
+          "question": "Coffee shop versus restaurant",
+          "options": ["Coffee shop", "Restaurant", "Both", "Neither"]
+        },
+        {
+          "question": "Concert versus museum",
+          "options": ["Concert", "Museum", "Both", "Neither"]
+        },
+        {
+          "question": "Clubbing or cozy movie night",
+          "options": ["Clubbing", "Movie night", "Both", "Neither"]
+        },
+        {
+          "question": "Texting versus calling",
+          "options": ["Texting", "Calling", "Both", "Neither"]
+        },
+        {
+          "question": "Video chat catch-up versus in-person hangouts",
+          "options": ["Video chat", "In-person", "Both", "Neither"]
+        },
+        {
+          "question": "Sends reels versus writes me letters",
+          "options": ["Reels", "Letters", "Both", "Neither"]
+        },
+        {
+          "question": "A voice memo versus a yap session",
+          "options": ["Voice memo", "Yap session", "Both", "Neither"]
+        },
+        {
+          "question": "Time alone to recharge versus receiving energy from hanging out",
+          "options": ["Alone time", "Social energy", "Both", "Neither"]
+        },
+        {
+          "question": "Seeing friend once a week versus every once in a while",
+          "options": ["Once a week", "Once in a while", "Both", "Neither"]
+        },
+        {
+          "question": "Spontaneous plans versus planned activities",
+          "options": ["Spontaneous", "Planned", "Both", "Neither"]
+        },
+        {
+          "question": "Group hangouts versus one-on-ones",
+          "options": ["Group", "One-on-one", "Both", "Neither"]
+        },
+        {
+          "question": "I am more realistic/practical versus imaginative/creative",
+          "options": ["Realistic", "Imaginative", "Both", "Neither"]
+        },
+        {
+          "question": "Facts/Logic versus Feelings/Energy",
+          "options": ["Facts/Logic", "Feelings/Energy", "Both", "Neither"]
+        },
+        {
+          "question": "On-time versus always late",
+          "options": ["On-time", "Late", "Both", "Neither"]
+        }
+      ]
+    },
+    {
+      "id": "values",
+      "title": "Values",
+      "type": "multi_select_exact",
+      "instruction": "Select exactly 5 values that are most important to you:",
+      "required_count": 5,
+      "options": [
+        "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+        "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
+        "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
+        "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
+        "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
+        "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
+        "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
+        "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+      ]
+    },
+    {
+      "id": "top_friendship_qualities",
+      "title": "Top Friendship Qualities",
+      "type": "multi_select_exact",
+      "instruction": "Select exactly 5 qualities you value most in friendships:",
+      "required_count": 5,
+      "options": [
+        "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+        "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
+        "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
+        "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
+        "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
+        "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
+        "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
+        "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+      ]
+    },
+    {
+      "id": "preferences",
+      "title": "Preferences",
+      "type": "mixed",
+      "questions": [
+        {
+          "id": "gender_preference",
+          "question": "I prefer... (gender preference)",
+          "type": "multi_select",
+          "options": ["Men", "Women", "Non-binary", "All genders", "No preference"]
+        },
+        {
+          "id": "substance_use",
+          "question": "I prefer... (substance use)",
+          "type": "multi_select",
+          "options": ["Straight-edge", "Drinks", "Smokes", "Party drugs", "N/A"]
+        },
+        {
+          "id": "religious_preference",
+          "question": "I prefer... (religious preferences)",
+          "type": "multi_select",
+          "options": ["Christian", "Jewish", "Muslim", "Hindu", "Buddhist", "Spiritual but not religious", "Atheist/Agnostic", "No preference"]
+        },
+        {
+          "id": "relationship_status",
+          "question": "I prefer... (relationship status preferences)",
+          "type": "multi_select",
+          "options": ["Single", "In a relationship", "Married", "It's complicated", "No preference"]
+        },
+        {
+          "id": "sexuality_preference",
+          "question": "I prefer... (sexuality preferences)",
+          "type": "multi_select",
+          "options": ["Straight", "Gay", "Lesbian", "Bisexual", "Pansexual", "Asexual", "Queer", "No preference"]
+        },
+        {
+          "id": "political_leaning",
+          "question": "I prefer... (political leanings)",
+          "type": "multi_select",
+          "options": ["Very liberal", "Liberal", "Moderate", "Conservative", "Very conservative", "No preference"]
+        },
+        {
+          "id": "location_preference",
+          "question": "I prefer... (location)",
+          "type": "multi_select",
+          "options": ["Lives 30 mins away", "Lives in Charlotte", "Lives in NC", "Long distance", "No preference"]
+        },
+        {
+          "id": "experience_hope",
+          "question": "What do you hope to get out of this experience?",
+          "type": "text"
+        },
+        {
+          "id": "team_notes",
+          "question": "Anything else you want to let our team know",
+          "type": "text"
+        },
+        {
+          "id": "dealbreakers",
+          "question": "Any dealbreakers for you?",
+          "type": "text"
+        }
+      ]
+    }
+  ]
+}

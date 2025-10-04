@@ -18,16 +18,20 @@
                         'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#8B5CF6', // Warm purple
-                        secondary: '#EC4899', // Rose pink
-                        accent: '#F59E0B', // Golden amber (reduced usage)
-                        'light-bg': '#FDF2F8', // Soft pink background
-                        'card-light': '#FAF5FF', // Light lavender card background
-                        'text-primary': '#7C2D12', // Warm brown text
-                        'text-accent': '#BE185D', // Deep rose text
-                        'soft-purple': '#A78BFA', // Soft purple
-                        'warm-cream': '#FEF3C7', // Warm cream
-                        'lavender': '#E9D5FF' // Light lavender
+                        primary: '#C17767', // Terracotta
+                        secondary: '#7A9B8E', // Eucalyptus
+                        accent: '#E8B298', // Peach
+                        'orange-light': '#E8B298', // Peach (alias for accent)
+                        'orange-medium': '#C17767', // Terracotta (alias for primary)
+                        'orange-dark': '#A86555', // Darker terracotta
+                        'light-bg': '#FAF7F5', // Off-white background
+                        'card-light': '#FAF7F5', // Off-white card background
+                        'text-primary': '#2C2420', // Espresso
+                        'text-accent': '#2C2420', // Espresso
+                        'warm-cream': '#FAF7F5', // Off-white
+                        'coffee-brown': '#2C2420', // Espresso
+                        'sun-yellow': '#E8B298', // Peach
+                        'orange-50': '#FAF7F5' // Off-white
                     },
                     animation: {
                         'chalice-pour': 'chalicePour 4s ease-in-out infinite',
@@ -64,8 +68,8 @@
                             '50%': { transform: 'translateY(-8px)' }
                         },
                         subtleGlow: {
-                            '0%': { boxShadow: '0 0 15px rgba(107, 70, 193, 0.3)' },
-                            '100%': { boxShadow: '0 0 25px rgba(107, 70, 193, 0.5)' }
+                            '0%': { boxShadow: '0 0 15px rgba(230, 126, 34, 0.3)' },
+                            '100%': { boxShadow: '0 0 25px rgba(230, 126, 34, 0.5)' }
                         }
                     }
                 }
@@ -74,32 +78,32 @@
     </script>
     <style>
         body {
-            background: linear-gradient(135deg, #FDF2F8 0%, #E9D5FF 50%, #A78BFA 100%);
+            background: linear-gradient(135deg, #FAF7F5 0%, #E8B298 50%, #C17767 100%);
             background-attachment: fixed;
         }
         .dark-card {
-            background: linear-gradient(145deg, rgba(250, 245, 255, 0.95), rgba(139, 92, 246, 0.1));
+            background: linear-gradient(145deg, rgba(250, 247, 245, 0.95), rgba(193, 119, 103, 0.1));
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            box-shadow: 0 8px 32px rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(193, 119, 103, 0.3);
+            box-shadow: 0 8px 32px rgba(193, 119, 103, 0.15);
         }
         .gradient-text {
-            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            background: linear-gradient(135deg, #C17767, #7A9B8E);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .nav-glass {
-            background: rgba(250, 245, 255, 0.95);
+            background: rgba(250, 247, 245, 0.95);
             backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-            box-shadow: 0 2px 20px rgba(139, 92, 246, 0.1);
+            border-bottom: 1px solid rgba(193, 119, 103, 0.3);
+            box-shadow: 0 2px 20px rgba(193, 119, 103, 0.1);
         }
         .footer-glass {
-            background: rgba(250, 245, 255, 0.95);
+            background: rgba(250, 247, 245, 0.95);
             backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(139, 92, 246, 0.2);
-            box-shadow: 0 -2px 20px rgba(139, 92, 246, 0.1);
+            border-top: 1px solid rgba(193, 119, 103, 0.3);
+            box-shadow: 0 -2px 20px rgba(193, 119, 103, 0.1);
         }
     </style>
 </head>
@@ -108,20 +112,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <a href="{{ url_for('home') }}" class="text-3xl font-bold gradient-text font-script">
-                        Three of Cups
+                    <a href="{{ url_for('home') }}" class="flex items-center space-x-3">
+                        <span class="text-2xl sm:text-3xl font-bold gradient-text font-script">
+                            Three of Cups
+                        </span>
                     </a>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('about') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">About</a>
+                    <a href="{{ url_for('services') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Services</a>
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Assessment</a>
+                        <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Assessment</a>
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin_dashboard') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Admin Dashboard</a>
+                            <a href="{{ url_for('admin_dashboard') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Admin Dashboard</a>
                         {% endif %}
-                        <a href="{{ url_for('logout') }}" class="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="bg-secondary hover:bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Logout</a>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="text-text-accent hover:text-accent transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Login</a>
-                        <a href="{{ url_for('register') }}" class="bg-gradient-to-r from-primary to-soft-blue hover:from-blue-700 hover:to-primary text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Register</a>
+                        <a href="{{ url_for('login') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Login</a>
+                        <a href="{{ url_for('register') }}" class="bg-gradient-to-r from-primary to-secondary hover:from-orange-light hover:to-orange-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">Register</a>
                     {% endif %}
                 </div>
             </div>
@@ -147,7 +155,7 @@
     <footer class="footer-glass mt-auto shadow-2xl">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="text-center text-text-accent text-sm font-sans">
-                <p>&copy; 2024 Three of Cups. Connecting friends through meaningful assessments.</p>
+                <p>&copy; 2025 Three of Cups. Connecting friends through meaningful assessments.</p>
             </div>
         </div>
     </footer>

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold gradient-text mb-4 font-script">About Three of Cups</h1>
+            <p class="text-xl text-text-accent">Building authentic connections through intentional matchmaking</p>
+        </div>
+
+        <div class="dark-card rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-semibold text-text-primary mb-6 font-handwritten">Our Mission</h2>
+            <p class="text-text-accent leading-relaxed mb-4">
+                Three of Cups is a unique friendship matchmaking platform where meaningful connections are formed through intentional pairings by a licensed therapist. We believe that friendship is the foundation of community, and we're dedicated to helping people find their perfect friendship matches.
+            </p>
+            <p class="text-text-accent leading-relaxed">
+                Our comprehensive assessment process goes beyond surface-level compatibility, diving deep into personality traits, values, communication styles, and friendship readiness to create matches that have the potential to flourish into lasting friendships.
+            </p>
+        </div>
+
+        <div class="dark-card rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-semibold text-text-primary mb-6 font-handwritten">Meet Our Founder</h2>
+
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="w-full md:w-1/3">
+                    <div class="w-48 h-48 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center shadow-xl">
+                        <span class="text-6xl text-white">IH</span>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-2/3">
+                    <h3 class="text-xl font-semibold text-text-primary mb-2">Iris Hudson</h3>
+                    <p class="text-secondary mb-4 font-medium">Licensed Therapist & Friendship Matchmaker</p>
+
+                    <div class="text-text-accent leading-relaxed space-y-3">
+                        <p>
+                            <em>[Bio placeholder - Information about Iris Hudson's background, credentials, and passion for helping people build meaningful friendships will be added here.]</em>
+                        </p>
+                        <p>
+                            <em>[Additional details about her therapeutic approach, experience with friendship dynamics, and vision for Three of Cups will be added here.]</em>
+                        </p>
+                        <p>
+                            <em>[Personal insights about the importance of friendship and community in our lives will be added here.]</em>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
+            <h2 class="text-2xl font-semibold text-text-primary mb-6 font-handwritten">How It Works</h2>
+
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            1
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary mb-2">Complete Your Assessment</h3>
+                        <p class="text-text-accent">Take our comprehensive friendship assessment covering personality, values, communication style, and friendship readiness.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            2
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary mb-2">Therapist Review</h3>
+                        <p class="text-text-accent">Iris personally reviews each assessment, considering the nuances of personality and compatibility beyond algorithmic matching.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            3
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary mb-2">Receive Your Matches</h3>
+                        <p class="text-text-accent">Get matched with compatible friends who share your values, communication style, and approach to friendship.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            4
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-text-primary mb-2">Build Your Community</h3>
+                        <p class="text-text-accent">Connect with your matches and build lasting friendships within a community of like-minded individuals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="{{ url_for('assessment') }}" class="inline-block bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-xl transform hover:scale-105">
+                Start Your Journey
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

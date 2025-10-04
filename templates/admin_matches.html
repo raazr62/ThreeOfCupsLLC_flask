@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold gradient-text mb-2">Completed Matches</h2>
+            <p class="text-text-accent opacity-90">View and manage successful friendship matches</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mb-8 flex justify-center">
+            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+                <a href="{{ url_for('admin_dashboard') }}" 
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Overview
+                </a>
+                <a href="{{ url_for('admin_assessments') }}" 
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Assessments
+                </a>
+                <a href="{{ url_for('admin_matches') }}" 
+                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
+                    Matches
+                </a>
+            </div>
+        </div>
+
+        <!-- Completed Matches -->
+        <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 shadow-lg">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-white">All Completed Matches</h3>
+                    <span class="bg-white/20 text-white text-sm px-3 py-1 rounded-full">{{ completed_matches|length }} Total</span>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                {% if completed_matches %}
+                    <div class="space-y-6">
+                        {% for match in completed_matches %}
+                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 shadow-lg hover:shadow-xl transition-shadow">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="flex items-center space-x-6">
+                                        <!-- User 1 -->
+                                        {% for user in users %}
+                                            {% if user.id == match.user_id %}
+                                                <div class="flex items-center space-x-4">
+                                                    {% if user.profile_picture %}
+                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                             alt="{{ user.first_name }}'s Profile" 
+                                                             class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
+                                                    {% else %}
+                                                        <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
+                                                            <span class="text-white font-bold text-lg">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h4 class="font-bold text-lg text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
+                                                        <p class="text-sm text-gray-600">{{ user.email }}</p>
+                                                        {% if user.bio %}
+                                                            <p class="text-sm text-gray-500 mt-1">{{ user.bio[:50] }}{% if user.bio|length > 50 %}...{% endif %}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        <!-- Match Connection Icon -->
+                                        <div class="flex flex-col items-center px-4">
+                                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="text-xs text-green-600 font-medium mt-2">Matched</span>
+                                        </div>
+                                        
+                                        <!-- User 2 -->
+                                        {% for user in users %}
+                                            {% if user.id == match.matched_user_id %}
+                                                <div class="flex items-center space-x-4">
+                                                    {% if user.profile_picture %}
+                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                                             alt="{{ user.first_name }}'s Profile" 
+                                                             class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
+                                                    {% else %}
+                                                        <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
+                                                            <span class="text-white font-bold text-lg">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h4 class="font-bold text-lg text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
+                                                        <p class="text-sm text-gray-600">{{ user.email }}</p>
+                                                        {% if user.bio %}
+                                                            <p class="text-sm text-gray-500 mt-1">{{ user.bio[:50] }}{% if user.bio|length > 50 %}...{% endif %}</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-4">
+                                        <div class="text-right">
+                                            <span class="bg-green-100 text-green-800 text-sm font-bold px-4 py-2 rounded-full shadow">✓ Active Match</span>
+                                            <p class="text-sm text-gray-600 mt-2">Assessment #{{ match.id }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Match Actions -->
+                                <div class="mt-4 pt-4 border-t border-green-200">
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">
+                                                Match ID: {{ match.id }}
+                                            </span>
+                                            <span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">
+                                                Created: {{ match.id }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="flex space-x-2">
+                                            <button onclick="viewMatchDetails({{ match.id }})" 
+                                                    class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-medium text-text-primary mb-3">No Matches Yet</h3>
+                        <p class="text-gray-600 mb-6">Completed matches will appear here once you start matching users from their assessments.</p>
+                        <a href="{{ url_for('admin_assessments') }}" 
+                           class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-8 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Review Assessments
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Match Details Modal -->
+<div id="matchDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-screen overflow-hidden">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-xl font-semibold text-white">Match Details</h3>
+                <button onclick="closeMatchDetails()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-96">
+                <div id="matchDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeMatchDetails()" 
+                        class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewMatchDetails(matchId) {
+    // For now, show basic info. Could be extended to show compatibility analysis
+    const modal = document.getElementById('matchDetailsModal');
+    const content = document.getElementById('matchDetailsContent');
+    
+    content.innerHTML = `
+        <div class="text-center py-8">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">Match #${matchId}</h4>
+            <p class="text-gray-600 mb-4">Detailed match analysis and user interaction history would be displayed here.</p>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <p class="text-sm text-green-800">This match has been successfully created and both users have been notified.</p>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+}
+
+function closeMatchDetails() {
+    const modal = document.getElementById('matchDetailsModal');
+    modal.classList.add('hidden');
+}
+
+document.getElementById('matchDetailsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeMatchDetails();
+    }
+});
+</script>
+
+{% endblock %}

@@ -7,6 +7,32 @@
             <h2 class="text-3xl font-bold gradient-text mb-2">Welcome, {{ current_user.first_name }}!</h2>
             <p class="text-text-accent opacity-90">Your friendship dashboard and connections</p>
         </div>
+
+        {% if results_data %}
+
+
+        <!-- Personalized Insights -->
+        {% else %}
+        <!-- No Assessment Message -->
+        <div class="mb-8 dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                <h3 class="text-xl font-semibold text-white">Assessment Required</h3>
+            </div>
+            <div class="p-8 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold text-text-primary mb-2">Complete Your Assessment</h4>
+                <p class="text-gray-600 mb-6">Take our friendship readiness assessment to get your personalized results dashboard with detailed insights and scoring.</p>
+                <a href="{{ url_for('assessment') }}" 
+                   class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-8 rounded-lg hover:from-orange-dark hover:to-orange-medium transition-all duration-300 shadow-lg hover:shadow-xl">
+                    Take Assessment
+                </a>
+            </div>
+        </div>
+        {% endif %}
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Profile Section -->
@@ -38,7 +64,7 @@
                                        id="profile_picture" 
                                        name="profile_picture" 
                                        accept="image/*"
-                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-coffee-brown hover:file:bg-orange-light">
                             </div>
                         </div>
                         
@@ -51,11 +77,11 @@
                                       name="bio" 
                                       rows="4" 
                                       placeholder="Tell us about yourself..."
-                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-none">{{ current_user.bio or '' }}</textarea>
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition-colors resize-none">{{ current_user.bio or '' }}</textarea>
                         </div>
                         
                         <button type="submit" 
-                                class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-dark hover:to-orange-medium transition-all duration-300 shadow-lg hover:shadow-xl">
                             Update Profile
                         </button>
                     </form>
@@ -79,7 +105,7 @@
                                                  alt="{{ user.first_name }}'s Profile" 
                                                  class="w-12 h-12 rounded-full object-cover">
                                         {% else %}
-                                            <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-orange-light to-orange-medium rounded-full flex items-center justify-center">
                                                 <span class="text-white font-bold text-sm">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
                                             </div>
                                         {% endif %}
