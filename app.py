@@ -12,6 +12,7 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///friendship.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Beta access settings
 BETA_ACCESS_CODE = 'threeofcups2025foundedbyiris'  # Change this to your desired access code
