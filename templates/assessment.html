@@ -4,7 +4,7 @@
 <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold gradient-text mb-2">Friendship Assessment</h2>
+            <h2 class="text-3xl font-bold text-text-primary mb-2">Friendship Assessment</h2>
             <p class="text-text-accent opacity-90">Tell us about yourself to find compatible friends</p>
         </div>
 
@@ -316,7 +316,7 @@ function buildQuestionsList() {
 function renderLikertQuestion(questionData) {
     return `
         <div class="question-fade-enter-active">
-            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
             <div class="likert-scale">
                 <p class="text-text-primary text-lg mb-8">${questionData.question}</p>
                 <div class="flex justify-between text-sm text-text-accent mb-4">
@@ -339,7 +339,7 @@ function renderLikertQuestion(questionData) {
 function renderThisOrThatQuestion(questionData) {
     return `
         <div class="question-fade-enter-active">
-            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
             <p class="text-text-primary text-lg mb-6">${questionData.question.question}</p>
             <div class="space-y-3">
                 ${questionData.question.options.map(option => `
@@ -357,7 +357,7 @@ function renderMultiSelectExact(questionData) {
     const counterId = `${questionData.fieldName}-count`;
     return `
         <div class="question-fade-enter-active">
-            <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+            <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
             <p class="text-text-primary text-lg mb-4">${questionData.instruction}</p>
             <p class="text-sm text-accent mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${questionData.required_count}</p>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
@@ -378,7 +378,7 @@ function renderMixedQuestion(questionData) {
     if (questionData.mixedType === 'multi_select') {
         return `
             <div class="question-fade-enter-active">
-                <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
                 <p class="text-text-primary text-lg mb-4">${questionData.question}</p>
                 <div class="space-y-2">
                     ${questionData.options.map(option => `
@@ -394,7 +394,7 @@ function renderMixedQuestion(questionData) {
     } else if (questionData.mixedType === 'text') {
         return `
             <div class="question-fade-enter-active">
-                <h3 class="text-xl font-semibold text-text-primary mb-2 font-handwritten">${questionData.sectionTitle}</h3>
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
                 <label class="block text-text-primary text-lg mb-4">${questionData.question}</label>
                 <textarea name="${questionData.fieldName}" rows="5"
                           class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary"

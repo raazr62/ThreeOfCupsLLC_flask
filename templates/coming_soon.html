@@ -6,21 +6,20 @@
     <title>Three of Cups - Coming Soon</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        'handwritten': ['Caveat', 'cursive'],
-                        'script': ['Dancing Script', 'cursive'],
+                        'brand': ['Playfair Display', 'serif'],
                         'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
                     },
                     colors: {
-                        primary: '#C17767',
-                        secondary: '#7A9B8E',
-                        accent: '#E8B298',
+                        primary: '#FF9B9B',
+                        secondary: '#FFB88C',
+                        accent: '#FFD97D',
                         'light-bg': '#FAF7F5',
                         'text-primary': '#2C2420',
                     }
@@ -30,7 +29,7 @@
     </script>
     <style>
         body {
-            background: linear-gradient(135deg, #FAF7F5 0%, #E8B298 50%, #C17767 100%);
+            background: linear-gradient(135deg, #FFD1DC 0%, #FFB88C 40%, #FFD97D 100%);
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
@@ -38,15 +37,13 @@
             justify-content: center;
         }
         .gradient-text {
-            background: linear-gradient(135deg, #C17767, #7A9B8E);
+            background: linear-gradient(135deg, #FF9B9B, #FFB88C, #FFD97D);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .chalice-container {
             position: relative;
-            width: 120px;
-            height: 120px;
             margin: 0 auto;
         }
         .chalice {
@@ -62,7 +59,7 @@
             right: 20px;
             width: 40px;
             height: 40px;
-            background: rgba(193, 119, 103, 0.1);
+            background: rgba(255, 155, 155, 0.1);
             border: none;
             cursor: pointer;
             opacity: 0.3;
@@ -87,37 +84,27 @@
 </head>
 <body class="font-sans">
     <div class="max-w-4xl mx-auto px-4 text-center">
-        <!-- Chalice Icon -->
-        <div class="chalice-container mb-8">
-            <svg class="chalice" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M30 20 L70 20 L75 45 C75 55 65 65 50 65 C35 65 25 55 25 45 Z" fill="#C17767" stroke="#A86555" stroke-width="2"/>
-                <rect x="48" y="65" width="4" height="15" fill="#C17767"/>
-                <ellipse cx="50" cy="82" rx="15" ry="3" fill="#C17767" stroke="#A86555" stroke-width="2"/>
-                <!-- Liquid inside -->
-                <ellipse cx="50" cy="35" rx="18" ry="8" fill="#E8B298" opacity="0.7"/>
-            </svg>
+        <!-- Logo -->
+        <div class="chalice-container">
+            <img src="/static/logo/ThreeofCupsLogo-White.png" alt="Three of Cups Logo" class="mx-auto" style="width: 350px; filter: drop-shadow(0 0 20px rgba(255, 155, 155, 0.5));">
         </div>
 
         <!-- Main Content -->
-        <h1 class="text-6xl md:text-7xl font-bold gradient-text mb-6 font-script leading-relaxed pb-2">
-            Three of Cups
+        <h1 class="text-6xl md:text-7xl font-bold text-text-primary mb-6 font-brand leading-relaxed pb-2 -mt-12">
+            three of cups
         </h1>
 
         <p class="text-2xl md:text-3xl text-text-primary mb-8 font-light">
             Coming Soon
         </p>
 
-        <div class="max-w-2xl mx-auto bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl">
+        <div class="max-w-md mx-auto bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl">
             <p class="text-lg text-text-primary text-center">
-                A matchmaking platform where friendship can form and community can flourish through intentional pairings by a licensed therapist.
+                A matchmaking platform where friendship can form and community can flourish
             </p>
         </div>
 
         <div class="mt-8">
-            <p class="text-text-primary/60 text-sm mb-4">
-                Building meaningful connections, one friendship at a time
-            </p>
-
             <a href="https://instagram.com/threeofcupsllc"
                target="_blank"
                rel="noopener noreferrer"
@@ -153,7 +140,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:opacity-90 transition-opacity">
+                            class="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition-colors">
                         Access
                     </button>
                 </div>

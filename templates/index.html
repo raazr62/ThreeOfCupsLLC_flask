@@ -9,54 +9,54 @@
             <div class="mb-8">
                 <!-- Title in Line -->
                 <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 mb-6">
-                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold font-script text-center md:text-left">
-                        <span class="text-primary drop-shadow-2xl" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                            Welcome to Three of Cups
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold font-brand text-center md:text-left">
+                        <span class="text-text-primary drop-shadow-2xl">
+                            welcome to three of cups
                         </span>
                     </h1>
                 </div>
                 <p class="text-xl md:text-2xl text-text-primary mb-12 max-w-3xl mx-auto leading-relaxed opacity-90 font-sans">
-                    A matchmaking platform where friendship can form and community can flourish through intentional pairings by a licensed therapist.
+                    A matchmaking platform where friendship can form and community can flourish
                 </p>
             </div>
             
             <!-- Action Cards -->
             <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                 <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-handwritten">New User?</h3>
+                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">New User?</h3>
                     <p class="text-text-accent mb-6 leading-relaxed font-sans">Create an account to start your friendship journey</p>
-                    <a href="{{ url_for('register') }}" class="inline-block bg-primary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans" style="box-shadow: 0 4px 0 0 #A86555, 0 8px 16px rgba(193, 119, 103, 0.3); position: relative;">
+                    <a href="{{ url_for('register') }}" class="inline-block bg-primary hover:bg-secondary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
                         Get Started
                     </a>
                 </div>
                 
                 <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-gradient-to-br from-secondary to-accent rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-8 h-8 text-text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-handwritten">Returning User?</h3>
+                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">Returning User?</h3>
                     <p class="text-text-accent mb-6 leading-relaxed font-sans">Sign back in to continue connecting with friends</p>
-                    <a href="{{ url_for('login') }}" class="inline-block bg-secondary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans" style="box-shadow: 0 4px 0 0 #5F7B70, 0 8px 16px rgba(122, 155, 142, 0.3); position: relative;">
+                    <a href="{{ url_for('login') }}" class="inline-block bg-secondary hover:bg-accent text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
                         Login
                     </a>
                 </div>
                 
                 <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <div class="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-handwritten">Take Assessment</h3>
+                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">Take Assessment?</h3>
                     <p class="text-text-accent mb-6 leading-relaxed font-sans">Complete your personality profile to find compatible friends</p>
-                    <a href="{{ url_for('assessment') }}" class="inline-block bg-accent text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans" style="box-shadow: 0 4px 0 0 #D49876, 0 8px 16px rgba(232, 178, 152, 0.3); position: relative;">
+                    <a href="{{ url_for('assessment') }}" class="inline-block bg-accent hover:bg-primary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
                         Start Assessment
                     </a>
                 </div>
@@ -66,26 +66,26 @@
             <div class="mt-20 max-w-4xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div class="text-left">
-                        <h2 class="text-3xl font-bold gradient-text mb-6 font-handwritten">How It Works</h2>
+                        <h2 class="text-3xl font-bold text-text-primary mb-6 font-brand">How It Works</h2>
                         <div class="space-y-6">
                             <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">1</div>
+                                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">1</div>
                                 <p class="text-text-accent text-lg font-sans">Create your account and complete your friendship profile</p>
                             </div>
                             <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-gradient-to-br from-secondary to-accent rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">2</div>
+                                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">2</div>
                                 <p class="text-text-accent text-lg font-sans">Take our comprehensive personality and compatibility assessment</p>
                             </div>
                             <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-gradient-to-br from-accent to-primary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">3</div>
+                                <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">3</div>
                                 <p class="text-text-accent text-lg font-sans">Get matched with compatible friends based on shared interests and values</p>
                             </div>
                         </div>
                     </div>
                     <div class="dark-card rounded-2xl p-8 text-center shadow-2xl">
                         <div class="text-6xl mb-4">🤝</div>
-                        <h3 class="text-xl font-semibold text-text-accent mb-4 font-handwritten">Find Your Friendship Circle</h3>
-                        <p class="text-text-accent leading-relaxed font-sans">Connect with people who share your interests, values, and friendship style. Build meaningful relationships that last through our thoughtful matching process.</p>
+                        <h3 class="text-xl font-semibold text-text-accent mb-4 font-brand">Find your community</h3>
+                        <p class="text-text-accent leading-relaxed font-sans">Connect with people who share your interests, values, and friendship style. Build meaningful relationships that last through our intentional matching process.</p>
                     </div>
                 </div>
             </div>
