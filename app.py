@@ -212,17 +212,17 @@ def register():
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
-        is_admin = True if request.form.get('role') == 'admin' else False
 
         if User.query.filter_by(username=username).first():
             flash('Username already exists.')
             return redirect(url_for('register'))
-        
+
         if User.query.filter_by(email=email).first():
             flash('Email already exists.')
             return redirect(url_for('register'))
 
-        user = User(username=username, first_name=first_name, last_name=last_name, email=email, is_admin=is_admin)
+        # All new registrations are created as regular users (not admin)
+        user = User(username=username, first_name=first_name, last_name=last_name, email=email, is_admin=False)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
