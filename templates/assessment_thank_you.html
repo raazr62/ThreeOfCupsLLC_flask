@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="dark-card rounded-2xl shadow-2xl p-8 md:p-12">
+            <div class="text-center space-y-6">
+                <!-- Thank you title -->
+                <h2 class="text-3xl md:text-4xl font-bold text-text-primary font-brand">
+                    thank you!
+                </h2>
+
+                <!-- Thank you message -->
+                <div class="space-y-6 text-text-primary text-lg leading-relaxed max-w-2xl mx-auto">
+                    <p>
+                        Thank you so much for trusting us at Three of Cups, LLC in your friendship journey!
+                        Our team will thoughtfully and intentionally review your responses and reach out within
+                        <strong>4-5 business days</strong> with your curated match.
+                    </p>
+
+                    <p>
+                        In the meantime, take a moment to congratulate yourself for taking the first step into
+                        expanding your community. That takes courage. <strong>You did it!</strong>
+                    </p>
+                </div>
+
+                <!-- Return to dashboard button -->
+                <div class="mt-8">
+                    <a href="{{ url_for('user_dashboard') }}"
+                       class="inline-block px-8 py-4 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white rounded-lg transition-all duration-300 shadow-lg text-lg font-semibold">
+                        Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

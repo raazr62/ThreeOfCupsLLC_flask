@@ -201,140 +201,455 @@ const assessmentData = {
             ]
         },
         {
-            "id": "rupture_repair",
-            "title": "Rupture and Repair",
-            "type": "likert",
+            "id": "personality_social_style",
+            "title": "personality and social style",
+            "subtext": "Help us get to know who you are and how you connect with others",
+            "type": "mixed",
             "questions": [
-                "In conflict, I am willing to initiate repair first.",
-                "I tend to avoid conflict.",
-                "I find it easy to take responsibility for my part in conflict.",
-                "I tend to metaphorically sweep things under the rug.",
-                "I prefer to resolve disagreements immediately rather than taking time to cool off.",
-                "I prefer to address conflicts directly rather than letting issues fade away.",
-                "I can forgive friends easily after they've hurt my feelings.",
-                "I hold onto hurt feelings for a long time, even after an apology.",
-                "After an argument, I need my friend to reach out first to reconcile.",
-                "I am comfortable apologizing first, even if I don't think I was entirely at fault."
+                {
+                    "id": "recharge_style",
+                    "question": "How do you typically recharge?",
+                    "type": "likert_custom",
+                    "options": [
+                        "I need a lot of alone time",
+                        "I need some time to myself",
+                        "I need both in balance",
+                        "I need some human connection",
+                        "I need a lot of meaningful human connection"
+                    ]
+                },
+                {
+                    "id": "social_settings",
+                    "question": "In social settings, you typically:",
+                    "type": "single_choice",
+                    "options": [
+                        "Observe, listen deeply, and engage selectively",
+                        "Share openly and engage actively with most people",
+                        "Somewhere in between – depends on the vibe",
+                        "I'm quiet at first but warm up over time",
+                        "I stay to myself"
+                    ]
+                },
+                {
+                    "id": "ideal_hangout",
+                    "question": "Your ideal friend hangout looks like:",
+                    "subtext": "Rank these 1-4 (1= most preferred)",
+                    "type": "ranking",
+                    "options": [
+                        "Deep one-on-one conversation",
+                        "Small, intimate group gathering (3-5 people)",
+                        "Larger social events and group activities",
+                        "Mix of all three"
+                    ]
+                },
+                {
+                    "id": "making_plans",
+                    "question": "When it comes to making plans:",
+                    "type": "single_choice",
+                    "options": [
+                        "I thrive on spontaneity and going with the flow",
+                        "I like having loose plans but staying flexible",
+                        "I prefer concrete plans with minimal wiggle room",
+                        "I need structure and advanced notice"
+                    ]
+                },
+                {
+                    "id": "communication_preference",
+                    "question": "How do you prefer to communicate with close friends?",
+                    "subtext": "Select your top two:",
+                    "type": "multi_select_max",
+                    "max_selections": 2,
+                    "options": [
+                        "Phone calls",
+                        "Texting throughout the day",
+                        "Occasional meaningful texts",
+                        "Video calls",
+                        "Voice notes",
+                        "Primarily in-person hangouts",
+                        "Mix of everything/I'm flexible"
+                    ]
+                },
+                {
+                    "id": "texting_style",
+                    "question": "What is your texting communication style?",
+                    "type": "single_choice",
+                    "options": [
+                        "Quick responder, love ongoing conversations",
+                        "Thoughtful but slow to respond (hours to days)",
+                        "I prefer less frequent but more meaningful exchanges"
+                    ]
+                }
             ]
         },
         {
-            "id": "this_or_that",
-            "title": "This or That",
-            "type": "this_or_that",
+            "id": "conflict_repair",
+            "title": "navigating conflict and repair",
+            "subtext": "All relationships have rupture and repair. Let's explore how you navigate these hard moments.",
+            "type": "mixed",
             "questions": [
-                { "question": "Indoor activities versus outdoor activities", "options": ["Indoor", "Outdoor", "Both", "Neither"] },
-                { "question": "Cooking together or trying a new restaurant together", "options": ["Cooking", "Restaurant", "Both", "Neither"] },
-                { "question": "Coffee shop versus restaurant", "options": ["Coffee shop", "Restaurant", "Both", "Neither"] },
-                { "question": "Concert versus museum", "options": ["Concert", "Museum", "Both", "Neither"] },
-                { "question": "Clubbing or cozy movie night", "options": ["Clubbing", "Movie night", "Both", "Neither"] },
-                { "question": "Texting versus calling", "options": ["Texting", "Calling", "Both", "Neither"] },
-                { "question": "Video chat catch-up versus in-person hangouts", "options": ["Video chat", "In-person", "Both", "Neither"] },
-                { "question": "Sends reels versus writes me letters", "options": ["Reels", "Letters", "Both", "Neither"] },
-                { "question": "A voice memo versus a yap session", "options": ["Voice memo", "Yap session", "Both", "Neither"] },
-                { "question": "Time alone to recharge versus receiving energy from hanging out", "options": ["Alone time", "Social energy", "Both", "Neither"] },
-                { "question": "Seeing friend once a week versus every once in a while", "options": ["Once a week", "Once in a while", "Both", "Neither"] },
-                { "question": "Spontaneous plans versus planned activities", "options": ["Spontaneous", "Planned", "Both", "Neither"] },
-                { "question": "Group hangouts versus one-on-ones", "options": ["Group", "One-on-one", "Both", "Neither"] },
-                { "question": "I am more realistic/practical versus imaginative/creative", "options": ["Realistic", "Imaginative", "Both", "Neither"] },
-                { "question": "Facts/Logic versus Feelings/Energy", "options": ["Facts/Logic", "Feelings/Energy", "Both", "Neither"] },
-                { "question": "On-time versus always late", "options": ["On-time", "Late", "Both", "Neither"] }
+                {
+                    "id": "conflict_response",
+                    "question": "When conflict or tension arises in a friendship, I typically:",
+                    "type": "single_choice",
+                    "options": [
+                        "Address it directly and as soon as possible",
+                        "Need time to process before I am ready to discuss",
+                        "Prefer to avoid direct confrontation if possible",
+                        "Try to understand the other person's perspective",
+                        "Get overwhelmed and withdraw",
+                        "Move past it without addressing it",
+                        "Feel hurt but bottle it up and move on"
+                    ]
+                },
+                {
+                    "id": "repair_looks_like",
+                    "question": "After a disagreement or conflict, what does repair look like to you?",
+                    "subtext": "Select all that apply",
+                    "type": "multi_select",
+                    "options": [
+                        "A direct conversation about what happened",
+                        "Quality time together to reconnect",
+                        "Written communication (text, letter, etc)",
+                        "Acts of care and presence",
+                        "Acknowledgement of impact and sincere apology",
+                        "Time and space before reconnecting",
+                        "Humor and lightness to ease back in",
+                        "Other"
+                    ]
+                },
+                {
+                    "id": "flaky_friend_scenario",
+                    "question": "Picture this: A close friend cancels plans last-minute for the third time. What do you do?",
+                    "type": "single_choice",
+                    "options": [
+                        "Address it directly: \"Hey, I've noticed a pattern. Can we talk about it?\"",
+                        "Pull back and wait to see if they reach out or notice",
+                        "Feel hurt but not saying anything, hoping it doesn't happen again",
+                        "Stay curious and check in: \"Is everything okay?\"",
+                        "Set a boundary: \"Hey, I really need more reliability in our friendship.\"",
+                        "End the friendship – consistent flakiness is a dealbreaker for me."
+                    ]
+                },
+                {
+                    "id": "feedback_comfort",
+                    "question": "How comfortable are you with receiving constructive feedback from friends?",
+                    "type": "likert_custom",
+                    "options": [
+                        "1 - very uncomfortable, I take it personally",
+                        "2 - uncomfortable",
+                        "3 - neutral",
+                        "4 - comfortable",
+                        "5 - very comfortable, I welcome and appreciate it"
+                    ]
+                },
+                {
+                    "id": "hurt_feelings_needs",
+                    "question": "When a friend unintentionally hurts your feelings, what do you need most?",
+                    "subtext": "Rank these 1-5 (1 = what you need most)",
+                    "type": "ranking",
+                    "options": [
+                        "Space first, then a conversation when we're both ready",
+                        "Immediate acknowledgement of the hurt",
+                        "To understand perspective and intentions",
+                        "A sincere apology with accountability",
+                        "Reassurance from the friend that we're still good"
+                    ]
+                },
+                {
+                    "id": "boundary_setting",
+                    "question": "How are you with setting and communicating boundaries in friendships?",
+                    "type": "single_choice",
+                    "options": [
+                        "I am clear and direct about my boundaries.",
+                        "I am learning how to set them, but it's still hard",
+                        "I struggle with boundaries and often overextend",
+                        "I am rigid with my boundaries, sometimes to a fault",
+                        "It depends on the friendship",
+                        "I am flexible with my boundaries"
+                    ]
+                },
+                {
+                    "id": "friendship_lessons",
+                    "question": "What have past friendship challenges taught you about yourself?",
+                    "subtext": "Think about conflicts, ruptures, or friendship breakups. What patterns have you noticed about yourself or the friendships?",
+                    "type": "text"
+                }
+            ]
+        },
+        {
+            "id": "hobbies_interests",
+            "title": "hobbies and interests",
+            "subtext": "Let's find some similarities with your future match!",
+            "type": "mixed",
+            "questions": [
+                {
+                    "id": "activities_interests",
+                    "question": "Select all the activities and interests that give you joy:",
+                    "type": "multi_select_categorized",
+                    "categories": [
+                        {
+                            "name": "Active/Outdoors",
+                            "options": [
+                                "Hiking/nature walks",
+                                "Yoga/Pilates",
+                                "Running/Cycling",
+                                "Dancing (salsa, pole, aerial, casual, etc)",
+                                "Sports (playing or watching)",
+                                "Rock climbing/adventure sports"
+                            ]
+                        },
+                        {
+                            "name": "Creative/Expressive",
+                            "options": [
+                                "Writing (journaling, poetry, books)",
+                                "Visual arts (painting, drawing, photography)",
+                                "Music (playing, creating, deeply listening)",
+                                "Crafting (pottery, knitting, DIY, etc)",
+                                "Cooking/Baking",
+                                "Fashion/Styling"
+                            ]
+                        },
+                        {
+                            "name": "Social/Community",
+                            "options": [
+                                "Hosting gatherings (dinner parties, game nights)",
+                                "Book clubs or discussion groups",
+                                "Volunteering/advocacy",
+                                "Attending events (concerts, markets, etc)",
+                                "Exploring local spots (cafes, shops)"
+                            ]
+                        },
+                        {
+                            "name": "Intellectual/Contemplative",
+                            "options": [
+                                "Reading (fiction, non-fiction, audiobooks)",
+                                "Podcasts and documentaries",
+                                "Philosophy and deep conversations",
+                                "Learning new skills",
+                                "Writing and reflection",
+                                "Activism and social change"
+                            ]
+                        },
+                        {
+                            "name": "Wellness and Spiritual",
+                            "options": [
+                                "Meditation/mindfulness",
+                                "Tarot/oracle cards",
+                                "Astrology",
+                                "Religious gatherings (temple/church/mosque, etc)",
+                                "Therapy/personal growth work",
+                                "Nature connection and grounding",
+                                "Energy work/holistic practices",
+                                "Medicinal herbs/substances"
+                            ]
+                        },
+                        {
+                            "name": "Other",
+                            "options": [
+                                "Other"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "want_to_try",
+                    "question": "What is something you've been wanting to learn or try with a friend?",
+                    "type": "text"
+                },
+                {
+                    "id": "free_time",
+                    "question": "How do you typically spend your free time?",
+                    "type": "text"
+                },
+                {
+                    "id": "doing_vs_being",
+                    "question": "Are you more of a \"doing\" friend or \"being\" friend?",
+                    "type": "single_choice",
+                    "options": [
+                        "Doing: I love activities, adventures, and experiences with friends",
+                        "Being: I prefer hanging out or just existing in each other's presence",
+                        "Both",
+                        "It depends"
+                    ]
+                }
             ]
         },
         {
             "id": "values",
-            "title": "Values",
-            "type": "multi_select_exact",
-            "instruction": "Select exactly 5 values that are most important to you:",
-            "required_count": 5,
-            "options": [
-                "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
-                "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
-                "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
-                "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
-                "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
-                "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
-                "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
-                "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
-            ]
-        },
-        {
-            "id": "top_friendship_qualities",
-            "title": "Top Friendship Qualities",
-            "type": "multi_select_exact",
-            "instruction": "Select exactly 5 qualities you value most in friendships:",
-            "required_count": 5,
-            "options": [
-                "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
-                "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals", "Family", "Fun",
-                "Forgiveness", "Generosity", "Genuineness", "Fulfillment", "Gratitude", "Spirituality",
-                "Religion", "Growth", "Honesty", "Trust", "Inclusiveness", "Independence", "Community",
-                "Intuition", "Integrity", "Leadership", "Loyalty", "Love", "Non-conformity", "Order",
-                "Passion", "Patience", "Purpose", "Rationality", "Responsibility", "Resilience",
-                "Self-awareness", "Risk-taking", "Self-expression", "Uniqueness", "Service", "Solitude",
-                "Stability", "Vulnerability", "Thrift", "Wisdom", "Work Ethic", "Sexuality"
-            ]
-        },
-        {
-            "id": "preferences",
-            "title": "Preferences",
+            "title": "values",
+            "subtext": "What matters to you? Answer based off of what matters to you, not what you are currently doing. For example, you may view \"environment\" as your top value, but haven't had the time or energy to engage in trash clean ups, connecting with nature, etc. It's about what matters to you, not what you are currently doing.",
             "type": "mixed",
             "questions": [
                 {
-                    "id": "gender_preference",
-                    "question": "I prefer... (gender preference)",
+                    "id": "top_values",
+                    "question": "Pick 10 values and rank these values in order of what matters most to you (1 = matters most)",
+                    "type": "select_and_rank",
+                    "select_count": 10,
+                    "options": [
+                        "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+                        "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals",
+                        "Family (chosen or biological)", "Fun", "Forgiveness", "Generosity", "Genuineness",
+                        "Fulfillment", "Gratitude", "Spirituality", "Religion", "Growth", "Honesty", "Trust",
+                        "Inclusiveness", "Independence", "Community", "Intuition", "Integrity", "Leadership",
+                        "Loyalty", "Love", "Non-conformity", "Order", "Passion", "Patience", "Purpose",
+                        "Rationality", "Responsibility", "Resilience", "Self-awareness", "Risk-taking",
+                        "Self-expression", "Uniqueness", "Service", "Solitude", "Stability", "Vulnerability",
+                        "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "friendship_values",
+            "title": "values",
+            "type": "mixed",
+            "questions": [
+                {
+                    "id": "statements_resonate",
+                    "question": "Which statements resonate most deeply with you?",
+                    "subtext": "Select 3",
+                    "type": "multi_select_max",
+                    "max_selections": 3,
+                    "options": [
+                        "Friends should be able to have difficult conversations",
+                        "Friendship is about celebrating each other's wins",
+                        "I value friends who check in consistently",
+                        "I appreciate friends who respect my need for space",
+                        "Friends should challenge me to grow",
+                        "I value reliability and follow-through",
+                        "Friends should accept me exactly as I am",
+                        "Humor and laughter are essential to friendship",
+                        "I need friends who can hold space for my emotions",
+                        "Mutual effort and reciprocity matters to me",
+                        "I value friends who share my worldview and values"
+                    ]
+                },
+                {
+                    "id": "friendship_needs",
+                    "question": "In friendships, you need:",
                     "type": "multi_select",
-                    "options": ["Men", "Women", "Non-binary", "All genders", "No preference"]
+                    "options": [
+                        "Emotional depth and vulnerability",
+                        "Shared laughter and lightness",
+                        "Intellectual stimulation",
+                        "Mutual support during hard times",
+                        "Celebration of wins and joys",
+                        "Accountability and growth",
+                        "Non-judgment and acceptance",
+                        "Consistency and reliability",
+                        "Genuineness",
+                        "Adventure and new experiences",
+                        "Peaceful, easy presence"
+                    ]
                 },
                 {
-                    "id": "substance_use",
-                    "question": "I prefer... (substance use)",
-                    "type": "multi_select",
-                    "options": ["Straight-edge", "Drinks", "Smokes", "Party drugs", "N/A"]
-                },
-                {
-                    "id": "religious_preference",
-                    "question": "I prefer... (religious preferences)",
-                    "type": "multi_select",
-                    "options": ["Christian", "Jewish", "Muslim", "Hindu", "Buddhist", "Spiritual but not religious", "Atheist/Agnostic", "No preference"]
-                },
-                {
-                    "id": "relationship_status",
-                    "question": "I prefer... (relationship status preferences)",
-                    "type": "multi_select",
-                    "options": ["Single", "In a relationship", "Married", "It's complicated", "No preference"]
-                },
-                {
-                    "id": "sexuality_preference",
-                    "question": "I prefer... (sexuality preferences)",
-                    "type": "multi_select",
-                    "options": ["Straight", "Gay", "Lesbian", "Bisexual", "Pansexual", "Asexual", "Queer", "No preference"]
-                },
-                {
-                    "id": "political_leaning",
-                    "question": "I prefer... (political leanings)",
-                    "type": "multi_select",
-                    "options": ["Very liberal", "Liberal", "Moderate", "Conservative", "Very conservative", "No preference"]
-                },
-                {
-                    "id": "location_preference",
-                    "question": "I prefer... (location)",
-                    "type": "multi_select",
-                    "options": ["Lives 30 mins away", "Lives in Charlotte", "Lives in NC", "Long distance", "No preference"]
-                },
-                {
-                    "id": "experience_hope",
-                    "question": "What do you hope to get out of this experience?",
-                    "type": "text"
-                },
-                {
-                    "id": "team_notes",
-                    "question": "Anything else you want to let our team know",
+                    "id": "non_negotiables",
+                    "question": "What are your non-negotiables for friendship?",
+                    "subtext": "What qualities, behaviors, or values are an absolute must-have for you?",
                     "type": "text"
                 },
                 {
                     "id": "dealbreakers",
-                    "question": "Any dealbreakers for you?",
+                    "question": "What are your dealbreakers?",
+                    "subtext": "What behaviors, patterns, qualities, or values would make a friendship unsustainable for you?",
                     "type": "text"
+                },
+                {
+                    "id": "connection_language",
+                    "question": "Rank how you receive connection in friendship.",
+                    "subtext": "Rank these 1-6",
+                    "type": "ranking",
+                    "options": [
+                        "Quality time (hangouts, phone calls, etc)",
+                        "Physical touch (hugging, holding hands)",
+                        "Words of affirmation (encouragement, posts about you)",
+                        "Emotional Support (showing up in hard times, being a listening ear)",
+                        "Other forms of support (problem-solving, providing resources like money/meals)",
+                        "Gifts (items that remind them of you)"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "logistics",
+            "title": "logistics and practical considerations",
+            "subtext": "Let's get practical!",
+            "type": "mixed",
+            "questions": [
+                {
+                    "id": "connection_frequency",
+                    "question": "Ideally, how often would you connect with a close friend?",
+                    "type": "single_choice",
+                    "options": [
+                        "Multiple times per week",
+                        "Once a week",
+                        "A few times a month",
+                        "Monthly",
+                        "Quality over quantity – frequency matters less than depth",
+                        "I am open"
+                    ]
+                },
+                {
+                    "id": "connection_type",
+                    "question": "Do you prefer...",
+                    "type": "single_choice",
+                    "options": [
+                        "Primarily in-person connections",
+                        "Primarily virtual connections",
+                        "Mix of both"
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "wrapping_up",
+            "title": "wrapping up",
+            "subtext": "You are almost done! These last questions help us understand and wrap up the final details to find your match.",
+            "type": "mixed",
+            "questions": [
+                {
+                    "id": "ideal_friend_words",
+                    "question": "If you could describe your ideal friend in three words, what would they be?",
+                    "type": "text_multi_input",
+                    "input_fields": [
+                        {"id": "word1", "label": "Word 1:"},
+                        {"id": "word2", "label": "Word 2:"},
+                        {"id": "word3", "label": "Word 3:"}
+                    ]
+                },
+                {
+                    "id": "what_can_offer",
+                    "question": "What can you offer in a friendship?",
+                    "type": "text"
+                },
+                {
+                    "id": "what_want_receive",
+                    "question": "What would you like to receive in friendship and community?",
+                    "type": "text"
+                },
+                {
+                    "id": "gender_preference",
+                    "question": "I prefer a friend who is... (check all that apply)\n\nGender:",
+                    "type": "multi_select",
+                    "options": [
+                        "Man",
+                        "Woman",
+                        "Non-binary",
+                        "No preference"
+                    ]
+                },
+                {
+                    "id": "age_preference",
+                    "question": "Age:",
+                    "type": "multi_select",
+                    "options": [
+                        "18-25",
+                        "26-35",
+                        "36-45",
+                        "46-55",
+                        "56-65",
+                        "65+"
+                    ]
                 }
             ]
         }
@@ -376,14 +691,19 @@ function buildQuestionsList() {
                 allQuestions.push({
                     sectionId: section.id,
                     sectionTitle: section.title,
+                    sectionSubtext: section.subtext,
                     type: 'mixed',
                     mixedType: question.type,
                     question: question.question,
                     subtext: question.subtext,
                     questionId: question.id,
                     options: question.options,
+                    categories: question.categories,
                     scale_min: question.scale_min,
                     scale_max: question.scale_max,
+                    max_selections: question.max_selections,
+                    select_count: question.select_count,
+                    input_fields: question.input_fields,
                     fieldName: `${section.id}_${question.id}`
                 });
             });
@@ -437,7 +757,7 @@ function renderMultiSelectExact(questionData) {
         <div class="question-fade-enter-active">
             <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
             <p class="text-text-primary text-lg mb-4">${questionData.instruction}</p>
-            <p class="text-sm text-accent mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${questionData.required_count}</p>
+            <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${questionData.required_count}</p>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
                 ${questionData.options.map(option => `
                     <label class="flex items-center p-2 border border-primary/30 rounded hover:bg-accent/10 transition-colors cursor-pointer">
@@ -453,7 +773,104 @@ function renderMultiSelectExact(questionData) {
 }
 
 function renderMixedQuestion(questionData) {
-    if (questionData.mixedType === 'scale') {
+    const sectionSubtextHtml = questionData.sectionSubtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.sectionSubtext}</p>` : '';
+
+    if (questionData.mixedType === 'likert_custom') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-6">${questionData.question}</p>
+                <div class="space-y-3">
+                    ${questionData.options.map((option, idx) => `
+                        <label class="flex items-center p-4 border-2 border-primary/30 rounded-lg hover:bg-accent/10 hover:border-primary/50 cursor-pointer transition-all">
+                            <input type="radio" name="${questionData.fieldName}" value="${idx + 1}" required class="text-primary focus:ring-primary mr-3 single-choice-radio">
+                            <span class="text-text-primary text-lg">${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'select_and_rank') {
+        const selectCount = questionData.select_count || 10;
+        const counterId = `${questionData.fieldName}-count`;
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-4">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+
+                <div id="${questionData.fieldName}_select_phase">
+                    <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${selectCount}</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
+                        ${questionData.options.map(option => `
+                            <label class="flex items-center p-2 border border-primary/30 rounded hover:bg-accent/10 transition-colors cursor-pointer">
+                                <input type="checkbox" value="${option}"
+                                       class="select-and-rank-checkbox text-primary focus:ring-primary mr-2"
+                                       data-field="${questionData.fieldName}" data-max="${selectCount}">
+                                <span class="text-text-primary text-sm">${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <button type="button"
+                            onclick="proceedToRanking('${questionData.fieldName}', ${selectCount})"
+                            class="mt-4 px-6 py-3 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white rounded-lg transition-all duration-300 shadow-lg">
+                        Proceed to Ranking
+                    </button>
+                </div>
+
+                <div id="${questionData.fieldName}_rank_phase" class="hidden">
+                    <p class="text-sm text-text-accent mb-4">Now rank your selected values from 1 (matters most) to ${selectCount}</p>
+                    <div id="${questionData.fieldName}_ranking_container" class="space-y-3"></div>
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'ranking') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+                <div class="space-y-3">
+                    ${questionData.options.map((option, idx) => `
+                        <div class="flex items-center gap-3 p-3 border border-primary/30 rounded-lg">
+                            <select name="${questionData.fieldName}_${idx}" required
+                                    class="w-16 px-2 py-2 border border-primary/30 rounded focus:ring-2 focus:ring-primary focus:border-primary bg-white text-text-primary ranking-select"
+                                    data-field="${questionData.fieldName}">
+                                <option value="">-</option>
+                                ${questionData.options.map((_, rankIdx) => `<option value="${rankIdx + 1}">${rankIdx + 1}</option>`).join('')}
+                            </select>
+                            <span class="text-text-primary flex-1">${option}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'multi_select_max') {
+        const counterId = `${questionData.fieldName}-count`;
+        const maxSelections = questionData.max_selections || 2;
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-2 italic">${questionData.subtext}</p>` : ''}
+                <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${maxSelections}</p>
+                <div class="space-y-2">
+                    ${questionData.options.map(option => `
+                        <label class="flex items-center p-3 border border-primary/30 rounded-lg hover:bg-accent/10 cursor-pointer transition-colors">
+                            <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                                   class="text-primary focus:ring-primary mr-3 multi-select-max-checkbox"
+                                   data-field="${questionData.fieldName}" data-max="${maxSelections}">
+                            <span class="text-text-primary">${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'scale') {
         const min = questionData.scale_min || 1;
         const max = questionData.scale_max || 10;
         const scaleOptions = [];
@@ -463,6 +880,7 @@ function renderMixedQuestion(questionData) {
         return `
             <div class="question-fade-enter-active">
                 <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-6 italic">${questionData.subtext}</p>` : ''}
                 <div class="flex justify-center space-x-2 md:space-x-3 flex-wrap">
@@ -479,6 +897,7 @@ function renderMixedQuestion(questionData) {
         return `
             <div class="question-fade-enter-active">
                 <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
                 <div class="space-y-3">
@@ -491,10 +910,40 @@ function renderMixedQuestion(questionData) {
                 </div>
             </div>
         `;
+    } else if (questionData.mixedType === 'multi_select_categorized') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-4">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+                <div class="space-y-4 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
+                    ${questionData.categories.map(category => `
+                        <div class="space-y-2">
+                            <h4 class="font-semibold text-text-primary text-md mt-2">${category.name}</h4>
+                            ${category.options.map(option => `
+                                <label class="flex items-center p-2 border border-primary/30 rounded-lg hover:bg-accent/10 cursor-pointer transition-colors">
+                                    <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                                           class="text-primary focus:ring-primary mr-3 ${option === 'Other' ? 'other-checkbox' : ''}"
+                                           data-field="${questionData.fieldName}">
+                                    <span class="text-text-primary">${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="${questionData.fieldName}_other_input" class="mt-4 hidden">
+                    <input type="text" name="${questionData.fieldName}_other_text"
+                           class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary"
+                           placeholder="Please specify...">
+                </div>
+            </div>
+        `;
     } else if (questionData.mixedType === 'multi_select') {
         return `
             <div class="question-fade-enter-active">
                 <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
                 <div class="space-y-2">
@@ -518,11 +967,32 @@ function renderMixedQuestion(questionData) {
         return `
             <div class="question-fade-enter-active">
                 <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
                 <label class="block text-text-primary text-lg mb-2">${questionData.question}</label>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
                 <textarea name="${questionData.fieldName}" rows="5"
                           class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary"
                           placeholder="Your answer..."></textarea>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'text_multi_input') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-4">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+                <div class="space-y-4">
+                    ${questionData.input_fields.map(field => `
+                        <div>
+                            <label class="block text-text-primary text-md mb-2">${field.label}</label>
+                            <input type="text" name="${questionData.fieldName}_${field.id}" required
+                                   class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary text-multi-input"
+                                   data-field="${questionData.fieldName}"
+                                   placeholder="Your answer...">
+                        </div>
+                    `).join('')}
+                </div>
             </div>
         `;
     }
@@ -607,7 +1077,7 @@ function saveCurrentAnswer() {
             hiddenContainer.appendChild(hiddenInput);
         });
     } else if (questionData.type === 'mixed') {
-        if (questionData.mixedType === 'multi_select') {
+        if (questionData.mixedType === 'multi_select' || questionData.mixedType === 'multi_select_categorized') {
             // Multi-select checkboxes
             const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
 
@@ -633,6 +1103,70 @@ function saveCurrentAnswer() {
                 hiddenInput.value = otherTextInput.value;
                 hiddenContainer.appendChild(hiddenInput);
             }
+        } else if (questionData.mixedType === 'multi_select_max') {
+            // Multi-select with max count
+            const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            checkboxes.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+        } else if (questionData.mixedType === 'ranking') {
+            // Ranking selects
+            const selects = container.querySelectorAll(`select[name^="${questionData.fieldName}_"]`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name^="${questionData.fieldName}_"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            selects.forEach(select => {
+                if (select.value) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = select.name;
+                    hiddenInput.value = select.value;
+                    hiddenContainer.appendChild(hiddenInput);
+                }
+            });
+        } else if (questionData.mixedType === 'select_and_rank') {
+            // Select and rank - save like ranking
+            const selects = container.querySelectorAll(`select[name^="${questionData.fieldName}_"]`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name^="${questionData.fieldName}_"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            selects.forEach(select => {
+                if (select.value) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = select.name;
+                    hiddenInput.value = select.value;
+                    hiddenContainer.appendChild(hiddenInput);
+                }
+            });
+        } else if (questionData.mixedType === 'likert_custom' || questionData.mixedType === 'single_choice' || questionData.mixedType === 'scale') {
+            // Radio buttons
+            const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
+            if (selectedRadio) {
+                // Remove old hidden input
+                const oldInput = hiddenContainer.querySelector(`input[name="${questionData.fieldName}"]`);
+                if (oldInput) oldInput.remove();
+
+                // Create new hidden input
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = selectedRadio.value;
+                hiddenContainer.appendChild(hiddenInput);
+            }
         } else if (questionData.mixedType === 'text' || questionData.mixedType === 'text_optional') {
             // Text area
             const textarea = container.querySelector(`textarea[name="${questionData.fieldName}"]`);
@@ -648,6 +1182,23 @@ function saveCurrentAnswer() {
                 hiddenInput.value = textarea.value;
                 hiddenContainer.appendChild(hiddenInput);
             }
+        } else if (questionData.mixedType === 'text_multi_input') {
+            // Multiple text inputs
+            const textInputs = container.querySelectorAll(`input[name^="${questionData.fieldName}_"]`);
+
+            // Remove old hidden inputs for this field
+            hiddenContainer.querySelectorAll(`input[name^="${questionData.fieldName}_"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs for each text input
+            textInputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = input.name;
+                    hiddenInput.value = input.value;
+                    hiddenContainer.appendChild(hiddenInput);
+                }
+            });
         }
     }
 }
@@ -682,8 +1233,65 @@ function setupMultiSelectListeners() {
         });
     });
 
+    // Setup listeners for multi-select-max checkboxes
+    document.querySelectorAll('.multi-select-max-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const fieldName = this.dataset.field;
+            const maxCount = parseInt(this.dataset.max);
+            const checked = document.querySelectorAll(`input[data-field="${fieldName}"]:checked`).length;
+
+            const counterId = `${fieldName}-count`;
+            const counterElement = document.getElementById(counterId);
+            if (counterElement) {
+                counterElement.textContent = checked;
+            }
+
+            if (checked >= maxCount) {
+                document.querySelectorAll(`input[data-field="${fieldName}"]:not(:checked)`).forEach(cb => {
+                    cb.disabled = true;
+                    cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            } else {
+                document.querySelectorAll(`input[data-field="${fieldName}"]`).forEach(cb => {
+                    cb.disabled = false;
+                    cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+
+            // Save answer when checkbox changes
+            saveCurrentAnswer();
+        });
+    });
+
+    // Setup listeners for select-and-rank checkboxes
+    document.querySelectorAll('.select-and-rank-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const fieldName = this.dataset.field;
+            const maxCount = parseInt(this.dataset.max);
+            const checked = document.querySelectorAll(`.select-and-rank-checkbox[data-field="${fieldName}"]:checked`).length;
+
+            const counterId = `${fieldName}-count`;
+            const counterElement = document.getElementById(counterId);
+            if (counterElement) {
+                counterElement.textContent = checked;
+            }
+
+            if (checked >= maxCount) {
+                document.querySelectorAll(`.select-and-rank-checkbox[data-field="${fieldName}"]:not(:checked)`).forEach(cb => {
+                    cb.disabled = true;
+                    cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            } else {
+                document.querySelectorAll(`.select-and-rank-checkbox[data-field="${fieldName}"]`).forEach(cb => {
+                    cb.disabled = false;
+                    cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+        });
+    });
+
     // Also setup listeners for multi-select in mixed questions
-    document.querySelectorAll('input[type="checkbox"]:not(.multi-select-checkbox)').forEach(checkbox => {
+    document.querySelectorAll('input[type="checkbox"]:not(.multi-select-checkbox):not(.multi-select-max-checkbox)').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
             // Handle "Other" checkbox to show/hide text input
             if (checkbox.classList.contains('other-checkbox')) {
@@ -704,6 +1312,13 @@ function setupMultiSelectListeners() {
         });
     });
 
+    // Setup listeners for ranking selects
+    document.querySelectorAll('.ranking-select').forEach(select => {
+        select.addEventListener('change', () => {
+            saveCurrentAnswer();
+        });
+    });
+
     // Setup listeners for text areas
     document.querySelectorAll('textarea').forEach(textarea => {
         textarea.addEventListener('blur', () => {
@@ -713,6 +1328,13 @@ function setupMultiSelectListeners() {
 
     // Setup listeners for "Other" text inputs in multi-select questions
     document.querySelectorAll('input[type="text"][name$="_other_text"]').forEach(input => {
+        input.addEventListener('blur', () => {
+            saveCurrentAnswer();
+        });
+    });
+
+    // Setup listeners for text_multi_input fields
+    document.querySelectorAll('.text-multi-input').forEach(input => {
         input.addEventListener('blur', () => {
             saveCurrentAnswer();
         });
@@ -751,6 +1373,23 @@ function validateCurrentQuestion() {
         }
     }
 
+    // Check required text_multi_input fields
+    if (questionData.type === 'mixed' && questionData.mixedType === 'text_multi_input') {
+        const textInputs = container.querySelectorAll(`input[name^="${questionData.fieldName}_"]`);
+        let allFilled = true;
+
+        textInputs.forEach(input => {
+            if (input.value.trim() === '') {
+                allFilled = false;
+            }
+        });
+
+        if (!allFilled) {
+            alert('Please fill in all word fields before proceeding.');
+            return false;
+        }
+    }
+
     // Check required single choice questions
     if (questionData.type === 'mixed' && questionData.mixedType === 'single_choice') {
         const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
@@ -765,6 +1404,86 @@ function validateCurrentQuestion() {
         const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
         if (!selectedRadio) {
             alert('Please answer this question before proceeding.');
+            return false;
+        }
+    }
+
+    // Check required likert_custom questions
+    if (questionData.type === 'mixed' && questionData.mixedType === 'likert_custom') {
+        const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
+        if (!selectedRadio) {
+            alert('Please answer this question before proceeding.');
+            return false;
+        }
+    }
+
+    // Check multi-select-max count
+    if (questionData.type === 'mixed' && questionData.mixedType === 'multi_select_max') {
+        const checked = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`).length;
+        const maxSelections = questionData.max_selections || 2;
+        if (checked !== maxSelections) {
+            alert(`Please select exactly ${maxSelections} options.`);
+            return false;
+        }
+    }
+
+    // Check ranking - all dropdowns must have a value and no duplicates
+    if (questionData.type === 'mixed' && questionData.mixedType === 'ranking') {
+        const selects = container.querySelectorAll(`select[name^="${questionData.fieldName}_"]`);
+        const values = [];
+        let allFilled = true;
+
+        selects.forEach(select => {
+            if (!select.value) {
+                allFilled = false;
+            } else {
+                values.push(select.value);
+            }
+        });
+
+        if (!allFilled) {
+            alert('Please rank all options.');
+            return false;
+        }
+
+        // Check for duplicates
+        const uniqueValues = new Set(values);
+        if (uniqueValues.size !== values.length) {
+            alert('Please ensure each option has a unique rank (no duplicates).');
+            return false;
+        }
+    }
+
+    // Check select-and-rank - must be in ranking phase with all values ranked
+    if (questionData.type === 'mixed' && questionData.mixedType === 'select_and_rank') {
+        const selectPhase = container.querySelector(`#${questionData.fieldName}_select_phase`);
+        const rankPhase = container.querySelector(`#${questionData.fieldName}_rank_phase`);
+
+        if (!selectPhase.classList.contains('hidden')) {
+            alert('Please complete the selection and proceed to ranking.');
+            return false;
+        }
+
+        const selects = container.querySelectorAll(`select[name^="${questionData.fieldName}_"]`);
+        const values = [];
+        let allFilled = true;
+
+        selects.forEach(select => {
+            if (!select.value) {
+                allFilled = false;
+            } else {
+                values.push(select.value);
+            }
+        });
+
+        if (!allFilled) {
+            alert('Please rank all selected values.');
+            return false;
+        }
+
+        const uniqueValues = new Set(values);
+        if (uniqueValues.size !== values.length) {
+            alert('Please ensure each value has a unique rank (no duplicates).');
             return false;
         }
     }
@@ -845,6 +1564,50 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('progress-percent').textContent = '0';
     document.getElementById('progress-bar').style.width = '0%';
 });
+
+// Select and Rank functions
+function proceedToRanking(fieldName, selectCount) {
+    const checkboxes = document.querySelectorAll(`.select-and-rank-checkbox[data-field="${fieldName}"]:checked`);
+
+    if (checkboxes.length !== selectCount) {
+        alert(`Please select exactly ${selectCount} values before proceeding to ranking.`);
+        return;
+    }
+
+    // Get selected values
+    const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+
+    // Hide selection phase
+    document.getElementById(`${fieldName}_select_phase`).classList.add('hidden');
+
+    // Show ranking phase
+    const rankPhase = document.getElementById(`${fieldName}_rank_phase`);
+    rankPhase.classList.remove('hidden');
+
+    // Generate ranking interface
+    const rankingContainer = document.getElementById(`${fieldName}_ranking_container`);
+    rankingContainer.innerHTML = selectedValues.map((value, idx) => `
+        <div class="flex items-center gap-3 p-3 border border-primary/30 rounded-lg">
+            <select name="${fieldName}_${idx}" required
+                    class="w-16 px-2 py-2 border border-primary/30 rounded focus:ring-2 focus:ring-primary focus:border-primary bg-white text-text-primary ranking-select"
+                    data-field="${fieldName}">
+                <option value="">-</option>
+                ${Array.from({length: selectCount}, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('')}
+            </select>
+            <span class="text-text-primary flex-1">${value}</span>
+        </div>
+    `).join('');
+
+    // Setup listeners for the new ranking selects
+    rankingContainer.querySelectorAll('.ranking-select').forEach(select => {
+        select.addEventListener('change', () => {
+            saveCurrentAnswer();
+        });
+    });
+
+    // Save the selected values for validation
+    window[`${fieldName}_selectedValues`] = selectedValues;
+}
 
 // Form submission validation
 document.getElementById('assessment-form').addEventListener('submit', (e) => {

@@ -332,8 +332,14 @@ def assessment():
         assessment = Assessment(user_id=current_user.id, answers=answers_json)
         db.session.add(assessment)
         db.session.commit()
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('assessment_thank_you'))
     return render_template('assessment.html')
+
+# Assessment thank you page
+@app.route('/assessment/thank-you')
+@login_required
+def assessment_thank_you():
+    return render_template('assessment_thank_you.html')
 
 # Admin dashboard route - main overview
 @app.route('/admin')
