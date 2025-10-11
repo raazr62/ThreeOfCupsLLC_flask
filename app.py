@@ -360,7 +360,7 @@ def forgot_password():
                 reset_url = url_for('reset_password', token=token, _external=True)
                 msg = Message(
                     'Password Reset Request - Three of Cups',
-                    sender=(app.config['MAIL_DEFAULT_SENDER'], 'Three of Cups'),
+                    sender=app.config['MAIL_DEFAULT_SENDER'],
                     recipients=[user.email]
                 )
                 msg.body = f'''Hello {user.first_name},
