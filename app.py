@@ -1,11 +1,17 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, jsonify, session
 import os
 import json
+import re
 import statistics
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
 from models import db, User, Assessment
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
@@ -13,6 +19,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///friendship.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Email configuration
+# NOTE: Update these with your actual email credentials in .env file
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+# Use MAIL_DEFAULT_SENDER if set, otherwise fallback to MAIL_USERNAME
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
+
+mail = Mail(app)
 
 # Beta access settings
 BETA_ACCESS_CODE = 'threeofcups2025foundedbyiris'  # Change this to your desired access code
@@ -32,6 +50,32 @@ def beta_access_required(f):
             return redirect(url_for('coming_soon'))
         return f(*args, **kwargs)
     return decorated_function
+
+def validate_password(password):
+    """
+    Validate password meets security requirements:
+    - At least 8 characters long
+    - Contains at least one uppercase letter
+    - Contains at least one lowercase letter
+    - Contains at least one number
+    - Contains at least one special character (@$!%*?&)
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter"
+
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter"
+
+    if not re.search(r'\d', password):
+        return False, "Password must contain at least one number"
+
+    if not re.search(r'[@$!%*?&]', password):
+        return False, "Password must contain at least one special character (@$!%*?&)"
+
+    return True, "Password is valid"
 
 def calculate_friendship_scores(assessment_data):
     scores = {
@@ -207,16 +251,35 @@ def services():
 @beta_access_required
 def register():
     if request.method == 'POST':
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-        email = request.form['email']
-        username = request.form['username']
-        password = request.form['password']
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
 
+        # Validate all fields are provided
+        if not all([first_name, last_name, email, username, password, confirm_password]):
+            flash('All fields are required.')
+            return redirect(url_for('register'))
+
+        # Validate passwords match
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return redirect(url_for('register'))
+
+        # Validate password strength
+        is_valid, message = validate_password(password)
+        if not is_valid:
+            flash(message)
+            return redirect(url_for('register'))
+
+        # Check if username already exists
         if User.query.filter_by(username=username).first():
             flash('Username already exists.')
             return redirect(url_for('register'))
 
+        # Check if email already exists
         if User.query.filter_by(email=email).first():
             flash('Email already exists.')
             return redirect(url_for('register'))
@@ -226,6 +289,8 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+
+        flash('Account created successfully! Please log in.')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -235,12 +300,16 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('user_dashboard'))
-    
+
     if request.method == 'POST':
-        username = request.form['username']
+        username_or_email = request.form['username']
         password = request.form['password']
 
-        user = User.query.filter_by(username=username).first()
+        # Try to find user by username or email
+        user = User.query.filter(
+            (User.username == username_or_email) | (User.email == username_or_email)
+        ).first()
+
         if user and user.check_password(password):
             login_user(user)
             if user.is_admin:
@@ -262,6 +331,119 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+# Forgot password route
+@app.route('/forgot-password', methods=['GET', 'POST'])
+@beta_access_required
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('user_dashboard'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+
+        if not email:
+            flash('Please enter your email address.')
+            return redirect(url_for('forgot_password'))
+
+        user = User.query.filter_by(email=email).first()
+
+        # Always show success message for security (don't reveal if email exists)
+        flash('If an account exists with that email, you will receive a password reset link shortly.')
+
+        if user:
+            # Generate reset token
+            token = user.generate_reset_token()
+            db.session.commit()
+
+            # Send email
+            try:
+                reset_url = url_for('reset_password', token=token, _external=True)
+                msg = Message(
+                    'Password Reset Request - Three of Cups',
+                    sender=(app.config['MAIL_DEFAULT_SENDER'], 'Three of Cups'),
+                    recipients=[user.email]
+                )
+                msg.body = f'''Hello {user.first_name},
+
+You requested to reset your password for your Three of Cups account.
+
+Click the link below to reset your password:
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you did not request this password reset, please ignore this email and your password will remain unchanged.
+
+Best regards,
+the three of cups team
+'''
+                msg.html = f'''
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #333;">Password Reset Request</h2>
+                    <p>Hello {user.first_name},</p>
+                    <p>You requested to reset your password for your Three of Cups account.</p>
+                    <p>Click the button below to reset your password:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_url}" style="background-color: #8B5CF6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Reset Password</a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">Or copy and paste this link into your browser:</p>
+                    <p style="color: #8B5CF6; word-break: break-all;">{reset_url}</p>
+                    <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
+                    <p style="color: #666; font-size: 14px;">If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                    <p style="color: #999; font-size: 12px;">Best regards,<br>The Three of Cups Team</p>
+                </div>
+                '''
+                mail.send(msg)
+            except Exception as e:
+                print(f"Error sending email: {e}")
+                # Still show success message to user for security
+
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
+
+# Reset password route
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+@beta_access_required
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('user_dashboard'))
+
+    user = User.query.filter_by(reset_token=token).first()
+
+    if not user or not user.verify_reset_token(token):
+        flash('Invalid or expired reset link. Please request a new password reset.')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if not password or not confirm_password:
+            flash('Please fill in all fields.')
+            return redirect(url_for('reset_password', token=token))
+
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return redirect(url_for('reset_password', token=token))
+
+        # Validate password strength
+        is_valid, message = validate_password(password)
+        if not is_valid:
+            flash(message)
+            return redirect(url_for('reset_password', token=token))
+
+        # Update password and clear reset token
+        user.set_password(password)
+        user.clear_reset_token()
+        db.session.commit()
+
+        flash('Your password has been reset successfully! You can now log in with your new password.')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
+
 # Assessment route
 @app.route('/assessment', methods=['GET', 'POST'])
 @login_required
@@ -275,56 +457,20 @@ def assessment():
             print(f"{key}: {value}")
         print("=========================")
 
-        # Collect all assessment responses in structured format
+        # Collect all assessment responses - store as flat dictionary with field names as keys
+        # This matches the new assessment structure in assessment.html
         assessment_data = {}
 
-        # Friendship Likeness (9 questions)
-        assessment_data['friendship_likeness'] = {}
-        for i in range(1, 10):
-            field_name = f'friendship_likeness_q{i}'
-            value = request.form.get(field_name)
-            print(f"Looking for {field_name}, got: {value}")
-            assessment_data['friendship_likeness'][f'q{i}'] = value
-
-        # Personality (20 questions)
-        assessment_data['personality'] = {}
-        for i in range(1, 21):
-            field_name = f'personality_q{i}'
-            assessment_data['personality'][f'q{i}'] = request.form.get(field_name)
-
-        # Rupture and Repair (10 questions)
-        assessment_data['rupture_repair'] = {}
-        for i in range(1, 11):
-            field_name = f'rupture_repair_q{i}'
-            assessment_data['rupture_repair'][f'q{i}'] = request.form.get(field_name)
-
-        # This or That (16 questions)
-        assessment_data['this_or_that'] = {}
-        for i in range(1, 17):
-            field_name = f'this_or_that_q{i}'
-            assessment_data['this_or_that'][f'q{i}'] = request.form.get(field_name)
-
-        # Values (multi-select, exactly 5)
-        values = request.form.getlist('values')
-        assessment_data['values'] = values
-
-        # Top Friendship Qualities (multi-select, exactly 5)
-        top_qualities = request.form.getlist('top_friendship_qualities')
-        assessment_data['top_friendship_qualities'] = top_qualities
-
-        # Preferences section (mixed types)
-        assessment_data['preferences'] = {
-            'gender_preference': request.form.getlist('preferences_gender_preference'),
-            'substance_use': request.form.getlist('preferences_substance_use'),
-            'religious_preference': request.form.getlist('preferences_religious_preference'),
-            'relationship_status': request.form.getlist('preferences_relationship_status'),
-            'sexuality_preference': request.form.getlist('preferences_sexuality_preference'),
-            'political_leaning': request.form.getlist('preferences_political_leaning'),
-            'location_preference': request.form.getlist('preferences_location_preference'),
-            'experience_hope': request.form.get('preferences_experience_hope'),
-            'team_notes': request.form.get('preferences_team_notes'),
-            'dealbreakers': request.form.get('preferences_dealbreakers')
-        }
+        # Iterate through all form fields and store them with their exact field names
+        for key in request.form.keys():
+            # Handle multi-value fields (checkboxes, multi-select)
+            values = request.form.getlist(key)
+            if len(values) > 1:
+                # Multiple values selected
+                assessment_data[key] = values
+            else:
+                # Single value
+                assessment_data[key] = request.form.get(key)
 
         # Convert to JSON string for storage
         answers_json = json.dumps(assessment_data, indent=2)

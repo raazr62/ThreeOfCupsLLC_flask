@@ -38,10 +38,29 @@
                 <div>
                     <label for="password" class="block text-sm font-medium text-text-primary mb-2">Password</label>
                     <input type="password" name="password" id="password" required
+                           minlength="8"
+                           pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                    <div class="mt-2 text-xs text-text-accent space-y-1">
+                        <p class="font-medium">Password must contain:</p>
+                        <ul class="list-disc list-inside ml-2 space-y-0.5">
+                            <li id="length-check">At least 8 characters</li>
+                            <li id="uppercase-check">One uppercase letter</li>
+                            <li id="lowercase-check">One lowercase letter</li>
+                            <li id="number-check">One number</li>
+                            <li id="special-check">One special character (@$!%*?&)</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <button type="submit"
+                <div>
+                    <label for="confirm_password" class="block text-sm font-medium text-text-primary mb-2">Confirm Password</label>
+                    <input type="password" name="confirm_password" id="confirm_password" required
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                    <p id="password-match-message" class="mt-2 text-xs hidden"></p>
+                </div>
+
+                <button type="submit" id="submit-button"
                         class="w-full bg-primary hover:bg-secondary text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105">
                     Create Account
                 </button>
@@ -55,4 +74,88 @@
         </div>
     </div>
 </div>
+
+<script>
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const matchMessage = document.getElementById('password-match-message');
+    const submitButton = document.getElementById('submit-button');
+
+    // Password requirement checks
+    const checks = {
+        length: { element: document.getElementById('length-check'), regex: /.{8,}/ },
+        uppercase: { element: document.getElementById('uppercase-check'), regex: /[A-Z]/ },
+        lowercase: { element: document.getElementById('lowercase-check'), regex: /[a-z]/ },
+        number: { element: document.getElementById('number-check'), regex: /\d/ },
+        special: { element: document.getElementById('special-check'), regex: /[@$!%*?&]/ }
+    };
+
+    function validatePassword() {
+        const password = passwordInput.value;
+        let allValid = true;
+
+        for (const [key, check] of Object.entries(checks)) {
+            const isValid = check.regex.test(password);
+            if (isValid) {
+                check.element.classList.add('text-green-500');
+                check.element.classList.remove('text-text-accent');
+            } else {
+                check.element.classList.remove('text-green-500');
+                check.element.classList.add('text-text-accent');
+                allValid = false;
+            }
+        }
+
+        return allValid;
+    }
+
+    function validatePasswordMatch() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        if (confirmPassword === '') {
+            matchMessage.classList.add('hidden');
+            return false;
+        }
+
+        if (password === confirmPassword) {
+            matchMessage.textContent = 'Passwords match';
+            matchMessage.classList.remove('hidden', 'text-red-500');
+            matchMessage.classList.add('text-green-500');
+            return true;
+        } else {
+            matchMessage.textContent = 'Passwords do not match';
+            matchMessage.classList.remove('hidden', 'text-green-500');
+            matchMessage.classList.add('text-red-500');
+            return false;
+        }
+    }
+
+    function updateSubmitButton() {
+        const passwordValid = validatePassword();
+        const passwordsMatch = validatePasswordMatch();
+
+        if (passwordValid && passwordsMatch && passwordInput.value !== '') {
+            submitButton.disabled = false;
+            submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    passwordInput.addEventListener('input', updateSubmitButton);
+    confirmPasswordInput.addEventListener('input', updateSubmitButton);
+
+    // Initialize button state
+    updateSubmitButton();
+
+    // Prevent form submission if validation fails
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!validatePassword() || !validatePasswordMatch()) {
+            e.preventDefault();
+            alert('Please ensure all password requirements are met and passwords match.');
+        }
+    });
+</script>
 {% endblock %}
