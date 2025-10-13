@@ -6,9 +6,10 @@ import statistics
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_mail import Mail, Message
+from flask_mail import Mail
 from dotenv import load_dotenv
 from models import db, User, Assessment
+from email_helper import send_password_reset_email, send_match_notification_email
 
 # Load environment variables from .env file
 load_dotenv()
@@ -356,48 +357,10 @@ def forgot_password():
             db.session.commit()
 
             # Send email
-            try:
-                reset_url = url_for('reset_password', token=token, _external=True)
-                msg = Message(
-                    'Password Reset Request - Three of Cups',
-                    sender=app.config['MAIL_DEFAULT_SENDER'],
-                    recipients=[user.email]
-                )
-                msg.body = f'''Hello {user.first_name},
-
-You requested to reset your password for your Three of Cups account.
-
-Click the link below to reset your password:
-{reset_url}
-
-This link will expire in 1 hour.
-
-If you did not request this password reset, please ignore this email and your password will remain unchanged.
-
-Best regards,
-the three of cups team
-'''
-                msg.html = f'''
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #333;">Password Reset Request</h2>
-                    <p>Hello {user.first_name},</p>
-                    <p>You requested to reset your password for your Three of Cups account.</p>
-                    <p>Click the button below to reset your password:</p>
-                    <div style="text-align: center; margin: 30px 0;">
-                        <a href="{reset_url}" style="background-color: #8B5CF6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block;">Reset Password</a>
-                    </div>
-                    <p style="color: #666; font-size: 14px;">Or copy and paste this link into your browser:</p>
-                    <p style="color: #8B5CF6; word-break: break-all;">{reset_url}</p>
-                    <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
-                    <p style="color: #666; font-size: 14px;">If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
-                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-                    <p style="color: #999; font-size: 12px;">Best regards,<br>The Three of Cups Team</p>
-                </div>
-                '''
-                mail.send(msg)
-            except Exception as e:
-                print(f"Error sending email: {e}")
-                # Still show success message to user for security
+            reset_url = url_for('reset_password', token=token, _external=True)
+            send_password_reset_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, reset_url)
+            # Note: Intentionally not checking return value for security reasons
+            # (don't reveal whether email exists)
 
         return redirect(url_for('login'))
 
@@ -526,7 +489,26 @@ def admin_assessments():
         if assessment:
             assessment.reviewed = True
             assessment.matched_user_id = matched_user_id
+
+            # Also mark the matched user's assessment as reviewed
+            matched_user_assessment = Assessment.query.filter_by(user_id=matched_user_id, reviewed=False).first()
+            if matched_user_assessment:
+                matched_user_assessment.reviewed = True
+                matched_user_assessment.matched_user_id = assessment.user_id
+
             db.session.commit()
+
+            # Send match notification emails to both users
+            user1 = User.query.get(assessment.user_id)
+            user2 = User.query.get(matched_user_id)
+
+            dashboard_url = url_for('user_dashboard', _external=True)
+
+            if user1:
+                send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, dashboard_url)
+            if user2:
+                send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, dashboard_url)
+
             flash('User matched successfully.')
             return redirect(url_for('admin_assessments'))
         else:
@@ -534,6 +516,13 @@ def admin_assessments():
 
     assessments = Assessment.query.filter_by(reviewed=False).all()
     users = User.query.all()
+
+    # Get all matched user IDs to determine who is already matched
+    matched_user_ids = set()
+    all_assessments = Assessment.query.filter(Assessment.matched_user_id.isnot(None)).all()
+    for assess in all_assessments:
+        matched_user_ids.add(assess.user_id)
+        matched_user_ids.add(assess.matched_user_id)
 
     # Process assessments for display
     assessments_with_scores = []
@@ -563,9 +552,10 @@ def admin_assessments():
 
     return render_template('admin_assessments.html',
                          assessments_with_scores=assessments_with_scores,
-                         users=users)
+                         users=users,
+                         matched_user_ids=matched_user_ids)
 
-# Admin matches page  
+# Admin matches page
 @app.route('/admin/matches')
 @login_required
 def admin_matches():

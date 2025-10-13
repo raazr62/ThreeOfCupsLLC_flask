@@ -4,7 +4,7 @@
 <div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold gradient-text mb-2">Completed Matches</h2>
+            <h2 class="text-3xl font-bold text-text-primary mb-2">Completed Matches</h2>
             <p class="text-text-accent opacity-90">View and manage successful friendship matches</p>
         </div>
 
@@ -122,7 +122,7 @@
                                         </div>
                                         
                                         <div class="flex space-x-2">
-                                            <button onclick="viewMatchDetails({{ match.id }})" 
+                                            <button onclick="viewMatchDetails({{ match.user_id }}, {{ match.matched_user_id }})"
                                                     class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                                 View Details
                                             </button>
@@ -155,20 +155,20 @@
 <!-- Match Details Modal -->
 <div id="matchDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-screen overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
             <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 flex justify-between items-center">
-                <h3 class="text-xl font-semibold text-white">Match Details</h3>
+                <h3 class="text-xl font-semibold text-white">Match Assessment Comparison</h3>
                 <button onclick="closeMatchDetails()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
             </div>
-            
-            <div class="p-6 overflow-y-auto max-h-96">
-                <div id="matchDetailsContent">
+
+            <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 160px);">
+                <div id="matchDetailsContent" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
-            
+
             <div class="px-6 py-4 bg-gray-50 border-t flex justify-end">
-                <button onclick="closeMatchDetails()" 
+                <button onclick="closeMatchDetails()"
                         class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
                     Close
                 </button>
@@ -178,22 +178,419 @@
 </div>
 
 <script>
-function viewMatchDetails(matchId) {
-    // For now, show basic info. Could be extended to show compatibility analysis
+function viewMatchDetails(user1Id, user2Id) {
     const modal = document.getElementById('matchDetailsModal');
     const content = document.getElementById('matchDetailsContent');
-    
-    content.innerHTML = `
-        <div class="text-center py-8">
-            <h4 class="text-lg font-semibold text-gray-900 mb-4">Match #${matchId}</h4>
-            <p class="text-gray-600 mb-4">Detailed match analysis and user interaction history would be displayed here.</p>
-            <div class="bg-green-50 p-4 rounded-lg">
-                <p class="text-sm text-green-800">This match has been successfully created and both users have been notified.</p>
+
+    // Show loading state
+    content.innerHTML = '<div class="text-center py-8"><p class="text-gray-600">Loading assessments...</p></div>';
+    modal.classList.remove('hidden');
+
+    // Fetch both users' assessments
+    Promise.all([
+        fetch(`/api/user_assessment/${user1Id}`).then(response => response.json()),
+        fetch(`/api/user_assessment/${user2Id}`).then(response => response.json())
+    ])
+    .then(([user1Data, user2Data]) => {
+        if (user1Data.error || user2Data.error) {
+            content.innerHTML = '<div class="text-center py-8"><p class="text-red-600">Error loading assessments</p></div>';
+            return;
+        }
+
+        displayMatchComparison(user1Data, user2Data);
+    })
+    .catch(error => {
+        content.innerHTML = '<div class="text-center py-8"><p class="text-red-600">Failed to load assessment data</p></div>';
+    });
+}
+
+function displayMatchComparison(user1Data, user2Data) {
+    const content = document.getElementById('matchDetailsContent');
+
+    let comparisonHTML = `
+        <div class="space-y-6">
+            <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">${user1Data.user.name}</h4>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    ${renderAssessmentComparison(user1Data.assessment)}
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="text-center">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">${user2Data.user.name}</h4>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    ${renderAssessmentComparison(user2Data.assessment)}
+                </div>
             </div>
         </div>
     `;
-    
-    modal.classList.remove('hidden');
+
+    content.innerHTML = comparisonHTML;
+}
+
+function renderAssessmentComparison(assessment) {
+    // Check if it's a valid object
+    if (typeof assessment !== 'object' || assessment === null) {
+        return '<p class="text-gray-500">No assessment data available</p>';
+    }
+
+    // Check for new structured format
+    const hasNewFormat = Object.keys(assessment).some(key =>
+        key.startsWith('tell_us_more_') ||
+        key.startsWith('friendship_readiness_') ||
+        key.startsWith('personality_social_style_') ||
+        key.startsWith('conflict_repair_') ||
+        key.startsWith('hobbies_interests_') ||
+        key.startsWith('values_top_values_') ||
+        key.startsWith('friendship_values_') ||
+        key.startsWith('logistics_') ||
+        key.startsWith('wrapping_up_')
+    );
+
+    if (hasNewFormat) {
+        return renderStructuredAssessment(assessment);
+    }
+
+    // Legacy format
+    let html = '';
+    Object.keys(assessment).forEach(key => {
+        const qa = assessment[key];
+        if (qa && qa.question && qa.answer) {
+            html += `
+                <div class="mb-4">
+                    <h5 class="font-medium text-gray-800 text-sm mb-2">${qa.question}</h5>
+                    <p class="text-gray-700 text-sm bg-white p-3 rounded border">${qa.answer}</p>
+                </div>
+            `;
+        }
+    });
+
+    return html || '<p class="text-gray-500">No assessment completed</p>';
+}
+
+function renderStructuredAssessment(assessment) {
+    const RECHARGE_STYLE_OPTIONS = [
+        "I need a lot of alone time",
+        "I need some time to myself",
+        "I need both in balance",
+        "I need some human connection",
+        "I need a lot of meaningful human connection"
+    ];
+
+    const FEEDBACK_COMFORT_OPTIONS = [
+        "1 - very uncomfortable, I take it personally",
+        "2 - uncomfortable",
+        "3 - neutral",
+        "4 - comfortable",
+        "5 - very comfortable, I welcome and appreciate it"
+    ];
+
+    const IDEAL_HANGOUT_OPTIONS = [
+        "Deep one-on-one conversation",
+        "Small, intimate group gathering (3-5 people)",
+        "Larger social events and group activities",
+        "Mix of all three"
+    ];
+
+    const HURT_FEELINGS_NEEDS_OPTIONS = [
+        "Space first, then a conversation when we're both ready",
+        "Immediate acknowledgement of the hurt",
+        "To understand perspective and intentions",
+        "A sincere apology with accountability",
+        "Reassurance from the friend that we're still good"
+    ];
+
+    const CONNECTION_LANGUAGE_OPTIONS = [
+        "Quality time (hangouts, phone calls, etc)",
+        "Physical touch (hugging, holding hands)",
+        "Words of affirmation (encouragement, posts about you)",
+        "Emotional Support (showing up in hard times, being a listening ear)",
+        "Other forms of support (problem-solving, providing resources like money/meals)",
+        "Gifts (items that remind them of you)"
+    ];
+
+    const VALUES_OPTIONS = [
+        "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+        "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals",
+        "Family (chosen or biological)", "Fun", "Forgiveness", "Generosity", "Genuineness",
+        "Fulfillment", "Gratitude", "Spirituality", "Religion", "Growth", "Honesty", "Trust",
+        "Inclusiveness", "Independence", "Community", "Intuition", "Integrity", "Leadership",
+        "Loyalty", "Love", "Non-conformity", "Order", "Passion", "Patience", "Purpose",
+        "Rationality", "Responsibility", "Resilience", "Self-awareness", "Risk-taking",
+        "Self-expression", "Uniqueness", "Service", "Solitude", "Stability", "Vulnerability",
+        "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+    ];
+
+    let html = '<div class="space-y-4">';
+
+    const renderTextResponse = (question, answer) => {
+        if (!answer || answer.trim() === '') return '';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <p class="text-sm text-gray-700 italic">${answer}</p>
+            </div>
+        `;
+    };
+
+    const renderMultiSelect = (question, answers) => {
+        if (!answers || (Array.isArray(answers) && answers.length === 0)) return '';
+        const answerArray = Array.isArray(answers) ? answers : [answers];
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <div class="flex flex-wrap gap-2">
+                    ${answerArray.map(a => `<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">${a}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    const renderSingleChoice = (question, answer) => {
+        if (!answer) return '';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <p class="text-sm text-gray-700">${answer}</p>
+            </div>
+        `;
+    };
+
+    const renderScale = (question, value) => {
+        if (!value) return '';
+        const percentage = (value / 10) * 100;
+        const color = value >= 7 ? 'green' : value >= 4 ? 'yellow' : 'red';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full bg-${color}-500" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-sm font-bold text-gray-700">${value}/10</span>
+                </div>
+            </div>
+        `;
+    };
+
+    // TELL US MORE SECTION
+    if (assessment.tell_us_more_what_brings_you || assessment.tell_us_more_friendship_meaning) {
+        html += '<div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-3 border-l-4 border-purple-500">';
+        html += '<h6 class="font-bold text-purple-700 text-sm mb-3">Tell Us More</h6>';
+        html += '<div class="space-y-2">';
+        html += renderTextResponse('What brings you to Three of Cups?', assessment.tell_us_more_what_brings_you);
+        html += renderTextResponse('What does friendship mean to you?', assessment.tell_us_more_friendship_meaning);
+        html += '</div></div>';
+    }
+
+    // FRIENDSHIP READINESS SECTION
+    if (assessment.friendship_readiness_emotional_availability ||
+        assessment.friendship_readiness_time_energy_capacity ||
+        assessment.friendship_readiness_friendship_intention) {
+        html += '<div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 border-l-4 border-blue-500">';
+        html += '<h6 class="font-bold text-blue-700 text-sm mb-3">Friendship Readiness</h6>';
+        html += '<div class="space-y-2">';
+        html += renderScale('Emotional Availability (1-10)', assessment.friendship_readiness_emotional_availability);
+        html += renderSingleChoice('Time & Energy Capacity', assessment.friendship_readiness_time_energy_capacity);
+        html += renderSingleChoice('Friendship Intention', assessment.friendship_readiness_friendship_intention);
+        html += renderSingleChoice('Personal Work on Friendship Patterns', assessment.friendship_readiness_personal_work);
+        html += renderMultiSelect('Life Circumstances', assessment.friendship_readiness_life_circumstances);
+        html += renderTextResponse('Life circumstances details', assessment.friendship_readiness_life_circumstances_details);
+        html += renderTextResponse('What does "showing up" look like for you?', assessment.friendship_readiness_showing_up);
+        html += '</div></div>';
+    }
+
+    // PERSONALITY & SOCIAL STYLE SECTION
+    if (assessment.personality_social_style_recharge_style ||
+        assessment.personality_social_style_social_settings) {
+        html += '<div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-3 border-l-4 border-green-500">';
+        html += '<h6 class="font-bold text-green-700 text-sm mb-3">Personality & Social Style</h6>';
+        html += '<div class="space-y-2">';
+
+        if (assessment.personality_social_style_recharge_style) {
+            const rechargeValue = parseInt(assessment.personality_social_style_recharge_style);
+            const rechargeText = RECHARGE_STYLE_OPTIONS[rechargeValue - 1] || assessment.personality_social_style_recharge_style;
+            html += renderSingleChoice('Recharge Style', rechargeText);
+        }
+        html += renderSingleChoice('In Social Settings', assessment.personality_social_style_social_settings);
+
+        if (assessment.personality_social_style_ideal_hangout_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 4; i++) {
+                const key = `personality_social_style_ideal_hangout_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: IDEAL_HANGOUT_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Ideal Hangout (Ranked Preferences)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+
+        html += renderSingleChoice('Making Plans', assessment.personality_social_style_making_plans);
+        html += renderMultiSelect('Communication Preferences (Top 2)', assessment.personality_social_style_communication_preference);
+        html += renderSingleChoice('Texting Style', assessment.personality_social_style_texting_style);
+        html += '</div></div>';
+    }
+
+    // CONFLICT & REPAIR SECTION
+    if (assessment.conflict_repair_conflict_response ||
+        assessment.conflict_repair_repair_looks_like) {
+        html += '<div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-3 border-l-4 border-orange-500">';
+        html += '<h6 class="font-bold text-orange-700 text-sm mb-3">Navigating Conflict & Repair</h6>';
+        html += '<div class="space-y-2">';
+        html += renderSingleChoice('When conflict arises, I typically...', assessment.conflict_repair_conflict_response);
+        html += renderMultiSelect('Repair looks like...', assessment.conflict_repair_repair_looks_like);
+        html += renderSingleChoice('Flaky Friend Scenario', assessment.conflict_repair_flaky_friend_scenario);
+
+        if (assessment.conflict_repair_feedback_comfort) {
+            const feedbackValue = parseInt(assessment.conflict_repair_feedback_comfort);
+            const feedbackText = FEEDBACK_COMFORT_OPTIONS[feedbackValue - 1] || assessment.conflict_repair_feedback_comfort;
+            html += renderSingleChoice('Comfort with Feedback', feedbackText);
+        }
+
+        if (assessment.conflict_repair_hurt_feelings_needs_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 5; i++) {
+                const key = `conflict_repair_hurt_feelings_needs_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: HURT_FEELINGS_NEEDS_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">When hurt, I need most (Ranked)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+
+        html += renderSingleChoice('Boundary Setting', assessment.conflict_repair_boundary_setting);
+        html += renderTextResponse('What have past friendship challenges taught you?', assessment.conflict_repair_friendship_lessons);
+        html += '</div></div>';
+    }
+
+    // HOBBIES & INTERESTS SECTION
+    if (assessment.hobbies_interests_activities_interests ||
+        assessment.hobbies_interests_want_to_try) {
+        html += '<div class="bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-3 border-l-4 border-pink-500">';
+        html += '<h6 class="font-bold text-pink-700 text-sm mb-3">Hobbies & Interests</h6>';
+        html += '<div class="space-y-2">';
+        html += renderMultiSelect('Activities & Interests', assessment.hobbies_interests_activities_interests);
+        html += renderTextResponse('Want to try with a friend', assessment.hobbies_interests_want_to_try);
+        html += renderTextResponse('How do you spend free time?', assessment.hobbies_interests_free_time);
+        html += renderSingleChoice('Doing vs Being Friend', assessment.hobbies_interests_doing_vs_being);
+        html += '</div></div>';
+    }
+
+    // VALUES SECTION
+    if (assessment.values_top_values_0 !== undefined) {
+        const rankedValues = [];
+        for (let i = 0; i < 10; i++) {
+            const key = `values_top_values_${i}`;
+            if (assessment[key]) {
+                const rank = parseInt(assessment[key]);
+                rankedValues.push({ rank: rank, text: VALUES_OPTIONS[i] });
+            }
+        }
+        rankedValues.sort((a, b) => a.rank - b.rank);
+
+        html += '<div class="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-3 border-l-4 border-indigo-500">';
+        html += '<h6 class="font-bold text-indigo-700 text-sm mb-3">Core Values (Top 10, Ranked)</h6>';
+        html += '<ol class="list-decimal list-inside space-y-1">';
+        rankedValues.forEach(value => {
+            html += `<li class="bg-white rounded-lg p-2 text-sm text-gray-700 font-medium">${value.text}</li>`;
+        });
+        html += '</ol></div>';
+    }
+
+    // FRIENDSHIP VALUES SECTION
+    if (assessment.friendship_values_statements_resonate ||
+        assessment.friendship_values_friendship_needs) {
+        html += '<div class="bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-3 border-l-4 border-teal-500">';
+        html += '<h6 class="font-bold text-teal-700 text-sm mb-3">Friendship Values</h6>';
+        html += '<div class="space-y-2">';
+        html += renderMultiSelect('Statements that resonate (Top 3)', assessment.friendship_values_statements_resonate);
+        html += renderMultiSelect('In friendships, you need...', assessment.friendship_values_friendship_needs);
+        html += renderTextResponse('Non-Negotiables', assessment.friendship_values_non_negotiables);
+        html += renderTextResponse('Dealbreakers', assessment.friendship_values_dealbreakers);
+
+        if (assessment.friendship_values_connection_language_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 6; i++) {
+                const key = `friendship_values_connection_language_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: CONNECTION_LANGUAGE_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Connection Language (Ranked)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+        html += '</div></div>';
+    }
+
+    // LOGISTICS SECTION
+    if (assessment.logistics_connection_frequency ||
+        assessment.logistics_connection_type) {
+        html += '<div class="bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg p-3 border-l-4 border-cyan-500">';
+        html += '<h6 class="font-bold text-cyan-700 text-sm mb-3">Logistics</h6>';
+        html += '<div class="space-y-2">';
+        html += renderSingleChoice('Ideal Connection Frequency', assessment.logistics_connection_frequency);
+        html += renderSingleChoice('Connection Type', assessment.logistics_connection_type);
+        html += '</div></div>';
+    }
+
+    // WRAPPING UP SECTION
+    if (assessment.wrapping_up_ideal_friend_words_word1 ||
+        assessment.wrapping_up_what_can_offer) {
+        html += '<div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-3 border-l-4 border-amber-500">';
+        html += '<h6 class="font-bold text-amber-700 text-sm mb-3">Ideal Friend & Preferences</h6>';
+        html += '<div class="space-y-2">';
+
+        if (assessment.wrapping_up_ideal_friend_words_word1) {
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Ideal Friend in Three Words</p>';
+            html += '<div class="flex gap-2">';
+            html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word1}</span>`;
+            if (assessment.wrapping_up_ideal_friend_words_word2) {
+                html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word2}</span>`;
+            }
+            if (assessment.wrapping_up_ideal_friend_words_word3) {
+                html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word3}</span>`;
+            }
+            html += '</div></div>';
+        }
+
+        html += renderTextResponse('What can you offer in friendship?', assessment.wrapping_up_what_can_offer);
+        html += renderTextResponse('What would you like to receive?', assessment.wrapping_up_what_want_receive);
+        html += renderMultiSelect('Gender Preference', assessment.wrapping_up_gender_preference);
+        html += renderMultiSelect('Age Preference', assessment.wrapping_up_age_preference);
+        html += '</div></div>';
+    }
+
+    html += '</div>';
+    return html;
 }
 
 function closeMatchDetails() {
