@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment
+from models import db, User, Assessment, ReviewerAssessment
 from email_helper import send_password_reset_email, send_match_notification_email
 
 # Load environment variables from .env file
@@ -37,6 +37,9 @@ mail = Mail(app)
 BETA_ACCESS_CODE = 'threeofcups2025foundedbyiris'  # Change this to your desired access code
 UNDER_CONSTRUCTION = True  # Set to False when ready to launch
 
+# Reviewer access settings
+REVIEWER_ACCESS_CODE = 'threeofcups2025'  # Change this to your desired reviewer access code
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -49,6 +52,16 @@ def beta_access_required(f):
     def decorated_function(*args, **kwargs):
         if UNDER_CONSTRUCTION and not session.get('beta_access'):
             return redirect(url_for('coming_soon'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def reviewer_access_required(f):
+    """Decorator to check if user has reviewer access"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('reviewer_access'):
+            return redirect(url_for('reviewer_login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -562,16 +575,60 @@ def admin_matches():
     if not current_user.is_admin:
         flash('Access denied.')
         return redirect(url_for('login'))
-        
+
     completed_matches = Assessment.query.filter(
         Assessment.reviewed == True,
         Assessment.matched_user_id.isnot(None)
     ).all()
     users = User.query.all()
-    
-    return render_template('admin_matches.html', 
-                         completed_matches=completed_matches, 
+
+    return render_template('admin_matches.html',
+                         completed_matches=completed_matches,
                          users=users)
+
+# Admin reviewer assessments page
+@app.route('/admin/reviewer-assessments', methods=['GET', 'POST'])
+@login_required
+def admin_reviewer_assessments():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        assessment_id = request.form.get('assessment_id')
+        admin_notes = request.form.get('admin_notes', '').strip()
+        reviewed = request.form.get('reviewed') == '1'
+
+        assessment = ReviewerAssessment.query.get(assessment_id)
+        if assessment:
+            assessment.admin_notes = admin_notes
+            assessment.reviewed = reviewed
+            db.session.commit()
+            flash('Reviewer assessment updated successfully.')
+        else:
+            flash('Assessment not found.')
+
+        return redirect(url_for('admin_reviewer_assessments'))
+
+    reviewer_assessments = ReviewerAssessment.query.order_by(ReviewerAssessment.created_at.desc()).all()
+
+    # Process assessments for display
+    assessments_with_data = []
+    for assessment in reviewer_assessments:
+        assessment_data = None
+        if assessment.answers:
+            try:
+                assessment_data = json.loads(assessment.answers)
+            except:
+                pass
+
+        assessments_with_data.append({
+            'assessment': assessment,
+            'assessment_data': assessment_data
+        })
+
+    return render_template('admin_reviewer_assessments.html',
+                         assessments_with_data=assessments_with_data)
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -642,6 +699,65 @@ def user_dashboard():
     return render_template('user_dashboard.html', 
                          matched_users=matched_users,
                          results_data=results_data)
+
+# Reviewer access routes
+@app.route('/reviewer-login', methods=['GET', 'POST'])
+def reviewer_login():
+    if request.method == 'POST':
+        access_code = request.form.get('access_code')
+        if access_code == REVIEWER_ACCESS_CODE:
+            session['reviewer_access'] = True
+            return redirect(url_for('reviewer_assessment'))
+        else:
+            flash('Invalid access code.')
+            return redirect(url_for('reviewer_login'))
+    return render_template('reviewer_login.html')
+
+@app.route('/reviewer-assessment', methods=['GET', 'POST'])
+@reviewer_access_required
+def reviewer_assessment():
+    if request.method == 'POST':
+        import json
+
+        # Get basic information (with basics_ prefix as submitted by form)
+        name = request.form.get('basics_name', '').strip()
+        pronouns = request.form.get('basics_pronouns', '').strip()
+        age_range = request.form.get('basics_age_range', '').strip()
+        location = request.form.get('basics_location', '').strip()
+
+        # Collect all assessment responses
+        assessment_data = {}
+
+        # Iterate through all form fields and store them
+        for key in request.form.keys():
+            values = request.form.getlist(key)
+            if len(values) > 1:
+                assessment_data[key] = values
+            else:
+                assessment_data[key] = request.form.get(key)
+
+        # Convert to JSON string for storage
+        answers_json = json.dumps(assessment_data, indent=2)
+
+        # Create reviewer assessment record
+        reviewer_assessment = ReviewerAssessment(
+            name=name,
+            pronouns=pronouns,
+            age_range=age_range,
+            location=location,
+            answers=answers_json
+        )
+        db.session.add(reviewer_assessment)
+        db.session.commit()
+
+        return redirect(url_for('reviewer_thank_you'))
+
+    return render_template('reviewer_assessment.html')
+
+@app.route('/reviewer-assessment/thank-you')
+@reviewer_access_required
+def reviewer_thank_you():
+    return render_template('reviewer_thank_you.html')
 
 @app.route('/api/user_assessment/<int:user_id>')
 @login_required

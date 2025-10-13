@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Review Access - Three of Cups</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'brand': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#FF9B9B',
+                        secondary: '#FFB88C',
+                        accent: '#FFD97D',
+                        'light-bg': '#FAF7F5',
+                        'text-primary': '#2C2420',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #FFD1DC 0%, #FFB88C 40%, #FFD97D 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #FF9B9B, #FFB88C, #FFD97D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-img {
+            width: 200px;
+        }
+        @media (max-width: 768px) {
+            .logo-img {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <div class="max-w-md mx-auto px-4">
+        <div class="text-center mb-8">
+            <!-- Logo -->
+            <div class="mb-6">
+                <img src="/static/logo/three-of-cups-logo-white.png" alt="Three of Cups Logo" class="mx-auto logo-img" style="filter: drop-shadow(0 0 15px rgba(255, 155, 155, 0.4));">
+            </div>
+            <h1 class="text-4xl font-bold text-text-primary mb-3 font-brand">three of cups</h1>
+            <h2 class="text-2xl font-semibold text-text-primary mb-2">assessment review access</h2>
+            <p class="text-gray-700">Enter your access code to review the assessment</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('reviewer_login') }}">
+            <div class="mb-6">
+                <label for="access_code" class="block text-text-primary font-medium mb-2">Access Code</label>
+                <input type="password"
+                        id="access_code"
+                        name="access_code"
+                        placeholder="Enter your access code"
+                        class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                        required>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-primary text-white font-semibold py-3 px-6 rounded-lg hover:bg-secondary transition-all duration-300 shadow-lg hover:shadow-xl">
+                Access Assessment
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-text-accent">
+                This area is for assessment reviewers only.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

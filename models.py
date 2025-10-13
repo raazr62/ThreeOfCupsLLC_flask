@@ -50,3 +50,14 @@ class Assessment(db.Model):
     answers = db.Column(db.Text)
     reviewed = db.Column(db.Boolean, default=False)
     matched_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+class ReviewerAssessment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    pronouns = db.Column(db.String(100))
+    age_range = db.Column(db.String(50))
+    location = db.Column(db.String(200))
+    answers = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed = db.Column(db.Boolean, default=False)
+    admin_notes = db.Column(db.Text)
