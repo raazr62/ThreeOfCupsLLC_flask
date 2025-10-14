@@ -25,13 +25,47 @@
                 
                 <div>
                     <label for="email" class="block text-sm font-medium text-text-primary mb-2">Email</label>
-                    <input type="email" name="email" id="email" required 
+                    <input type="email" name="email" id="email" required
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
-                
+
                 <div>
                     <label for="username" class="block text-sm font-medium text-text-primary mb-2">Username</label>
-                    <input type="text" name="username" id="username" required 
+                    <input type="text" name="username" id="username" required
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                </div>
+
+                <div>
+                    <label for="pronouns" class="block text-sm font-medium text-text-primary mb-2">Pronouns</label>
+                    <select name="pronouns" id="pronouns" required
+                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary">
+                        <option value="">Select pronouns</option>
+                        <option value="she/her">she/her</option>
+                        <option value="he/him">he/him</option>
+                        <option value="they/them">they/them</option>
+                        <option value="she/they">she/they</option>
+                        <option value="he/they">he/they</option>
+                        <option value="other">other</option>
+                        <option value="prefer not to say">prefer not to say</option>
+                    </select>
+                    <div id="pronouns_other_input" class="mt-3 hidden">
+                        <input type="text" name="pronouns_other_text" id="pronouns_other_text"
+                               class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400"
+                               placeholder="Please specify your pronouns...">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="date_of_birth" class="block text-sm font-medium text-text-primary mb-2">Date of Birth</label>
+                    <input type="date" name="date_of_birth" id="date_of_birth" required
+                           class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
+                    <p class="mt-1 text-xs text-text-accent">You must be at least 18 years old to register.</p>
+                </div>
+
+                <div>
+                    <label for="location" class="block text-sm font-medium text-text-primary mb-2">Location (City or Zip Code)</label>
+                    <input type="text" name="location" id="location" required
+                           placeholder="e.g., New York or 10001"
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
                 
@@ -80,6 +114,22 @@
     const confirmPasswordInput = document.getElementById('confirm_password');
     const matchMessage = document.getElementById('password-match-message');
     const submitButton = document.getElementById('submit-button');
+    const pronounsSelect = document.getElementById('pronouns');
+    const pronounsOtherInput = document.getElementById('pronouns_other_input');
+    const pronounsOtherText = document.getElementById('pronouns_other_text');
+
+    // Handle pronouns "other" option
+    pronounsSelect.addEventListener('change', function() {
+        if (this.value === 'other') {
+            pronounsOtherInput.classList.remove('hidden');
+            pronounsOtherText.required = true;
+            pronounsOtherText.focus();
+        } else {
+            pronounsOtherInput.classList.add('hidden');
+            pronounsOtherText.required = false;
+            pronounsOtherText.value = '';
+        }
+    });
 
     // Password requirement checks
     const checks = {

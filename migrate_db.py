@@ -1,55 +1,57 @@
 """
-Database migration script to add password reset fields to User table.
-Run this script once to update the existing database schema.
+Database migration script to add new columns to the User table.
+This script adds pronouns, date_of_birth, and location columns.
 """
 import sqlite3
 import os
 
-# Path to the database
-db_path = 'instance/friendship.db'
-
 def migrate_database():
-    """Add reset_token and reset_token_expiry columns to User table if they don't exist"""
+    db_path = 'instance/friendship.db'
 
     if not os.path.exists(db_path):
         print(f"Database not found at {db_path}")
-        print("The database will be created when you first run the application.")
         return
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Check if columns already exist
-    cursor.execute("PRAGMA table_info(user)")
-    columns = [column[1] for column in cursor.fetchall()]
+    try:
+        # Check if columns already exist
+        cursor.execute("PRAGMA table_info(user)")
+        columns = [column[1] for column in cursor.fetchall()]
 
-    migrations_performed = []
+        # Add pronouns column if it doesn't exist
+        if 'pronouns' not in columns:
+            print("Adding 'pronouns' column...")
+            cursor.execute("ALTER TABLE user ADD COLUMN pronouns VARCHAR(100)")
+            print("✓ Added 'pronouns' column")
+        else:
+            print("'pronouns' column already exists")
 
-    # Add reset_token column if it doesn't exist
-    if 'reset_token' not in columns:
-        cursor.execute('ALTER TABLE user ADD COLUMN reset_token VARCHAR(100)')
-        migrations_performed.append('reset_token')
-        print("✓ Added reset_token column")
-    else:
-        print("→ reset_token column already exists")
+        # Add date_of_birth column if it doesn't exist
+        if 'date_of_birth' not in columns:
+            print("Adding 'date_of_birth' column...")
+            cursor.execute("ALTER TABLE user ADD COLUMN date_of_birth DATE")
+            print("✓ Added 'date_of_birth' column")
+        else:
+            print("'date_of_birth' column already exists")
 
-    # Add reset_token_expiry column if it doesn't exist
-    if 'reset_token_expiry' not in columns:
-        cursor.execute('ALTER TABLE user ADD COLUMN reset_token_expiry DATETIME')
-        migrations_performed.append('reset_token_expiry')
-        print("✓ Added reset_token_expiry column")
-    else:
-        print("→ reset_token_expiry column already exists")
+        # Add location column if it doesn't exist
+        if 'location' not in columns:
+            print("Adding 'location' column...")
+            cursor.execute("ALTER TABLE user ADD COLUMN location VARCHAR(200)")
+            print("✓ Added 'location' column")
+        else:
+            print("'location' column already exists")
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        print("\nMigration completed successfully!")
 
-    if migrations_performed:
-        print(f"\n✅ Migration completed successfully! Added {len(migrations_performed)} column(s).")
-    else:
-        print("\n✅ Database schema is up to date. No migrations needed.")
+    except Exception as e:
+        print(f"Error during migration: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
-    print("Starting database migration...")
-    print(f"Database path: {db_path}\n")
     migrate_database()

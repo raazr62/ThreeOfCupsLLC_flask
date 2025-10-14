@@ -3,6 +3,7 @@ import os
 import json
 import re
 import statistics
+from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -271,10 +272,35 @@ def register():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
+        pronouns = request.form.get('pronouns', '').strip()
+        pronouns_other_text = request.form.get('pronouns_other_text', '').strip()
+        date_of_birth_str = request.form.get('date_of_birth', '').strip()
+        location = request.form.get('location', '').strip()
+
+        # If "other" is selected for pronouns, use the custom text
+        if pronouns == 'other':
+            if not pronouns_other_text:
+                flash('Please specify your pronouns.')
+                return redirect(url_for('register'))
+            pronouns = pronouns_other_text
 
         # Validate all fields are provided
-        if not all([first_name, last_name, email, username, password, confirm_password]):
+        if not all([first_name, last_name, email, username, password, confirm_password, pronouns, date_of_birth_str, location]):
             flash('All fields are required.')
+            return redirect(url_for('register'))
+
+        # Validate and parse date of birth
+        try:
+            date_of_birth = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date of birth format.')
+            return redirect(url_for('register'))
+
+        # Validate user is at least 18 years old
+        today = date.today()
+        age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+        if age < 18:
+            flash('You must be at least 18 years old to register.')
             return redirect(url_for('register'))
 
         # Validate passwords match
@@ -299,7 +325,16 @@ def register():
             return redirect(url_for('register'))
 
         # All new registrations are created as regular users (not admin)
-        user = User(username=username, first_name=first_name, last_name=last_name, email=email, is_admin=False)
+        user = User(
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            pronouns=pronouns,
+            date_of_birth=date_of_birth,
+            location=location,
+            is_admin=False
+        )
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -677,23 +712,70 @@ def user_dashboard():
             matched_users.append(matched_user)
     
     if request.method == 'POST':
-        if 'bio' in request.form:
-            current_user.bio = request.form['bio']
-            
+        # Update text fields
+        if 'first_name' in request.form:
+            first_name = request.form['first_name'].strip()
+            if first_name:
+                current_user.first_name = first_name
+            else:
+                flash('First name is required.')
+                return redirect(url_for('user_dashboard'))
+
+        if 'last_name' in request.form:
+            last_name = request.form['last_name'].strip()
+            if last_name:
+                current_user.last_name = last_name
+            else:
+                flash('Last name is required.')
+                return redirect(url_for('user_dashboard'))
+
+        if 'email' in request.form:
+            email = request.form['email'].strip()
+            if email:
+                # Check if email is already used by another user
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user and existing_user.id != current_user.id:
+                    flash('Email already exists.')
+                    return redirect(url_for('user_dashboard'))
+                current_user.email = email
+            else:
+                flash('Email is required.')
+                return redirect(url_for('user_dashboard'))
+
+        if 'username' in request.form:
+            username = request.form['username'].strip()
+            if username:
+                # Check if username is already used by another user
+                existing_user = User.query.filter_by(username=username).first()
+                if existing_user and existing_user.id != current_user.id:
+                    flash('Username already exists.')
+                    return redirect(url_for('user_dashboard'))
+                current_user.username = username
+            else:
+                flash('Username is required.')
+                return redirect(url_for('user_dashboard'))
+
+        if 'pronouns' in request.form:
+            current_user.pronouns = request.form['pronouns'].strip()
+
+        if 'location' in request.form:
+            current_user.location = request.form['location'].strip()
+
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
             if file and file.filename != '' and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 unique_filename = f"{current_user.id}_{filename}"
-                
+
                 upload_folder = app.config['UPLOAD_FOLDER']
                 os.makedirs(upload_folder, exist_ok=True)
-                
+
                 file_path = os.path.join(upload_folder, unique_filename)
                 file.save(file_path)
                 current_user.profile_picture = f'uploads/{unique_filename}'
-        
+
         db.session.commit()
+        flash('Profile updated successfully!')
         return redirect(url_for('user_dashboard'))
     
     return render_template('user_dashboard.html', 
