@@ -12,7 +12,7 @@ Admin users will be automatically marked as verified.
 
 from app import app, db
 from models import User
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 def column_exists(table_name, column_name):
     """Check if a column exists in a table"""
@@ -30,21 +30,27 @@ def migrate_database():
             print("✓ email_verified column already exists")
         else:
             print("Adding email_verified column...")
-            db.engine.execute('ALTER TABLE user ADD COLUMN email_verified BOOLEAN DEFAULT 0')
+            with db.engine.connect() as conn:
+                conn.execute(text('ALTER TABLE user ADD COLUMN email_verified BOOLEAN DEFAULT 0'))
+                conn.commit()
             print("✓ email_verified column added")
 
         if column_exists('user', 'verification_token'):
             print("✓ verification_token column already exists")
         else:
             print("Adding verification_token column...")
-            db.engine.execute('ALTER TABLE user ADD COLUMN verification_token VARCHAR(100)')
+            with db.engine.connect() as conn:
+                conn.execute(text('ALTER TABLE user ADD COLUMN verification_token VARCHAR(100)'))
+                conn.commit()
             print("✓ verification_token column added")
 
         if column_exists('user', 'verification_token_expiry'):
             print("✓ verification_token_expiry column already exists")
         else:
             print("Adding verification_token_expiry column...")
-            db.engine.execute('ALTER TABLE user ADD COLUMN verification_token_expiry DATETIME')
+            with db.engine.connect() as conn:
+                conn.execute(text('ALTER TABLE user ADD COLUMN verification_token_expiry DATETIME'))
+                conn.commit()
             print("✓ verification_token_expiry column added")
 
         # Mark all admin users as verified
