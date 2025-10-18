@@ -10,7 +10,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_mail import Mail
 from dotenv import load_dotenv
 from models import db, User, Assessment, ReviewerAssessment
-from email_helper import send_password_reset_email, send_match_notification_email
+from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email
 
 # Load environment variables from .env file
 load_dotenv()
@@ -336,11 +336,26 @@ def register():
             is_admin=False
         )
         user.set_password(password)
+
+        # Generate verification token
+        token = user.generate_verification_token()
+
         db.session.add(user)
         db.session.commit()
 
-        flash('Account created successfully! Please log in.')
-        return redirect(url_for('login'))
+        # Send verification email
+        verification_url = url_for('verify_email', token=token, _external=True)
+        send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url)
+
+        # Log in the user immediately
+        login_user(user)
+
+        # Check if user has already completed an assessment
+        existing_assessment = Assessment.query.filter_by(user_id=user.id).first()
+        if existing_assessment:
+            return redirect(url_for('user_dashboard'))
+        else:
+            return redirect(url_for('assessment'))
     return render_template('register.html')
 
 # Login route
@@ -454,6 +469,57 @@ def reset_password(token):
         return redirect(url_for('login'))
 
     return render_template('reset_password.html', token=token)
+
+# Email verification route
+@app.route('/verify-email/<token>')
+@beta_access_required
+def verify_email(token):
+    user = User.query.filter_by(verification_token=token).first()
+
+    if not user or not user.verify_email_token(token):
+        flash('Invalid or expired verification link. Please request a new verification email.')
+        if current_user.is_authenticated:
+            return redirect(url_for('user_dashboard'))
+        return redirect(url_for('login'))
+
+    # Clear verification token
+    user.clear_verification_token()
+    db.session.commit()
+
+    flash('Your email has been verified successfully! You now have full access to your matches.')
+    if current_user.is_authenticated:
+        return redirect(url_for('user_dashboard'))
+    return redirect(url_for('login'))
+
+# Resend verification email route
+@app.route('/resend-verification')
+@login_required
+@beta_access_required
+def resend_verification():
+    # Only allow unverified users to resend
+    if current_user.email_verified:
+        flash('Your email is already verified.')
+        return redirect(url_for('user_dashboard'))
+
+    # Rate limiting: Check if token was recently generated (within last 5 minutes)
+    if current_user.verification_token_expiry:
+        from datetime import datetime, timedelta
+        time_since_last_token = datetime.utcnow() - (current_user.verification_token_expiry - timedelta(hours=24))
+        if time_since_last_token < timedelta(minutes=5):
+            remaining_seconds = int((timedelta(minutes=5) - time_since_last_token).total_seconds())
+            flash(f'Please wait {remaining_seconds} seconds before requesting another verification email.')
+            return redirect(url_for('user_dashboard'))
+
+    # Generate new verification token
+    token = current_user.generate_verification_token()
+    db.session.commit()
+
+    # Send verification email
+    verification_url = url_for('verify_email', token=token, _external=True)
+    send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], current_user, verification_url)
+
+    flash('Verification email sent! Please check your inbox.')
+    return redirect(url_for('user_dashboard'))
 
 # Assessment route
 @app.route('/assessment', methods=['GET', 'POST'])
@@ -670,7 +736,7 @@ def admin_reviewer_assessments():
 def user_dashboard():
     if current_user.is_admin:
         return redirect(url_for('admin_dashboard'))
-    
+
     matched_users = []
     user_assessment = Assessment.query.filter_by(user_id=current_user.id).order_by(Assessment.id.desc()).first()
 
@@ -692,24 +758,26 @@ def user_dashboard():
             print(f"Error processing assessment: {e}")
             results_data = None
 
-    # Find matches in two ways:
-    # 1. Assessments where current user is matched TO someone
-    user_assessments = Assessment.query.filter_by(user_id=current_user.id, reviewed=True).all()
-    for assessment in user_assessments:
-        if assessment.matched_user_id:
-            matched_user = User.query.get(assessment.matched_user_id)
-            if matched_user and matched_user.id != current_user.id:
-                matched_users.append(matched_user)
+    # Only show matches if email is verified (or if user is admin)
+    if current_user.email_verified or current_user.is_admin:
+        # Find matches in two ways:
+        # 1. Assessments where current user is matched TO someone
+        user_assessments = Assessment.query.filter_by(user_id=current_user.id, reviewed=True).all()
+        for assessment in user_assessments:
+            if assessment.matched_user_id:
+                matched_user = User.query.get(assessment.matched_user_id)
+                if matched_user and matched_user.id != current_user.id:
+                    matched_users.append(matched_user)
 
-    # 2. Assessments where current user IS the match (matched_user_id points to them)
-    assessments_matched_to_user = Assessment.query.filter_by(
-        matched_user_id=current_user.id,
-        reviewed=True
-    ).all()
-    for assessment in assessments_matched_to_user:
-        matched_user = User.query.get(assessment.user_id)
-        if matched_user and matched_user.id != current_user.id and matched_user not in matched_users:
-            matched_users.append(matched_user)
+        # 2. Assessments where current user IS the match (matched_user_id points to them)
+        assessments_matched_to_user = Assessment.query.filter_by(
+            matched_user_id=current_user.id,
+            reviewed=True
+        ).all()
+        for assessment in assessments_matched_to_user:
+            matched_user = User.query.get(assessment.user_id)
+            if matched_user and matched_user.id != current_user.id and matched_user not in matched_users:
+                matched_users.append(matched_user)
     
     if request.method == 'POST':
         # Update text fields
@@ -778,9 +846,10 @@ def user_dashboard():
         flash('Profile updated successfully!')
         return redirect(url_for('user_dashboard'))
     
-    return render_template('user_dashboard.html', 
+    return render_template('user_dashboard.html',
                          matched_users=matched_users,
-                         results_data=results_data)
+                         results_data=results_data,
+                         email_verified=current_user.email_verified)
 
 # Reviewer access routes
 @app.route('/reviewer-login', methods=['GET', 'POST'])
