@@ -10,17 +10,28 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_mail import Mail
 from dotenv import load_dotenv
 from models import db, User, Assessment, ReviewerAssessment
-from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email
+from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification
+from security_utils import (
+    sanitize_input, sanitize_email, sanitize_username,
+    sanitize_location, sanitize_json_data, setup_template_filters,
+    validate_file_upload
+)
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')  # Use environment variable in production
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///friendship.db'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Security configurations
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # HTTPS only in production
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to session cookie
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session timeout
 
 # Email configuration
 # NOTE: Update these with your actual email credentials in .env file
@@ -223,9 +234,42 @@ login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
+# Set up template filters for security
+setup_template_filters(app)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Security headers middleware
+@app.after_request
+def set_security_headers(response):
+    """Add security headers to all responses."""
+    # Content Security Policy - Restrictive policy to prevent XSS
+    csp_policy = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; "  # Tailwind CDN requires inline
+        "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; "  # Inline styles for tailwind
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self';"
+    )
+    response.headers['Content-Security-Policy'] = csp_policy
+
+    # Additional security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'  # Prevent MIME type sniffing
+    response.headers['X-Frame-Options'] = 'DENY'  # Prevent clickjacking
+    response.headers['X-XSS-Protection'] = '1; mode=block'  # Enable XSS filter
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'  # Control referrer info
+
+    # HSTS - only in production with HTTPS
+    if os.environ.get('FLASK_ENV') == 'production':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+
+    return response
 
 # Coming Soon page
 @app.route('/coming-soon')
@@ -266,16 +310,17 @@ def services():
 @beta_access_required
 def register():
     if request.method == 'POST':
-        first_name = request.form.get('first_name', '').strip()
-        last_name = request.form.get('last_name', '').strip()
-        email = request.form.get('email', '').strip()
-        username = request.form.get('username', '').strip()
+        # Sanitize all user inputs
+        first_name = sanitize_input(request.form.get('first_name', ''), max_length=100, allow_newlines=False)
+        last_name = sanitize_input(request.form.get('last_name', ''), max_length=100, allow_newlines=False)
+        email = sanitize_email(request.form.get('email', ''))
+        username = sanitize_username(request.form.get('username', ''))
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
-        pronouns = request.form.get('pronouns', '').strip()
-        pronouns_other_text = request.form.get('pronouns_other_text', '').strip()
+        pronouns = sanitize_input(request.form.get('pronouns', ''), max_length=100, allow_newlines=False)
+        pronouns_other_text = sanitize_input(request.form.get('pronouns_other_text', ''), max_length=100, allow_newlines=False)
         date_of_birth_str = request.form.get('date_of_birth', '').strip()
-        location = request.form.get('location', '').strip()
+        location = sanitize_location(request.form.get('location', ''))
 
         # If "other" is selected for pronouns, use the custom text
         if pronouns == 'other':
@@ -366,8 +411,9 @@ def login():
         return redirect(url_for('user_dashboard'))
 
     if request.method == 'POST':
-        username_or_email = request.form['username']
-        password = request.form['password']
+        # Sanitize login input
+        username_or_email = sanitize_input(request.form.get('username', ''), max_length=150, allow_newlines=False)
+        password = request.form.get('password', '')
 
         # Try to find user by username or email
         user = User.query.filter(
@@ -521,10 +567,53 @@ def resend_verification():
     flash('Verification email sent! Please check your inbox.')
     return redirect(url_for('user_dashboard'))
 
+# Verify email change route
+@app.route('/verify-email-change/<token>')
+@beta_access_required
+def verify_email_change(token):
+    user = User.query.filter_by(email_change_token=token).first()
+
+    if not user or not user.verify_email_change_token(token):
+        flash('Invalid or expired verification link. Please try changing your email again.')
+        if current_user.is_authenticated:
+            return redirect(url_for('user_dashboard'))
+        return redirect(url_for('login'))
+
+    # Check if the pending email is already taken by another user
+    if user.pending_email:
+        existing_user = User.query.filter_by(email=user.pending_email).first()
+        if existing_user and existing_user.id != user.id:
+            flash('This email address is already in use by another account.')
+            user.clear_email_change_token()
+            db.session.commit()
+            return redirect(url_for('user_dashboard'))
+
+        # Update the email address
+        old_email = user.email
+        user.email = user.pending_email
+        user.email_verified = True  # Mark new email as verified
+        user.clear_email_change_token()
+        db.session.commit()
+
+        flash(f'Your email has been successfully updated to {user.email}!')
+    else:
+        flash('Email change request not found.')
+        user.clear_email_change_token()
+        db.session.commit()
+
+    if current_user.is_authenticated:
+        return redirect(url_for('user_dashboard'))
+    return redirect(url_for('login'))
+
 # Assessment route
 @app.route('/assessment', methods=['GET', 'POST'])
 @login_required
 def assessment():
+    # Check if user can access the assessment
+    if not current_user.can_access_assessment():
+        flash('You have already completed your assessment. Please contact us if you would like to retake it!')
+        return redirect(url_for('user_dashboard'))
+
     if request.method == 'POST':
         import json
 
@@ -543,11 +632,14 @@ def assessment():
             # Handle multi-value fields (checkboxes, multi-select)
             values = request.form.getlist(key)
             if len(values) > 1:
-                # Multiple values selected
-                assessment_data[key] = values
+                # Multiple values selected - sanitize each value
+                assessment_data[key] = [sanitize_input(v, max_length=1000) for v in values]
             else:
-                # Single value
-                assessment_data[key] = request.form.get(key)
+                # Single value - sanitize
+                assessment_data[key] = sanitize_input(request.form.get(key), max_length=1000)
+
+        # Additional sanitization of the entire data structure
+        assessment_data = sanitize_json_data(assessment_data)
 
         # Convert to JSON string for storage
         answers_json = json.dumps(assessment_data, indent=2)
@@ -697,7 +789,7 @@ def admin_reviewer_assessments():
 
     if request.method == 'POST':
         assessment_id = request.form.get('assessment_id')
-        admin_notes = request.form.get('admin_notes', '').strip()
+        admin_notes = sanitize_input(request.form.get('admin_notes', ''), max_length=5000)
         reviewed = request.form.get('reviewed') == '1'
 
         assessment = ReviewerAssessment.query.get(assessment_id)
@@ -780,9 +872,8 @@ def user_dashboard():
                 matched_users.append(matched_user)
     
     if request.method == 'POST':
-        # Update text fields
         if 'first_name' in request.form:
-            first_name = request.form['first_name'].strip()
+            first_name = sanitize_input(request.form.get('first_name', ''), max_length=100, allow_newlines=False)
             if first_name:
                 current_user.first_name = first_name
             else:
@@ -790,7 +881,7 @@ def user_dashboard():
                 return redirect(url_for('user_dashboard'))
 
         if 'last_name' in request.form:
-            last_name = request.form['last_name'].strip()
+            last_name = sanitize_input(request.form.get('last_name', ''), max_length=100, allow_newlines=False)
             if last_name:
                 current_user.last_name = last_name
             else:
@@ -798,20 +889,54 @@ def user_dashboard():
                 return redirect(url_for('user_dashboard'))
 
         if 'email' in request.form:
-            email = request.form['email'].strip()
+            email = sanitize_email(request.form.get('email', ''))
             if email:
-                # Check if email is already used by another user
-                existing_user = User.query.filter_by(email=email).first()
-                if existing_user and existing_user.id != current_user.id:
-                    flash('Email already exists.')
+                # Check if email is different from current email
+                if email != current_user.email:
+                    # Check if email is already used by another user
+                    existing_user = User.query.filter_by(email=email).first()
+                    if existing_user and existing_user.id != current_user.id:
+                        flash('Email already exists.')
+                        return redirect(url_for('user_dashboard'))
+
+                    # Store old email for notification
+                    old_email = current_user.email
+
+                    # Store the new email as pending
+                    current_user.pending_email = email
+
+                    # Generate email change token
+                    token = current_user.generate_email_change_token()
+                    db.session.commit()
+
+                    # Send notification to old email
+                    send_email_change_notification(
+                        mail,
+                        app.config['MAIL_DEFAULT_SENDER'],
+                        old_email,
+                        current_user.first_name,
+                        email
+                    )
+
+                    # Send verification email to new email
+                    verification_url = url_for('verify_email_change', token=token, _external=True)
+                    send_email_change_verification(
+                        mail,
+                        app.config['MAIL_DEFAULT_SENDER'],
+                        email,
+                        current_user.first_name,
+                        verification_url,
+                        old_email
+                    )
+
+                    flash(f'A verification email has been sent to {email}. Please check your inbox to complete the email change. Your current email will remain {old_email} until verified.')
                     return redirect(url_for('user_dashboard'))
-                current_user.email = email
             else:
                 flash('Email is required.')
                 return redirect(url_for('user_dashboard'))
 
         if 'username' in request.form:
-            username = request.form['username'].strip()
+            username = sanitize_username(request.form.get('username', ''))
             if username:
                 # Check if username is already used by another user
                 existing_user = User.query.filter_by(username=username).first()
@@ -824,14 +949,20 @@ def user_dashboard():
                 return redirect(url_for('user_dashboard'))
 
         if 'pronouns' in request.form:
-            current_user.pronouns = request.form['pronouns'].strip()
+            current_user.pronouns = sanitize_input(request.form.get('pronouns', ''), max_length=100, allow_newlines=False)
 
         if 'location' in request.form:
-            current_user.location = request.form['location'].strip()
+            current_user.location = sanitize_location(request.form.get('location', ''))
 
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
-            if file and file.filename != '' and allowed_file(file.filename):
+            if file and file.filename != '':
+                # Validate file upload
+                is_valid, error_msg = validate_file_upload(file.filename)
+                if not is_valid:
+                    flash(error_msg)
+                    return redirect(url_for('user_dashboard'))
+
                 filename = secure_filename(file.filename)
                 unique_filename = f"{current_user.id}_{filename}"
 
@@ -870,22 +1001,25 @@ def reviewer_assessment():
     if request.method == 'POST':
         import json
 
-        # Get basic information (with basics_ prefix as submitted by form)
-        name = request.form.get('basics_name', '').strip()
-        pronouns = request.form.get('basics_pronouns', '').strip()
-        age_range = request.form.get('basics_age_range', '').strip()
-        location = request.form.get('basics_location', '').strip()
+        # Get basic information (with basics_ prefix as submitted by form) - sanitized
+        name = sanitize_input(request.form.get('basics_name', ''), max_length=200, allow_newlines=False)
+        pronouns = sanitize_input(request.form.get('basics_pronouns', ''), max_length=100, allow_newlines=False)
+        age_range = sanitize_input(request.form.get('basics_age_range', ''), max_length=50, allow_newlines=False)
+        location = sanitize_location(request.form.get('basics_location', ''))
 
         # Collect all assessment responses
         assessment_data = {}
 
-        # Iterate through all form fields and store them
+        # Iterate through all form fields and store them with sanitization
         for key in request.form.keys():
             values = request.form.getlist(key)
             if len(values) > 1:
-                assessment_data[key] = values
+                assessment_data[key] = [sanitize_input(v, max_length=1000) for v in values]
             else:
-                assessment_data[key] = request.form.get(key)
+                assessment_data[key] = sanitize_input(request.form.get(key), max_length=1000)
+
+        # Additional sanitization of the entire data structure
+        assessment_data = sanitize_json_data(assessment_data)
 
         # Convert to JSON string for storage
         answers_json = json.dumps(assessment_data, indent=2)

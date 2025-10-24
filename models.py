@@ -24,6 +24,10 @@ class User(UserMixin, db.Model):
     email_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), nullable=True)
     verification_token_expiry = db.Column(db.DateTime, nullable=True)
+    pending_email = db.Column(db.String(150), nullable=True)
+    email_change_token = db.Column(db.String(100), nullable=True)
+    email_change_token_expiry = db.Column(db.DateTime, nullable=True)
+    can_retake_assessment = db.Column(db.Boolean, default=False)  # Flag to allow assessment retakes
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
@@ -70,6 +74,34 @@ class User(UserMixin, db.Model):
         """Clear the verification token after use"""
         self.verification_token = None
         self.verification_token_expiry = None
+
+    def generate_email_change_token(self):
+        """Generate a secure email change verification token that expires in 24 hours"""
+        self.email_change_token = secrets.token_urlsafe(32)
+        self.email_change_token_expiry = datetime.utcnow() + timedelta(hours=24)
+        return self.email_change_token
+
+    def verify_email_change_token(self, token):
+        """Verify if the email change token is valid and not expired"""
+        if self.email_change_token != token:
+            return False
+        if self.email_change_token_expiry is None or datetime.utcnow() > self.email_change_token_expiry:
+            return False
+        return True
+
+    def clear_email_change_token(self):
+        """Clear the email change token and pending email after use"""
+        self.email_change_token = None
+        self.email_change_token_expiry = None
+        self.pending_email = None
+
+    def can_access_assessment(self):
+        """Check if user can access the assessment (hasn't completed it or is allowed to retake)"""
+        from models import Assessment
+        existing_assessment = Assessment.query.filter_by(user_id=self.id).first()
+
+        # User can access if they haven't taken it yet OR if they're allowed to retake
+        return existing_assessment is None or self.can_retake_assessment
 
 class Assessment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
