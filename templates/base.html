@@ -131,7 +131,7 @@
                             <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">assessment</a>
                         {% endif %}
                         {% if current_user.is_admin %}
-                            <a href="{{ url_for('admin_dashboard') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">Admin Dashboard</a>
+                            <a href="{{ url_for('admin_dashboard') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">admin dashboard</a>
                         {% endif %}
                         <a href="{{ url_for('logout') }}" class="bg-secondary hover:bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg font-sans">logout</a>
                     {% else %}
