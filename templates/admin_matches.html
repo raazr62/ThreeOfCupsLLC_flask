@@ -19,6 +19,10 @@
                    class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
                     Assessments
                 </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Pending Matches
+                </a>
                 <a href="{{ url_for('admin_matches') }}"
                    class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
                     Matches
@@ -35,41 +39,37 @@
             <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 shadow-lg">
                 <div class="flex justify-between items-center">
                     <h3 class="text-xl font-semibold text-white">All Completed Matches</h3>
-                    <span class="bg-white/20 text-white text-sm px-3 py-1 rounded-full">{{ completed_matches|length }} Total</span>
+                    <span class="bg-white/20 text-white text-sm px-3 py-1 rounded-full">{{ matches_data|length }} Total</span>
                 </div>
             </div>
-            
+
             <div class="p-6">
-                {% if completed_matches %}
+                {% if matches_data %}
                     <div class="space-y-6">
-                        {% for match in completed_matches %}
+                        {% for data in matches_data %}
                             <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 shadow-lg hover:shadow-xl transition-shadow">
                                 <div class="flex justify-between items-center mb-4">
                                     <div class="flex items-center space-x-6">
                                         <!-- User 1 -->
-                                        {% for user in users %}
-                                            {% if user.id == match.user_id %}
-                                                <div class="flex items-center space-x-4">
-                                                    {% if user.profile_picture %}
-                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
-                                                             alt="{{ user.first_name }}'s Profile" 
-                                                             class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
-                                                    {% else %}
-                                                        <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
-                                                            <span class="text-white font-bold text-lg">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
-                                                        </div>
-                                                    {% endif %}
-                                                    <div>
-                                                        <h4 class="font-bold text-lg text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
-                                                        <p class="text-sm text-gray-600">{{ user.email }}</p>
-                                                        {% if user.bio %}
-                                                            <p class="text-sm text-gray-500 mt-1">{{ user.bio[:50] }}{% if user.bio|length > 50 %}...{% endif %}</p>
-                                                        {% endif %}
-                                                    </div>
+                                        <div class="flex items-center space-x-4">
+                                            {% if data.user1.profile_picture %}
+                                                <img src="{{ url_for('static', filename=data.user1.profile_picture) }}"
+                                                     alt="{{ data.user1.first_name }}'s Profile"
+                                                     class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
+                                            {% else %}
+                                                <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
+                                                    <span class="text-white font-bold text-lg">{{ data.user1.first_name[0] }}{{ data.user1.last_name[0] }}</span>
                                                 </div>
                                             {% endif %}
-                                        {% endfor %}
-                                        
+                                            <div>
+                                                <h4 class="font-bold text-lg text-text-primary">{{ data.user1.first_name }} {{ data.user1.last_name }}</h4>
+                                                <p class="text-sm text-gray-600">{{ data.user1.email }}</p>
+                                                {% if data.user1.bio %}
+                                                    <p class="text-sm text-gray-500 mt-1">{{ data.user1.bio[:50] }}{% if data.user1.bio|length > 50 %}...{% endif %}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
                                         <!-- Match Connection Icon -->
                                         <div class="flex flex-col items-center px-4">
                                             <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
@@ -79,54 +79,50 @@
                                             </div>
                                             <span class="text-xs text-green-600 font-medium mt-2">Matched</span>
                                         </div>
-                                        
+
                                         <!-- User 2 -->
-                                        {% for user in users %}
-                                            {% if user.id == match.matched_user_id %}
-                                                <div class="flex items-center space-x-4">
-                                                    {% if user.profile_picture %}
-                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
-                                                             alt="{{ user.first_name }}'s Profile" 
-                                                             class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
-                                                    {% else %}
-                                                        <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
-                                                            <span class="text-white font-bold text-lg">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
-                                                        </div>
-                                                    {% endif %}
-                                                    <div>
-                                                        <h4 class="font-bold text-lg text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
-                                                        <p class="text-sm text-gray-600">{{ user.email }}</p>
-                                                        {% if user.bio %}
-                                                            <p class="text-sm text-gray-500 mt-1">{{ user.bio[:50] }}{% if user.bio|length > 50 %}...{% endif %}</p>
-                                                        {% endif %}
-                                                    </div>
+                                        <div class="flex items-center space-x-4">
+                                            {% if data.user2.profile_picture %}
+                                                <img src="{{ url_for('static', filename=data.user2.profile_picture) }}"
+                                                     alt="{{ data.user2.first_name }}'s Profile"
+                                                     class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">
+                                            {% else %}
+                                                <div class="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center border-4 border-white shadow-md">
+                                                    <span class="text-white font-bold text-lg">{{ data.user2.first_name[0] }}{{ data.user2.last_name[0] }}</span>
                                                 </div>
                                             {% endif %}
-                                        {% endfor %}
+                                            <div>
+                                                <h4 class="font-bold text-lg text-text-primary">{{ data.user2.first_name }} {{ data.user2.last_name }}</h4>
+                                                <p class="text-sm text-gray-600">{{ data.user2.email }}</p>
+                                                {% if data.user2.bio %}
+                                                    <p class="text-sm text-gray-500 mt-1">{{ data.user2.bio[:50] }}{% if data.user2.bio|length > 50 %}...{% endif %}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
-                                    
+
                                     <div class="flex items-center space-x-4">
                                         <div class="text-right">
                                             <span class="bg-green-100 text-green-800 text-sm font-bold px-4 py-2 rounded-full shadow">✓ Active Match</span>
-                                            <p class="text-sm text-gray-600 mt-2">Assessment #{{ match.id }}</p>
+                                            <p class="text-sm text-gray-600 mt-2">Match #{{ data.match.id }}</p>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Match Actions -->
                                 <div class="mt-4 pt-4 border-t border-green-200">
                                     <div class="flex justify-between items-center">
                                         <div class="flex space-x-2">
                                             <span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">
-                                                Match ID: {{ match.id }}
+                                                Match ID: {{ data.match.id }}
                                             </span>
                                             <span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">
-                                                Created: {{ match.id }}
+                                                Finalized: {{ data.match.finalized_at.strftime('%B %d, %Y') if data.match.finalized_at else 'N/A' }}
                                             </span>
                                         </div>
-                                        
+
                                         <div class="flex space-x-2">
-                                            <button onclick="viewMatchDetails({{ match.user_id }}, {{ match.matched_user_id }})"
+                                            <button onclick="viewMatchDetails({{ data.match.user1_id }}, {{ data.match.user2_id }})"
                                                     class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                                 View Details
                                             </button>

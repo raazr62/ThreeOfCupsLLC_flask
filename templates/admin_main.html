@@ -19,6 +19,10 @@
                    class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
                     Assessments
                 </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Pending Matches
+                </a>
                 <a href="{{ url_for('admin_matches') }}"
                    class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
                     Matches
@@ -78,7 +82,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Pending Assessments Card -->
             <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
                 <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
@@ -93,9 +97,31 @@
                         </div>
                         <h4 class="text-lg font-semibold text-text-primary mb-2">{{ pending_assessments }} Pending Reviews</h4>
                         <p class="text-gray-600 mb-4">Review assessments and create matches</p>
-                        <a href="{{ url_for('admin_assessments') }}" 
+                        <a href="{{ url_for('admin_assessments') }}"
                            class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
                             Review Assessments
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Matches Card -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Pending Matches</h3>
+                </div>
+                <div class="p-6">
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-text-primary mb-2">{{ pending_matches }} Awaiting Review</h4>
+                        <p class="text-gray-600 mb-4">Review, add notes, and finalize matches</p>
+                        <a href="{{ url_for('admin_pending_matches') }}"
+                           class="inline-block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Review Pending Matches
                         </a>
                     </div>
                 </div>
@@ -115,7 +141,7 @@
                         </div>
                         <h4 class="text-lg font-semibold text-text-primary mb-2">{{ completed_matches }} Successful Matches</h4>
                         <p class="text-gray-600 mb-4">View and manage friendship matches</p>
-                        <a href="{{ url_for('admin_matches') }}" 
+                        <a href="{{ url_for('admin_matches') }}"
                            class="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
                             View Matches
                         </a>

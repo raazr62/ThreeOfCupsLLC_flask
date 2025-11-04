@@ -110,6 +110,18 @@ class Assessment(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
     matched_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
+class Match(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user1_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user2_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    assessment1_id = db.Column(db.Integer, db.ForeignKey('assessment.id'), nullable=False)
+    assessment2_id = db.Column(db.Integer, db.ForeignKey('assessment.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending' or 'finalized'
+    admin_notes = db.Column(db.Text)
+    draft_email = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    finalized_at = db.Column(db.DateTime, nullable=True)
+
 class ReviewerAssessment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)

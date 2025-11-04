@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment
+from models import db, User, Assessment, ReviewerAssessment, Match
 from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
@@ -667,15 +667,14 @@ def admin_dashboard():
     # Get summary statistics
     total_assessments = Assessment.query.count()
     pending_assessments = Assessment.query.filter_by(reviewed=False).count()
-    completed_matches = Assessment.query.filter(
-        Assessment.reviewed == True,
-        Assessment.matched_user_id.isnot(None)
-    ).count()
+    pending_matches = Match.query.filter_by(status='pending').count()
+    completed_matches = Match.query.filter_by(status='finalized').count()
     total_users = User.query.filter_by(is_admin=False).count()
-    
-    return render_template('admin_main.html', 
+
+    return render_template('admin_main.html',
                          total_assessments=total_assessments,
                          pending_assessments=pending_assessments,
+                         pending_matches=pending_matches,
                          completed_matches=completed_matches,
                          total_users=total_users)
 
@@ -693,29 +692,29 @@ def admin_assessments():
 
         assessment = Assessment.query.get(assessment_id)
         if assessment:
+            # Mark both assessments as reviewed
             assessment.reviewed = True
-            assessment.matched_user_id = matched_user_id
 
-            # Also mark the matched user's assessment as reviewed
+            # Find the matched user's assessment
             matched_user_assessment = Assessment.query.filter_by(user_id=matched_user_id, reviewed=False).first()
             if matched_user_assessment:
                 matched_user_assessment.reviewed = True
-                matched_user_assessment.matched_user_id = assessment.user_id
 
-            db.session.commit()
+                # Create a new pending match
+                new_match = Match(
+                    user1_id=assessment.user_id,
+                    user2_id=matched_user_id,
+                    assessment1_id=assessment.id,
+                    assessment2_id=matched_user_assessment.id,
+                    status='pending'
+                )
+                db.session.add(new_match)
+                db.session.commit()
 
-            # Send match notification emails to both users
-            user1 = User.query.get(assessment.user_id)
-            user2 = User.query.get(matched_user_id)
+                flash('Pending match created successfully. Review it in the Pending Matches section.')
+            else:
+                flash('Matched user has no unreviewed assessment.')
 
-            dashboard_url = url_for('user_dashboard', _external=True)
-
-            if user1:
-                send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, dashboard_url)
-            if user2:
-                send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, dashboard_url)
-
-            flash('User matched successfully.')
             return redirect(url_for('admin_assessments'))
         else:
             flash('Assessment not found.')
@@ -769,15 +768,139 @@ def admin_matches():
         flash('Access denied.')
         return redirect(url_for('login'))
 
-    completed_matches = Assessment.query.filter(
-        Assessment.reviewed == True,
-        Assessment.matched_user_id.isnot(None)
-    ).all()
-    users = User.query.all()
+    # Get finalized matches from Match table
+    finalized_matches = Match.query.filter_by(status='finalized').all()
 
-    return render_template('admin_matches.html',
-                         completed_matches=completed_matches,
-                         users=users)
+    # Build match data with user information
+    matches_data = []
+    for match in finalized_matches:
+        user1 = User.query.get(match.user1_id)
+        user2 = User.query.get(match.user2_id)
+        if user1 and user2:
+            matches_data.append({
+                'match': match,
+                'user1': user1,
+                'user2': user2
+            })
+
+    return render_template('admin_matches.html', matches_data=matches_data)
+
+# Admin pending matches page
+@app.route('/admin/pending-matches', methods=['GET', 'POST'])
+@login_required
+def admin_pending_matches():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        match_id = request.form.get('match_id')
+        action = request.form.get('action')
+
+        match = Match.query.get(match_id)
+        if not match:
+            flash('Match not found.')
+            return redirect(url_for('admin_pending_matches'))
+
+        if action == 'update_notes':
+            # Update admin notes
+            match.admin_notes = sanitize_input(request.form.get('admin_notes', ''))
+            db.session.commit()
+            flash('Notes updated successfully.')
+
+        elif action == 'update_draft':
+            # Update draft email
+            match.draft_email = sanitize_input(request.form.get('draft_email', ''))
+            db.session.commit()
+            flash('Draft email updated successfully.')
+
+        elif action == 'finalize':
+            # Finalize the match
+            match.status = 'finalized'
+            match.finalized_at = datetime.utcnow()
+
+            # Update the assessment records to reflect the match
+            assessment1 = Assessment.query.get(match.assessment1_id)
+            assessment2 = Assessment.query.get(match.assessment2_id)
+            if assessment1:
+                assessment1.matched_user_id = match.user2_id
+            if assessment2:
+                assessment2.matched_user_id = match.user1_id
+
+            db.session.commit()
+
+            # Send the drafted email to both users
+            user1 = User.query.get(match.user1_id)
+            user2 = User.query.get(match.user2_id)
+            dashboard_url = url_for('user_dashboard', _external=True)
+
+            # Use the drafted email if available, otherwise use default template
+            if match.draft_email:
+                # Send custom drafted email to both users
+                from flask_mail import Message
+                for user in [user1, user2]:
+                    if user:
+                        try:
+                            msg = Message(
+                                'You have a new match! - Three of Cups',
+                                sender=app.config['MAIL_DEFAULT_SENDER'],
+                                recipients=[user.email]
+                            )
+                            # Replace placeholders in draft email
+                            personalized_email = match.draft_email.replace('{first_name}', user.first_name)
+                            personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
+                            msg.body = personalized_email
+                            msg.html = personalized_email.replace('\n', '<br>')
+                            mail.send(msg)
+                        except Exception as e:
+                            print(f"Error sending custom match email: {e}")
+            else:
+                # Use default template
+                if user1:
+                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, dashboard_url)
+                if user2:
+                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, dashboard_url)
+
+            flash('Match finalized successfully! Emails sent to both users.')
+
+        return redirect(url_for('admin_pending_matches'))
+
+    # Get all pending matches
+    pending_matches = Match.query.filter_by(status='pending').all()
+
+    # Build match data with user and assessment information
+    matches_data = []
+    for match in pending_matches:
+        user1 = User.query.get(match.user1_id)
+        user2 = User.query.get(match.user2_id)
+        assessment1 = Assessment.query.get(match.assessment1_id)
+        assessment2 = Assessment.query.get(match.assessment2_id)
+
+        # Parse assessment answers from JSON
+        assessment1_answers = {}
+        assessment2_answers = {}
+        try:
+            if assessment1 and assessment1.answers:
+                assessment1_answers = json.loads(assessment1.answers)
+        except:
+            pass
+        try:
+            if assessment2 and assessment2.answers:
+                assessment2_answers = json.loads(assessment2.answers)
+        except:
+            pass
+
+        matches_data.append({
+            'match': match,
+            'user1': user1,
+            'user2': user2,
+            'assessment1': assessment1,
+            'assessment2': assessment2,
+            'assessment1_answers': assessment1_answers,
+            'assessment2_answers': assessment2_answers
+        })
+
+    return render_template('admin_pending_matches.html', matches_data=matches_data)
 
 # Admin reviewer assessments page
 @app.route('/admin/reviewer-assessments', methods=['GET', 'POST'])
@@ -852,23 +975,18 @@ def user_dashboard():
 
     # Only show matches if email is verified (or if user is admin)
     if current_user.email_verified or current_user.is_admin:
-        # Find matches in two ways:
-        # 1. Assessments where current user is matched TO someone
-        user_assessments = Assessment.query.filter_by(user_id=current_user.id, reviewed=True).all()
-        for assessment in user_assessments:
-            if assessment.matched_user_id:
-                matched_user = User.query.get(assessment.matched_user_id)
-                if matched_user and matched_user.id != current_user.id:
-                    matched_users.append(matched_user)
-
-        # 2. Assessments where current user IS the match (matched_user_id points to them)
-        assessments_matched_to_user = Assessment.query.filter_by(
-            matched_user_id=current_user.id,
-            reviewed=True
+        # Find finalized matches where current user is either user1 or user2
+        from sqlalchemy import or_
+        finalized_matches = Match.query.filter(
+            Match.status == 'finalized',
+            or_(Match.user1_id == current_user.id, Match.user2_id == current_user.id)
         ).all()
-        for assessment in assessments_matched_to_user:
-            matched_user = User.query.get(assessment.user_id)
-            if matched_user and matched_user.id != current_user.id and matched_user not in matched_users:
+
+        for match in finalized_matches:
+            # Get the other user in the match
+            other_user_id = match.user2_id if match.user1_id == current_user.id else match.user1_id
+            matched_user = User.query.get(other_user_id)
+            if matched_user and matched_user not in matched_users:
                 matched_users.append(matched_user)
     
     if request.method == 'POST':

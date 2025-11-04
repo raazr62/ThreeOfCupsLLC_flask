@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-text-primary mb-2">Pending Matches</h2>
+            <p class="text-text-accent opacity-90">Review matches, add notes, draft emails, and finalize</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mb-8 flex justify-center">
+            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+                <a href="{{ url_for('admin_dashboard') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Overview
+                </a>
+                <a href="{{ url_for('admin_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Assessments
+                </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
+                    Pending Matches
+                </a>
+                <a href="{{ url_for('admin_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Matches
+                </a>
+                <a href="{{ url_for('admin_reviewer_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Reviewers
+                </a>
+            </div>
+        </div>
+
+        <!-- Pending Matches List -->
+        {% if matches_data %}
+            <div class="space-y-8">
+                {% for data in matches_data %}
+                    <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                        <!-- Match Header -->
+                        <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-xl font-semibold text-white">Match #{{ data.match.id }}</h3>
+                                    <p class="text-white/90 text-sm">Created: {{ data.match.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+                                <span class="bg-orange-100 text-orange-800 text-xs font-medium px-3 py-1 rounded-full">Pending Review</span>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <!-- User Info Cards -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <!-- User 1 Info -->
+                                <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                                    <h4 class="font-bold text-text-primary mb-3 flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        {{ data.user1.first_name }} {{ data.user1.last_name }}
+                                    </h4>
+                                    <div class="space-y-1 text-sm text-gray-700">
+                                        <p><span class="font-semibold">Email:</span> {{ data.user1.email }}</p>
+                                        {% if data.user1.pronouns %}<p><span class="font-semibold">Pronouns:</span> {{ data.user1.pronouns }}</p>{% endif %}
+                                        {% if data.user1.location %}<p><span class="font-semibold">Location:</span> {{ data.user1.location }}</p>{% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- User 2 Info -->
+                                <div class="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
+                                    <h4 class="font-bold text-text-primary mb-3 flex items-center">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        {{ data.user2.first_name }} {{ data.user2.last_name }}
+                                    </h4>
+                                    <div class="space-y-1 text-sm text-gray-700">
+                                        <p><span class="font-semibold">Email:</span> {{ data.user2.email }}</p>
+                                        {% if data.user2.pronouns %}<p><span class="font-semibold">Pronouns:</span> {{ data.user2.pronouns }}</p>{% endif %}
+                                        {% if data.user2.location %}<p><span class="font-semibold">Location:</span> {{ data.user2.location }}</p>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Assessments Side-by-Side -->
+                            <div class="mb-6">
+                                <button onclick="toggleAssessmentComparison('assessment-comparison-{{ data.match.id }}')"
+                                        class="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-semibold px-6 py-3 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg">
+                                    <span id="toggle-text-{{ data.match.id }}">Show Assessment Comparison</span>
+                                </button>
+                            </div>
+
+                            <div id="assessment-comparison-{{ data.match.id }}" class="hidden mb-6">
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <!-- User 1 Assessment -->
+                                    <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                                        <h5 class="font-bold text-purple-700 mb-3 text-center">{{ data.user1.first_name }}'s Assessment</h5>
+                                        <div class="space-y-2 text-sm max-h-96 overflow-y-auto">
+                                            {% if data.assessment1_answers %}
+                                                {% for key, value in data.assessment1_answers.items() %}
+                                                    <div class="bg-white rounded-lg p-3 shadow-sm border-b border-purple-200">
+                                                        <p class="font-semibold text-gray-700 text-xs mb-1">{{ key|replace('_', ' ')|title }}:</p>
+                                                        <p class="text-gray-600">
+                                                            {% if value is string %}
+                                                                {{ value }}
+                                                            {% elif value is sequence and value is not string %}
+                                                                {{ value|join(', ') }}
+                                                            {% else %}
+                                                                {{ value }}
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <p class="text-gray-500">No assessment data available</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- User 2 Assessment -->
+                                    <div class="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
+                                        <h5 class="font-bold text-cyan-700 mb-3 text-center">{{ data.user2.first_name }}'s Assessment</h5>
+                                        <div class="space-y-2 text-sm max-h-96 overflow-y-auto">
+                                            {% if data.assessment2_answers %}
+                                                {% for key, value in data.assessment2_answers.items() %}
+                                                    <div class="bg-white rounded-lg p-3 shadow-sm border-b border-cyan-200">
+                                                        <p class="font-semibold text-gray-700 text-xs mb-1">{{ key|replace('_', ' ')|title }}:</p>
+                                                        <p class="text-gray-600">
+                                                            {% if value is string %}
+                                                                {{ value }}
+                                                            {% elif value is sequence and value is not string %}
+                                                                {{ value|join(', ') }}
+                                                            {% else %}
+                                                                {{ value }}
+                                                            {% endif %}
+                                                        </p>
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <p class="text-gray-500">No assessment data available</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Admin Notes -->
+                            <div class="mb-6">
+                                <form method="POST" class="space-y-4">
+                                    <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                    <input type="hidden" name="action" value="update_notes">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-text-primary mb-2">Admin Notes</label>
+                                        <textarea name="admin_notes" rows="4"
+                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                  placeholder="Add your notes about this match...">{{ data.match.admin_notes or '' }}</textarea>
+                                    </div>
+                                    <button type="submit"
+                                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                                        Save Notes
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Draft Email -->
+                            <div class="mb-6">
+                                <form method="POST" class="space-y-4">
+                                    <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                    <input type="hidden" name="action" value="update_draft">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-text-primary mb-2">
+                                            Draft Email to Both Users
+                                            <span class="text-xs text-gray-500 font-normal ml-2">(Use {first_name} and {dashboard_url} as placeholders)</span>
+                                        </label>
+                                        <textarea name="draft_email" rows="8"
+                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
+                                                  placeholder="Hello {first_name},&#10;&#10;Great news! You have been matched with a new friend on Three of Cups...&#10;&#10;Visit your dashboard: {dashboard_url}">{{ data.match.draft_email or '' }}</textarea>
+                                    </div>
+                                    <button type="submit"
+                                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                                        Save Draft Email
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Finalize Match Button -->
+                            <div class="border-t border-gray-300 pt-6">
+                                <form method="POST" onsubmit="return confirm('Are you sure you want to finalize this match and send emails to both users?')">
+                                    <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                    <input type="hidden" name="action" value="finalize">
+                                    <button type="submit"
+                                            class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                        Finalize Match & Send Emails
+                                    </button>
+                                    <p class="text-sm text-gray-600 text-center mt-2">
+                                        This will make the match visible on user dashboards and send the drafted email (or default email if no draft).
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden p-12 text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-10 h-10 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-text-primary mb-2">No Pending Matches</h3>
+                <p class="text-gray-600">All matches have been reviewed and finalized.</p>
+                <a href="{{ url_for('admin_assessments') }}"
+                   class="mt-6 inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300">
+                    Create New Matches
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleAssessmentComparison(id) {
+    const element = document.getElementById(id);
+    const matchId = id.replace('assessment-comparison-', '');
+    const toggleText = document.getElementById('toggle-text-' + matchId);
+
+    if (element.classList.contains('hidden')) {
+        element.classList.remove('hidden');
+        if (toggleText) {
+            toggleText.textContent = 'Hide Assessment Comparison';
+        }
+    } else {
+        element.classList.add('hidden');
+        if (toggleText) {
+            toggleText.textContent = 'Show Assessment Comparison';
+        }
+    }
+}
+</script>
+{% endblock %}
