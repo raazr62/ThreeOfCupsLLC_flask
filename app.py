@@ -663,7 +663,7 @@ def admin_dashboard():
     if not current_user.is_admin:
         flash('Access denied.')
         return redirect(url_for('login'))
-    
+
     # Get summary statistics
     total_assessments = Assessment.query.count()
     pending_assessments = Assessment.query.filter_by(reviewed=False).count()
@@ -677,6 +677,47 @@ def admin_dashboard():
                          pending_matches=pending_matches,
                          completed_matches=completed_matches,
                          total_users=total_users)
+
+# Admin users page - view all registered users
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    # Get filter parameter
+    filter_type = request.args.get('filter', 'all')
+
+    # Get all non-admin users
+    users_query = User.query.filter_by(is_admin=False)
+
+    # Apply filter
+    if filter_type == 'has_assessment':
+        # Get users who have completed an assessment
+        user_ids_with_assessment = db.session.query(Assessment.user_id).distinct()
+        users_query = users_query.filter(User.id.in_(user_ids_with_assessment))
+    elif filter_type == 'no_assessment':
+        # Get users who have NOT completed an assessment
+        user_ids_with_assessment = db.session.query(Assessment.user_id).distinct()
+        users_query = users_query.filter(~User.id.in_(user_ids_with_assessment))
+
+    # Order by ID (registration order)
+    users = users_query.order_by(User.id.desc()).all()
+
+    # For each user, check if they have an assessment
+    user_data = []
+    for user in users:
+        assessment = Assessment.query.filter_by(user_id=user.id).first()
+        user_data.append({
+            'user': user,
+            'has_assessment': assessment is not None,
+            'assessment_reviewed': assessment.reviewed if assessment else None
+        })
+
+    return render_template('admin_users.html',
+                         user_data=user_data,
+                         filter_type=filter_type)
 
 # Admin assessments page
 @app.route('/admin/assessments', methods=['GET', 'POST'])
