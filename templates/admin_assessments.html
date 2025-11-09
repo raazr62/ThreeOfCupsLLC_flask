@@ -34,6 +34,24 @@
             </div>
         </div>
 
+        <!-- Filter Options -->
+        <div class="mb-6 flex justify-center">
+            <div class="bg-white rounded-xl shadow-md p-1 flex space-x-1">
+                <a href="{{ url_for('admin_assessments', filter='unreviewed') }}"
+                   class="px-4 py-2 {% if filter_status == 'unreviewed' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
+                    Unreviewed
+                </a>
+                <a href="{{ url_for('admin_assessments', filter='reviewed') }}"
+                   class="px-4 py-2 {% if filter_status == 'reviewed' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
+                    Reviewed
+                </a>
+                <a href="{{ url_for('admin_assessments', filter='all') }}"
+                   class="px-4 py-2 {% if filter_status == 'all' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
+                    All
+                </a>
+            </div>
+        </div>
+
         <!-- Assessments List -->
         <div class="space-y-8">
             {% if assessments_with_scores %}
@@ -162,8 +180,10 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
                                         {% for user in users %}
                                             {% if user.id != item.assessment.user_id and not user.is_admin %}
-                                                {% if user.id in matched_user_ids %}
-                                                    <!-- Already Matched User - Display Only -->
+                                                {% set is_already_matched = item.assessment.user_id in user_existing_matches and user.id in user_existing_matches[item.assessment.user_id] %}
+
+                                                {% if is_already_matched %}
+                                                    <!-- Already Matched with This User - Display Only -->
                                                     <div class="relative">
                                                         <div class="p-3 border-2 border-gray-300 rounded-lg bg-gray-100 opacity-60 cursor-not-allowed">
                                                             <div class="flex items-center space-x-3">
@@ -197,28 +217,33 @@
                                                                 <div class="flex items-center space-x-3">
                                                                     {% if user.profile_picture %}
                                                                         <img src="{{ url_for('static', filename=user.profile_picture) }}"
-                                                                             alt="{{ user.first_name }}'s Profile"
-                                                                             class="w-10 h-10 rounded-full object-cover flex-shrink-0">
-                                                                    {% else %}
-                                                                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
-                                                                            <span class="text-white font-bold text-xs">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                                                 alt="{{ user.first_name }}'s Profile"
+                                                                                 class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                                                                        {% else %}
+                                                                            <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
+                                                                                <span class="text-white font-bold text-xs">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                                            </div>
+                                                                        {% endif %}
+                                                                        <div class="flex-1 min-w-0">
+                                                                            <p class="font-semibold text-text-primary text-sm truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                                                                            <p class="text-xs text-gray-600 truncate">{{ user.email }}</p>
+                                                                            {% if user.id in user_match_counts %}
+                                                                                <span class="inline-block mt-1 text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                                                                                    Already has {{ user_match_counts[user.id] }} match{{ 'es' if user_match_counts[user.id] != 1 else '' }}
+                                                                                </span>
+                                                                            {% endif %}
                                                                         </div>
-                                                                    {% endif %}
-                                                                    <div class="flex-1 min-w-0">
-                                                                        <p class="font-semibold text-text-primary text-sm truncate">{{ user.first_name }} {{ user.last_name }}</p>
-                                                                        <p class="text-xs text-gray-600 truncate">{{ user.email }}</p>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </label>
-                                                        <button type="button"
-                                                                class="compare-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors"
-                                                                data-assessment-id="{{ item.assessment.id }}"
-                                                                data-user-id="{{ user.id }}"
-                                                                data-user-name="{{ user.first_name }} {{ user.last_name }}">
-                                                            Compare
-                                                        </button>
-                                                    </div>
+                                                            </label>
+                                                            <button type="button"
+                                                                    class="compare-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors"
+                                                                    data-assessment-id="{{ item.assessment.id }}"
+                                                                    data-user-id="{{ user.id }}"
+                                                                    data-user-name="{{ user.first_name }} {{ user.last_name }}">
+                                                                Compare
+                                                            </button>
+                                                        </div>
                                                 {% endif %}
                                             {% endif %}
                                         {% endfor %}

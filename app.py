@@ -692,42 +692,84 @@ def admin_assessments():
 
         assessment = Assessment.query.get(assessment_id)
         if assessment:
-            # Mark both assessments as reviewed
-            assessment.reviewed = True
+            # Mark the assessment as reviewed if it wasn't already
+            if not assessment.reviewed:
+                assessment.reviewed = True
 
-            # Find the matched user's assessment
-            matched_user_assessment = Assessment.query.filter_by(user_id=matched_user_id, reviewed=False).first()
+            # Find the matched user's assessment (can be reviewed or unreviewed for multi-matching)
+            matched_user_assessment = Assessment.query.filter_by(user_id=matched_user_id).first()
             if matched_user_assessment:
-                matched_user_assessment.reviewed = True
+                # Check if these two users are already matched (prevent duplicate matches)
+                existing_match = Match.query.filter(
+                    Match.status == 'finalized',
+                    or_(
+                        and_(Match.user1_id == assessment.user_id, Match.user2_id == matched_user_id),
+                        and_(Match.user1_id == matched_user_id, Match.user2_id == assessment.user_id)
+                    )
+                ).first()
 
-                # Create a new pending match
-                new_match = Match(
-                    user1_id=assessment.user_id,
-                    user2_id=matched_user_id,
-                    assessment1_id=assessment.id,
-                    assessment2_id=matched_user_assessment.id,
-                    status='pending'
-                )
-                db.session.add(new_match)
-                db.session.commit()
+                if existing_match:
+                    flash('These users are already matched. Please select a different user.')
+                else:
+                    # Mark as reviewed if it wasn't already
+                    if not matched_user_assessment.reviewed:
+                        matched_user_assessment.reviewed = True
 
-                flash('Pending match created successfully. Review it in the Pending Matches section.')
+                    # Create a new pending match
+                    new_match = Match(
+                        user1_id=assessment.user_id,
+                        user2_id=matched_user_id,
+                        assessment1_id=assessment.id,
+                        assessment2_id=matched_user_assessment.id,
+                        status='pending'
+                    )
+                    db.session.add(new_match)
+                    db.session.commit()
+
+                    flash('Pending match created successfully. Review it in the Pending Matches section.')
             else:
-                flash('Matched user has no unreviewed assessment.')
+                flash('Matched user has no assessment.')
 
             return redirect(url_for('admin_assessments'))
         else:
             flash('Assessment not found.')
 
-    assessments = Assessment.query.filter_by(reviewed=False).all()
+    # Add filter for assessment status
+    filter_status = request.args.get('filter', 'unreviewed')
+    if filter_status == 'all':
+        assessments = Assessment.query.all()
+    elif filter_status == 'reviewed':
+        assessments = Assessment.query.filter_by(reviewed=True).all()
+    else:  # Default to unreviewed
+        assessments = Assessment.query.filter_by(reviewed=False).all()
     users = User.query.all()
 
-    # Get all matched user IDs to determine who is already matched
-    matched_user_ids = set()
-    all_assessments = Assessment.query.filter(Assessment.matched_user_id.isnot(None)).all()
-    for assess in all_assessments:
-        matched_user_ids.add(assess.user_id)
-        matched_user_ids.add(assess.matched_user_id)
+    # Count how many matches each user has by querying the Match table
+    # Also track which users are matched with each assessment's user (to prevent duplicate matches)
+    from sqlalchemy import or_, and_
+    user_match_counts = {}
+    user_existing_matches = {}  # Maps user_id -> set of user_ids they're already matched with
+    finalized_matches = Match.query.filter_by(status='finalized').all()
+
+    for match in finalized_matches:
+        # Count matches for user1
+        if match.user1_id not in user_match_counts:
+            user_match_counts[match.user1_id] = 0
+        user_match_counts[match.user1_id] += 1
+
+        # Count matches for user2
+        if match.user2_id not in user_match_counts:
+            user_match_counts[match.user2_id] = 0
+        user_match_counts[match.user2_id] += 1
+
+        # Track existing match pairs (bidirectional)
+        if match.user1_id not in user_existing_matches:
+            user_existing_matches[match.user1_id] = set()
+        user_existing_matches[match.user1_id].add(match.user2_id)
+
+        if match.user2_id not in user_existing_matches:
+            user_existing_matches[match.user2_id] = set()
+        user_existing_matches[match.user2_id].add(match.user1_id)
 
     # Process assessments for display
     assessments_with_scores = []
@@ -758,7 +800,9 @@ def admin_assessments():
     return render_template('admin_assessments.html',
                          assessments_with_scores=assessments_with_scores,
                          users=users,
-                         matched_user_ids=matched_user_ids)
+                         user_match_counts=user_match_counts,
+                         user_existing_matches=user_existing_matches,
+                         filter_status=filter_status)
 
 # Admin matches page
 @app.route('/admin/matches')
