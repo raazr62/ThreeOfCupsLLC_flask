@@ -132,3 +132,23 @@ class ReviewerAssessment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     reviewed = db.Column(db.Boolean, default=False)
     admin_notes = db.Column(db.Text)
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(500), nullable=False)
+    date_time = db.Column(db.DateTime, nullable=False)
+    price = db.Column(db.Float, nullable=True)  # NULL means free
+    picture = db.Column(db.String(200), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class EventRSVP(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Ensure a user can only RSVP once per event
+    __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_rsvp'),)
