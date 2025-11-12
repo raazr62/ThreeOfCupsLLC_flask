@@ -1,149 +1,614 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col">
+<style>
+    /* Welcome Animation Styles */
+    .welcome-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #FFD1DC 0%, #FFB88C 40%, #FFD97D 100%);
+        opacity: 1;
+        transition: opacity 1s ease-out;
+    }
 
-    <!-- Hero Section -->
-    <div class="flex-1 flex items-center justify-center px-4 py-16">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="mb-8">
-                <!-- Title in Line -->
-                <div class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 mb-6">
-                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold font-brand text-center md:text-left">
-                        <span class="text-text-primary drop-shadow-2xl">
-                            welcome to three of cups
-                        </span>
-                    </h1>
-                </div>
-                <p class="text-xl md:text-2xl text-text-primary mb-12 max-w-3xl mx-auto leading-relaxed opacity-90 font-sans">
-                    a matchmaking platform where friendship can form and community can flourish
-                </p>
-            </div>
-            
-            <!-- Action Cards -->
-            {% if not current_user.is_authenticated %}
-            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">New User?</h3>
-                    <p class="text-text-accent mb-6 leading-relaxed font-sans">Create an account to start your friendship journey</p>
-                    <a href="{{ url_for('register') }}" class="inline-block bg-primary hover:bg-secondary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
-                        Get Started
-                    </a>
-                </div>
+    .welcome-overlay.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
 
-                <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-secondary rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">Returning User?</h3>
-                    <p class="text-text-accent mb-6 leading-relaxed font-sans">Sign back in to continue connecting with friends</p>
-                    <a href="{{ url_for('login') }}" class="inline-block bg-secondary hover:bg-accent text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
-                        Login
-                    </a>
-                </div>
+    .welcome-overlay.hidden {
+        display: none;
+    }
 
-                <div class="group dark-card rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold text-text-accent mb-4 font-brand">Take Assessment?</h3>
-                    <p class="text-text-accent mb-6 leading-relaxed font-sans">Complete your personality profile to find compatible friends</p>
-                    <a href="{{ url_for('assessment') }}" class="inline-block bg-accent hover:bg-primary text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg">
-                        Start Assessment
-                    </a>
-                </div>
-            </div>
-            {% else %}
-            <!-- Centered single card for logged-in users -->
-            <div class="max-w-2xl mx-auto">
-                <div class="group dark-card rounded-2xl p-10 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
-                    <div class="w-20 h-20 bg-accent rounded-xl flex items-center justify-center mb-8 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-3xl font-bold text-text-accent mb-6 font-brand">Take Assessment?</h3>
-                    <p class="text-text-accent mb-8 leading-relaxed font-sans text-lg">Complete your personality profile to find compatible friends and build meaningful connections</p>
-                    <a href="{{ url_for('assessment') }}" class="inline-block bg-accent hover:bg-primary text-white font-semibold px-10 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 font-sans shadow-lg text-lg">
-                        Start Assessment
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Features Section -->
-            <div class="mt-20 max-w-4xl mx-auto">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <div class="text-left">
-                        <h2 class="text-3xl font-bold text-text-primary mb-6 font-brand">How It Works</h2>
-                        <div class="space-y-6">
-                            <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">1</div>
-                                <p class="text-text-accent text-lg font-sans">Create your account and complete your friendship profile</p>
-                            </div>
-                            <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">2</div>
-                                <p class="text-text-accent text-lg font-sans">Take our comprehensive personality and compatibility assessment</p>
-                            </div>
-                            <div class="flex items-start space-x-4">
-                                <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0 mt-1 shadow-lg">3</div>
-                                <p class="text-text-accent text-lg font-sans">Get matched with compatible friends based on shared interests and values</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dark-card rounded-2xl p-8 text-center shadow-2xl">
-                        <div class="text-6xl mb-4">🤝</div>
-                        <h3 class="text-xl font-semibold text-text-accent mb-4 font-brand">Find your community</h3>
-                        <p class="text-text-accent leading-relaxed font-sans">Connect with people who share your interests, values, and friendship style. Build meaningful relationships that last through our intentional matching process.</p>
-                    </div>
-                </div>
-            </div>
+    .welcome-content {
+        text-align: center;
+        padding: 2rem;
+    }
 
-            <!-- Social Media Links -->
-            <div class="mt-16 mb-8 border-t border-text-primary/20 pt-8">
-                <div class="flex flex-row items-center justify-center gap-6">
-                    <a href="https://instagram.com/threeofcupsllc"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="inline-flex items-center gap-2 text-text-primary hover:text-primary transition-colors"
-                       aria-label="Follow us on Instagram @threeofcupsllc">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                        </svg>
-                        <span class="font-medium hidden sm:inline">@threeofcupsllc</span>
-                    </a>
+    .welcome-watercolor {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 155, 155, 0.3), rgba(255, 184, 140, 0.2), transparent);
+        filter: blur(60px);
+        animation: watercolorPulse 4s ease-in-out;
+    }
 
-                    <a href="https://www.tiktok.com/@threeofcupsllc"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="inline-flex items-center gap-2 text-text-primary hover:text-primary transition-colors"
-                       aria-label="Follow us on TikTok @threeofcupsllc">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                        </svg>
-                        <span class="font-medium hidden sm:inline">@threeofcupsllc</span>
-                    </a>
+    .logo-illustration {
+        width: 350px;
+        height: auto;
+        margin: 0 auto -1rem;
+        opacity: 0;
+        animation: fadeInScale 1.5s ease-out 0.5s forwards;
+        filter: invert(1) brightness(0) drop-shadow(0 0 20px rgba(44, 36, 32, 0.3));
+    }
 
-                    <a href="mailto:admin@threeofcupsllc.com"
-                       class="inline-flex items-center gap-2 text-text-primary hover:text-primary transition-colors"
-                       aria-label="Email us at admin@threeofcupsllc.com">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        <span class="font-medium hidden sm:inline">admin@threeofcupsllc.com</span>
-                    </a>
-                </div>
-            </div>
+    .welcome-to {
+        font-size: 1.5rem;
+        font-family: 'Inter', sans-serif;
+        color: #2C2420;
+        opacity: 0;
+        animation: fadeInText 1s ease-out 1.5s forwards;
+        font-weight: 300;
+        letter-spacing: 0.15em;
+        text-transform: lowercase;
+    }
+
+    .welcome-title {
+        font-size: 4rem;
+        font-family: 'Playfair Display', serif;
+        color: #2C2420;
+        opacity: 0;
+        animation: fadeInText 1.2s ease-out 2s forwards;
+        font-weight: 700;
+        margin: 1rem 0;
+        line-height: 1.2;
+    }
+
+    .welcome-tagline {
+        font-size: 1.2rem;
+        font-family: 'Inter', sans-serif;
+        color: #2C2420;
+        opacity: 0;
+        animation: fadeInText 1.2s ease-out 2.8s forwards;
+        font-weight: 400;
+        max-width: 600px;
+        margin: 1.5rem auto 0;
+        line-height: 1.6;
+    }
+
+    @keyframes watercolorPulse {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+
+    @keyframes fadeInText {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.7); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Main Content Styles */
+    .main-content {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem 4rem;
+    }
+
+    .hero-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .hero-logo {
+        width: 350px;
+        height: auto;
+        margin: 0 auto -1rem;
+        filter: invert(1) brightness(0) drop-shadow(0 0 20px rgba(255, 155, 155, 0.5));
+        display: block;
+    }
+
+    .hero-title-container {
+        margin-bottom: 2rem;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-family: 'Playfair Display', serif;
+        color: #2C2420;
+        font-weight: 700;
+        line-height: 1.4;
+        text-shadow: 0 2px 10px rgba(255, 155, 155, 0.2);
+    }
+
+    .main-tagline {
+        font-size: 1.5rem;
+        font-family: 'Inter', sans-serif;
+        color: #2C2420;
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+        font-weight: 400;
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator {
+        margin-top: 3rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        animation: bounce 2s ease-in-out infinite;
+    }
+
+    .scroll-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: #2C2420;
+        opacity: 0.7;
+        letter-spacing: 0.1em;
+        text-transform: lowercase;
+    }
+
+    .scroll-arrow {
+        width: 30px;
+        height: 30px;
+        border-left: 2px solid #2C2420;
+        border-bottom: 2px solid #2C2420;
+        transform: rotate(-45deg);
+        opacity: 0.6;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(10px); }
+    }
+
+    .cta-button {
+        display: inline-block;
+        padding: 1.25rem 3rem;
+        font-size: 1.25rem;
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, #E8505B, #F77E5F);
+        border-radius: 50px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(232, 80, 91, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(232, 80, 91, 0.5);
+        background: linear-gradient(135deg, #F77E5F, #E8505B);
+    }
+
+    .cta-button:hover::before {
+        left: 100%;
+    }
+
+    .cta-section {
+        text-align: center;
+        margin: 3rem auto;
+        padding: 2rem 1rem;
+        max-width: 600px;
+    }
+
+    .social-links-bottom {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        padding: 3rem 1rem;
+        margin-top: 2rem;
+        border-top: 1px solid rgba(44, 36, 32, 0.2);
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #2C2420;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .social-link:hover {
+        color: #FF9B9B;
+        transform: translateY(-2px);
+    }
+
+    .social-link svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* How It Works Section - Scroll Reveal */
+    .how-it-works {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 3rem auto 4rem;
+        padding: 0 1rem;
+    }
+
+    .how-it-works-title {
+        font-size: 2.5rem;
+        font-family: 'Playfair Display', serif;
+        color: #2C2420;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 700;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease;
+    }
+
+    .how-it-works-title.reveal {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .step-card {
+        background: rgba(250, 247, 245, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 155, 155, 0.3);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(255, 155, 155, 0.15);
+        transition: all 0.5s ease;
+        opacity: 0;
+        transform: translateY(50px);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .step-card.reveal {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .step-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(255, 155, 155, 0.25);
+    }
+
+    .step-number {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .step-text {
+        font-family: 'Inter', sans-serif;
+        color: #2C2420;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        flex: 1;
+    }
+
+    .community-card {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.8s ease;
+    }
+
+    .community-card.reveal {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Accessibility - Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+        .welcome-overlay,
+        .welcome-to,
+        .welcome-title,
+        .welcome-tagline,
+        .logo-illustration,
+        .cta-button,
+        .step-card,
+        .how-it-works-title,
+        .community-card,
+        .scroll-indicator {
+            animation: none !important;
+            transition: opacity 0.2s ease !important;
+        }
+
+        .welcome-overlay {
+            transition: opacity 0.3s ease !important;
+        }
+
+        .step-card, .how-it-works-title, .community-card {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .welcome-title, .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .welcome-tagline {
+            font-size: 1rem;
+        }
+
+        .logo-illustration {
+            width: 200px;
+        }
+
+        .hero-logo {
+            width: 200px;
+        }
+
+        .main-tagline {
+            font-size: 1.2rem;
+        }
+
+        .cta-button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .how-it-works-title {
+            font-size: 2rem;
+        }
+
+        .social-link span {
+            display: none;
+        }
+
+        .step-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .step-number {
+            margin-bottom: 1rem;
+        }
+
+        .scroll-indicator {
+            margin-top: 2rem;
+        }
+    }
+</style>
+
+<!-- Welcome Loading Animation (First Visit Only) -->
+<div id="welcomeOverlay" class="welcome-overlay hidden">
+    <div class="welcome-watercolor"></div>
+    <div class="welcome-content">
+        <!-- Three of Cups Logo (Black) - Larger Size -->
+        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-white.png') }}"
+             alt="Three of Cups Logo"
+             class="logo-illustration">
+        <div class="welcome-to">welcome to</div>
+        <div class="welcome-title">three of cups</div>
+        <div class="welcome-tagline">where friendship can form and community can flourish</div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="hero-section">
+        <!-- Black Logo - Larger Size -->
+        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-white.png') }}"
+             alt="Three of Cups Logo"
+             class="hero-logo">
+
+        <!-- Welcome to Three of Cups Text - Same Font -->
+        <div class="hero-title-container">
+            <h1 class="hero-title">welcome to three of cups</h1>
+        </div>
+
+        <!-- Tagline -->
+        <p class="main-tagline">
+            a matchmaking platform where friendship can form and community can flourish
+        </p>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <span class="scroll-text">scroll to learn more</span>
+            <div class="scroll-arrow"></div>
         </div>
     </div>
 </div>
+
+<!-- How It Works Section (Scroll Reveal) -->
+<div class="how-it-works">
+    <h2 class="how-it-works-title">How It Works</h2>
+
+    <div class="steps-grid">
+        <div class="step-card" data-delay="0">
+            <div class="step-number" style="background: linear-gradient(135deg, #FF9B9B, #FFB88C);">1</div>
+            <p class="step-text">Create your account and complete your friendship profile</p>
+        </div>
+
+        <div class="step-card" data-delay="200">
+            <div class="step-number" style="background: linear-gradient(135deg, #FFB88C, #FFD97D);">2</div>
+            <p class="step-text">Take our comprehensive personality and compatibility assessment</p>
+        </div>
+
+        <div class="step-card" data-delay="400">
+            <div class="step-number" style="background: linear-gradient(135deg, #FFD97D, #FF9B9B);">3</div>
+            <p class="step-text">Get matched with compatible friends based on shared interests and values</p>
+        </div>
+    </div>
+
+    <div class="step-card community-card" style="max-width: 600px; margin: 0 auto; text-align: center; flex-direction: column;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🤝</div>
+        <h3 style="font-size: 1.5rem; font-family: 'Playfair Display', serif; color: #2C2420; margin-bottom: 1rem; font-weight: 700;">Find Your Community</h3>
+        <p class="step-text">Connect with people who share your interests, values, and friendship style. Build meaningful relationships that last through our intentional matching process.</p>
+    </div>
+</div>
+
+<!-- CTA Button Section (After Find Your Community) -->
+<div class="cta-section">
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('user_dashboard') }}" class="cta-button" aria-label="Go to your dashboard">
+            Begin Your Journey
+        </a>
+    {% else %}
+        <a href="{{ url_for('login') }}" class="cta-button" aria-label="Get started with Three of Cups">
+            Get Started
+        </a>
+    {% endif %}
+</div>
+
+<!-- Social Media Links at Bottom -->
+<div class="social-links-bottom">
+    <a href="https://instagram.com/threeofcupsllc"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="social-link"
+       aria-label="Follow us on Instagram">
+        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+        </svg>
+        <span>@threeofcupsllc</span>
+    </a>
+
+    <a href="https://www.tiktok.com/@threeofcupsllc"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="social-link"
+       aria-label="Follow us on TikTok">
+        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+        </svg>
+        <span>@threeofcupsllc</span>
+    </a>
+
+    <a href="mailto:admin@threeofcupsllc.com"
+       class="social-link"
+       aria-label="Email us">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        <span>admin@threeofcupsllc.com</span>
+    </a>
+</div>
+
+<script>
+    // Welcome animation with localStorage detection - FIRST VISIT ONLY
+    (function() {
+        const welcomeOverlay = document.getElementById('welcomeOverlay');
+        const hasVisited = localStorage.getItem('hasVisitedThreeOfCups');
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (!hasVisited && !prefersReducedMotion) {
+            // First-time visitor - show full animation (4.5 seconds)
+            welcomeOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            localStorage.setItem('hasVisitedThreeOfCups', 'true');
+
+            setTimeout(() => {
+                welcomeOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    welcomeOverlay.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }, 1000);
+            }, 4500);
+        } else if (!hasVisited && prefersReducedMotion) {
+            // First visit but prefers reduced motion - quick fade
+            welcomeOverlay.classList.remove('hidden');
+            localStorage.setItem('hasVisitedThreeOfCups', 'true');
+
+            setTimeout(() => {
+                welcomeOverlay.classList.add('fade-out');
+                setTimeout(() => {
+                    welcomeOverlay.style.display = 'none';
+                }, 300);
+            }, 500);
+        }
+        // If hasVisited is true, the overlay stays hidden (default state)
+    })();
+
+    // Scroll reveal animation for "How It Works" section
+    (function() {
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = entry.target.dataset.delay || 0;
+                    setTimeout(() => {
+                        entry.target.classList.add('reveal');
+                    }, delay);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe title
+        const title = document.querySelector('.how-it-works-title');
+        if (title) observer.observe(title);
+
+        // Observe step cards
+        const stepCards = document.querySelectorAll('.step-card');
+        stepCards.forEach(card => observer.observe(card));
+
+        // Observe community card
+        const communityCard = document.querySelector('.community-card');
+        if (communityCard) observer.observe(communityCard);
+    })();
+</script>
+
 {% endblock %}
