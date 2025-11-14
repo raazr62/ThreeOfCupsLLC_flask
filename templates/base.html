@@ -97,6 +97,8 @@
             backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(255, 155, 155, 0.3);
             box-shadow: 0 2px 20px rgba(255, 155, 155, 0.1);
+            position: relative;
+            z-index: 10000;
         }
         .footer-glass {
             background: rgba(250, 247, 245, 0.95);
@@ -293,7 +295,7 @@
                             </button>
 
                             <!-- Dropdown Menu -->
-                            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2" style="z-index: 10001;">
                                 <div class="px-4 py-3 border-b border-gray-200">
                                     <p class="text-sm font-semibold text-text-primary">{{ current_user.first_name }} {{ current_user.last_name }}</p>
                                     <p class="text-xs text-gray-500 truncate">{{ current_user.email }}</p>
