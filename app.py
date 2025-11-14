@@ -1170,6 +1170,10 @@ def user_dashboard():
             print(f"Error processing assessment: {e}")
             results_data = None
 
+    # Initialize event lists
+    upcoming_rsvp_events = []
+    past_rsvp_events = []
+
     # Only show matches if email is verified (or if user is admin)
     if current_user.email_verified or current_user.is_admin:
         # Find finalized matches where current user is either user1 or user2
@@ -1185,7 +1189,7 @@ def user_dashboard():
             matched_user = User.query.get(other_user_id)
             if matched_user and matched_user not in matched_users:
                 matched_users.append(matched_user)
-        
+
         # Get user's RSVP'd events
         user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
         rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
