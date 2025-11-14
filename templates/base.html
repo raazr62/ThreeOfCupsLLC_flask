@@ -274,7 +274,11 @@
                 <div class="hidden md:flex items-center space-x-4">
                     <a href="{{ url_for('about') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">about</a>
                     <a href="{{ url_for('services') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">services</a>
+                    <a href="{{ url_for('events') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">events</a>
                     {% if current_user.is_authenticated %}
+                        {% if not current_user.is_admin %}
+                            <a href="{{ url_for('user_dashboard') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">dashboard</a>
+                        {% endif %}
                         {% if current_user.can_access_assessment() %}
                             <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">assessment</a>
                         {% endif %}
@@ -334,7 +338,11 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a href="{{ url_for('about') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">about</a>
                 <a href="{{ url_for('services') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">services</a>
+                <a href="{{ url_for('events') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">events</a>
                 {% if current_user.is_authenticated %}
+                    {% if not current_user.is_admin %}
+                        <a href="{{ url_for('user_dashboard') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">dashboard</a>
+                    {% endif %}
                     {% if current_user.can_access_assessment() %}
                         <a href="{{ url_for('assessment') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">assessment</a>
                     {% endif %}

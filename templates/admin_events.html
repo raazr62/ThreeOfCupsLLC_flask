@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Mobile Dropdown Navigation */
+    .admin-nav-desktop {
+        display: flex;
+    }
+
+    .admin-nav-mobile {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .admin-nav-desktop {
+            display: none;
+        }
+
+        .admin-nav-mobile {
+            display: block;
+        }
+    }
+</style>
+
+<div class="min-h-screen py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Events Management</h2>
+            <p class="text-sm sm:text-base text-text-accent opacity-90">Create and manage community events</p>
+        </div>
+
+        <!-- Navigation - Desktop -->
+        <div class="mb-6 sm:mb-8 admin-nav-desktop justify-center">
+            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+                <a href="{{ url_for('admin_dashboard') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Overview
+                </a>
+                <a href="{{ url_for('admin_users') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Users
+                </a>
+                <a href="{{ url_for('admin_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Assessments
+                </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Pending Matches
+                </a>
+                <a href="{{ url_for('admin_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Matches
+                </a>
+                <a href="{{ url_for('admin_reviewer_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Reviewers
+                </a>
+                <a href="{{ url_for('admin_events') }}"
+                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
+                    Events
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation - Mobile Dropdown -->
+        <div class="mb-6 sm:mb-8 admin-nav-mobile">
+            <select onchange="window.location.href=this.value"
+                    class="w-full bg-white border-2 border-primary rounded-xl px-4 py-3 font-semibold text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="{{ url_for('admin_dashboard') }}">Overview</option>
+                <option value="{{ url_for('admin_users') }}">Users</option>
+                <option value="{{ url_for('admin_assessments') }}">Assessments</option>
+                <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
+                <option value="{{ url_for('admin_matches') }}">Matches</option>
+                <option value="{{ url_for('admin_reviewer_assessments') }}">Reviewers</option>
+                <option value="{{ url_for('admin_events') }}" selected>Events</option>
+            </select>
+        </div>
+
+        <!-- Create New Event Form -->
+        <div class="dark-card rounded-2xl shadow-2xl p-8 mb-8">
+            <h3 class="text-2xl font-bold text-text-primary mb-6 font-brand">Create New Event</h3>
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-semibold text-text-primary mb-2">Event Title *</label>
+                        <input type="text" id="title" name="title" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="e.g., Community Crafting Night">
+                    </div>
+
+                    <div>
+                        <label for="location" class="block text-sm font-semibold text-text-primary mb-2">Location *</label>
+                        <input type="text" id="location" name="location" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="e.g., 123 Main St, City, State">
+                    </div>
+
+                    <div>
+                        <label for="date_time" class="block text-sm font-semibold text-text-primary mb-2">Date & Time *</label>
+                        <input type="datetime-local" id="date_time" name="date_time" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label for="price" class="block text-sm font-semibold text-text-primary mb-2">Price (leave empty for free)</label>
+                        <input type="number" id="price" name="price" step="0.01" min="0"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="0.00">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-semibold text-text-primary mb-2">Description *</label>
+                    <textarea id="description" name="description" required rows="4"
+                              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                              placeholder="Describe the event..."></textarea>
+                </div>
+
+                <div>
+                    <label for="picture" class="block text-sm font-semibold text-text-primary mb-2">Event Picture (optional)</label>
+                    <input type="file" id="picture" name="picture" accept="image/*"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    <p class="text-sm text-gray-500 mt-2">Accepted formats: PNG, JPG, JPEG, GIF (max 16MB)</p>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-secondary hover:to-primary transition-all duration-300 shadow-lg hover:shadow-xl">
+                    Create Event
+                </button>
+            </form>
+        </div>
+
+        <!-- Existing Events -->
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
+            <h3 class="text-2xl font-bold text-text-primary mb-6 font-brand">All Events</h3>
+
+            {% if event_data %}
+                <div class="space-y-6">
+                    {% for data in event_data %}
+                        <div class="bg-white rounded-xl p-6 shadow-md border-l-4 {% if data.event.date_time >= now %}border-green-500{% else %}border-gray-400{% endif %}">
+                            <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-start gap-4">
+                                        {% if data.event.picture %}
+                                            <img src="{{ url_for('static', filename=data.event.picture) }}"
+                                                 alt="{{ data.event.title }}"
+                                                 class="w-24 h-24 object-cover rounded-lg">
+                                        {% endif %}
+                                        <div class="flex-1">
+                                            <h4 class="text-xl font-bold text-text-primary mb-2">{{ data.event.title|safe }}</h4>
+
+                                            <div class="space-y-1 text-sm text-text-accent mb-3">
+                                                <p><strong>When:</strong> {{ data.event.date_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</p>
+                                                <p><strong>Where:</strong> {{ data.event.location|safe }}</p>
+                                                <p><strong>Price:</strong>
+                                                    {% if data.event.price %}
+                                                        ${{ "%.2f"|format(data.event.price) }}
+                                                    {% else %}
+                                                        Free
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>RSVPs:</strong> {{ data.rsvp_count }} attendee(s)</p>
+                                            </div>
+
+                                            <p class="text-text-accent text-sm mb-3">{{ data.event.description|safe }}</p>
+
+                                            {% if data.rsvp_users %}
+                                                <div class="mt-4">
+                                                    <button onclick="toggleRSVPs({{ data.event.id }})"
+                                                            class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
+                                                        View RSVPs ({{ data.rsvp_count }})
+                                                    </button>
+                                                    <div id="rsvps-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
+                                                        <h5 class="font-semibold text-text-primary mb-2">Attendees:</h5>
+                                                        <ul class="space-y-2">
+                                                            {% for user in data.rsvp_users %}
+                                                                <li class="flex items-center gap-2">
+                                                                    {% if user.profile_picture %}
+                                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}"
+                                                                             alt="{{ user.first_name }}"
+                                                                             class="w-8 h-8 rounded-full object-cover">
+                                                                    {% else %}
+                                                                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                                                                            {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                                                        </div>
+                                                                    {% endif %}
+                                                                    <span class="text-sm text-text-accent">
+                                                                        {{ user.first_name }} {{ user.last_name }}
+                                                                        <span class="text-gray-500">({{ user.email }})</span>
+                                                                    </span>
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-2">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                                {% if data.event.date_time >= now %}
+                                                    bg-green-100 text-green-800
+                                                {% else %}
+                                                    bg-gray-100 text-gray-800
+                                                {% endif %}">
+                                        {% if data.event.date_time >= now %}
+                                            Upcoming
+                                        {% else %}
+                                            Past
+                                        {% endif %}
+                                    </span>
+                                    <form method="POST" action="{{ url_for('delete_event', event_id=data.event.id) }}"
+                                          onsubmit="return confirm('Are you sure you want to delete this event? All RSVPs will also be deleted.');"
+                                          class="inline">
+                                        <button type="submit"
+                                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-all duration-300">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-text-accent text-center py-8">No events created yet. Create your first event above!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleRSVPs(eventId) {
+        const rsvpDiv = document.getElementById(`rsvps-${eventId}`);
+        rsvpDiv.classList.toggle('hidden');
+    }
+
+    // Get current datetime for the datetime-local input
+    window.addEventListener('DOMContentLoaded', (event) => {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('date_time').min = now.toISOString().slice(0, 16);
+    });
+</script>
+{% endblock %}

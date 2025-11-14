@@ -56,6 +56,10 @@
                    class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
                     Reviewers
                 </a>
+                <a href="{{ url_for('admin_events') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Events
+                </a>
             </div>
         </div>
 
@@ -69,6 +73,7 @@
                 <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
                 <option value="{{ url_for('admin_matches') }}" selected>Matches</option>
                 <option value="{{ url_for('admin_reviewer_assessments') }}">Reviewers</option>
+                <option value="{{ url_for('admin_events') }}">Events</option>
             </select>
         </div>
 

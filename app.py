@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment, Match
+from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP
 from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
@@ -1185,11 +1185,228 @@ def user_dashboard():
             matched_user = User.query.get(other_user_id)
             if matched_user and matched_user not in matched_users:
                 matched_users.append(matched_user)
+        
+        # Get user's RSVP'd events
+        user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
+        rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
+
+        # Get upcoming events user has RSVP'd to
+        upcoming_rsvp_events = Event.query.filter(
+            Event.id.in_(rsvp_event_ids),
+            Event.date_time >= datetime.utcnow()
+        ).order_by(Event.date_time.asc()).all() if rsvp_event_ids else []
+
+        # Get past events user has RSVP'd to
+        past_rsvp_events = Event.query.filter(
+            Event.id.in_(rsvp_event_ids),
+            Event.date_time < datetime.utcnow()
+        ).order_by(Event.date_time.desc()).all() if rsvp_event_ids else []
 
     return render_template('user_dashboard.html',
                          matched_users=matched_users,
                          results_data=results_data,
-                         email_verified=current_user.email_verified)
+                         email_verified=current_user.email_verified,
+                         upcoming_rsvp_events=upcoming_rsvp_events,
+                         past_rsvp_events=past_rsvp_events)
+
+@app.route('/submit-feedback', methods=['POST'])
+@login_required
+@beta_access_required
+def submit_feedback():
+    feedback_type = request.form.get('feedback_type', 'general')
+    feedback_subject = sanitize_input(request.form.get('feedback_subject', ''), max_length=200, allow_newlines=False)
+    feedback_message = sanitize_input(request.form.get('feedback_message', ''), max_length=5000, allow_newlines=True)
+
+    if not feedback_subject or not feedback_message:
+        flash('Please provide both a subject and message for your feedback.')
+        return redirect(url_for('user_dashboard'))
+
+    # Map feedback type to readable label
+    feedback_type_labels = {
+        'event_recommendation': 'Event Recommendation',
+        'app_issue': 'App Issue/Bug Report',
+        'feature_request': 'Feature Request',
+        'match_feedback': 'Feedback on Matches',
+        'general': 'General Feedback',
+        'other': 'Other'
+    }
+    feedback_type_label = feedback_type_labels.get(feedback_type, 'General Feedback')
+
+    # Send feedback email to admin
+    try:
+        from flask_mail import Message
+        msg = Message(
+            subject=f'User Feedback: {feedback_type_label} - {feedback_subject}',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['admin@threeofcupsllc.com']
+        )
+
+        msg.body = f"""
+User Feedback Submission
+
+From: {current_user.first_name} {current_user.last_name} ({current_user.email})
+User ID: {current_user.id}
+Category: {feedback_type_label}
+Subject: {feedback_subject}
+
+Message:
+{feedback_message}
+
+---
+Submitted on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+        """
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #C17767, #7A9B8E); padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="color: white; margin: 0;">User Feedback Submission</h2>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">
+                <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #C17767; margin-top: 0;">Feedback Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">From:</td>
+                            <td style="padding: 8px 0;">{current_user.first_name} {current_user.last_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Email:</td>
+                            <td style="padding: 8px 0;">{current_user.email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">User ID:</td>
+                            <td style="padding: 8px 0;">{current_user.id}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Category:</td>
+                            <td style="padding: 8px 0;"><span style="background-color: #C17767; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">{feedback_type_label}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Subject:</td>
+                            <td style="padding: 8px 0;">{feedback_subject}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #7A9B8E; margin-top: 0;">Message:</h4>
+                    <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">{feedback_message}</p>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    Submitted on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        mail.send(msg)
+        flash('Thank you for your feedback! We appreciate you helping us improve Three of Cups.')
+    except Exception as e:
+        print(f"Error sending feedback email: {e}")
+        flash('There was an issue submitting your feedback. Please try again or contact us directly at admin@threeofcupsllc.com')
+
+    return redirect(url_for('user_dashboard'))
+
+@app.route('/submit-event-recommendation', methods=['POST'])
+@login_required
+@beta_access_required
+def submit_event_recommendation():
+    event_type = request.form.get('event_type', '')
+    event_title = sanitize_input(request.form.get('event_title', ''), max_length=200, allow_newlines=False)
+    event_description = sanitize_input(request.form.get('event_description', ''), max_length=2000, allow_newlines=True)
+
+    if not event_type or not event_title or not event_description:
+        flash('Please fill out all fields for your event recommendation.')
+        return redirect(url_for('events'))
+
+    # Map event type to readable label
+    event_type_labels = {
+        'social': 'Social Gathering',
+        'workshop': 'Workshop or Class',
+        'wellness': 'Wellness Activity',
+        'outdoor': 'Outdoor Adventure',
+        'cultural': 'Cultural Experience',
+        'creative': 'Creative Activity',
+        'other': 'Other'
+    }
+    event_type_label = event_type_labels.get(event_type, 'Other')
+
+    # Send event recommendation email to admin
+    try:
+        from flask_mail import Message
+        msg = Message(
+            subject=f'Event Recommendation: {event_type_label} - {event_title}',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['admin@threeofcupsllc.com']
+        )
+
+        msg.body = f"""
+Event Recommendation Submission
+
+From: {current_user.first_name} {current_user.last_name} ({current_user.email})
+User ID: {current_user.id}
+Event Type: {event_type_label}
+Event Idea: {event_title}
+
+Description:
+{event_description}
+
+---
+Submitted on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+        """
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #9333ea, #ec4899); padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="color: white; margin: 0;">Event Recommendation</h2>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">
+                <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #9333ea; margin-top: 0;">Recommendation Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">From:</td>
+                            <td style="padding: 8px 0;">{current_user.first_name} {current_user.last_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Email:</td>
+                            <td style="padding: 8px 0;">{current_user.email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">User ID:</td>
+                            <td style="padding: 8px 0;">{current_user.id}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Event Type:</td>
+                            <td style="padding: 8px 0;"><span style="background-color: #9333ea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">{event_type_label}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Event Idea:</td>
+                            <td style="padding: 8px 0;">{event_title}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ec4899; margin-top: 0;">Description:</h4>
+                    <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">{event_description}</p>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    Submitted on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        mail.send(msg)
+        flash('Thank you for your event recommendation! We love hearing ideas from our community.')
+    except Exception as e:
+        print(f"Error sending event recommendation email: {e}")
+        flash('There was an issue submitting your recommendation. Please try again or contact us directly at admin@threeofcupsllc.com')
+
+    return redirect(url_for('events'))
 
 # Reviewer access routes
 @app.route('/reviewer-login', methods=['GET', 'POST'])
@@ -1258,18 +1475,18 @@ def reviewer_thank_you():
 def get_user_assessment(user_id):
     if not current_user.is_admin:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     user = User.query.get(user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
+
     assessment = Assessment.query.filter_by(user_id=user_id).first()
     if not assessment:
         return jsonify({'error': 'No assessment found'}), 404
-    
+
     import json
     parsed_answers = {}
-    
+
     if assessment.answers:
         try:
             # Try to parse as JSON (new format)
@@ -1279,20 +1496,20 @@ def get_user_assessment(user_id):
             # Fall back to old text format parsing
             questions = [
                 "What are your main hobbies and interests?",
-                "How do you prefer to spend your free time?", 
+                "How do you prefer to spend your free time?",
                 "What values are most important to you in friendships?",
                 "What kind of social activities do you enjoy?",
                 "How do you handle conflicts or disagreements?",
                 "What gender(s) are you open to being matched with for friendship?"
             ]
-            
+
             answer_blocks = assessment.answers.split('\n\n')
             for block in answer_blocks:
                 if 'Q' in block and 'A:' in block:
                     lines = block.split('\n')
                     question_line = lines[0]
                     answer_line = '\n'.join(lines[1:]) if len(lines) > 1 else ''
-                    
+
                     # Extract question number
                     if question_line.startswith('Q') and ':' in question_line:
                         q_num = question_line.split(':')[0].replace('Q', '')
@@ -1303,7 +1520,7 @@ def get_user_assessment(user_id):
                                     'question': questions[q_index],
                                     'answer': answer_line.replace('A: ', '', 1) if answer_line.startswith('A: ') else answer_line
                                 }
-    
+
     return jsonify({
         'user': {
             'id': user.id,
@@ -1314,6 +1531,190 @@ def get_user_assessment(user_id):
         },
         'assessment': parsed_answers
     })
+
+# Events routes
+@app.route('/events')
+@beta_access_required
+def events():
+    # Get all upcoming events (future events only)
+    from sqlalchemy import or_
+    upcoming_events = Event.query.filter(
+        Event.date_time >= datetime.utcnow()
+    ).order_by(Event.date_time.asc()).all()
+
+    # Get user's RSVPs if authenticated
+    user_rsvps = set()
+    if current_user.is_authenticated:
+        rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
+        user_rsvps = {rsvp.event_id for rsvp in rsvps}
+
+    # Get RSVP counts for each event
+    event_rsvp_counts = {}
+    for event in upcoming_events:
+        count = EventRSVP.query.filter_by(event_id=event.id).count()
+        event_rsvp_counts[event.id] = count
+
+    return render_template('events.html',
+                         events=upcoming_events,
+                         user_rsvps=user_rsvps,
+                         event_rsvp_counts=event_rsvp_counts)
+
+@app.route('/admin/events', methods=['GET', 'POST'])
+@login_required
+def admin_events():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # Sanitize inputs
+        title = sanitize_input(request.form.get('title', ''), max_length=200, allow_newlines=False)
+        description = sanitize_input(request.form.get('description', ''), max_length=5000)
+        location = sanitize_location(request.form.get('location', ''))
+        date_time_str = request.form.get('date_time', '').strip()
+        price_str = request.form.get('price', '').strip()
+
+        # Validate required fields
+        if not all([title, description, location, date_time_str]):
+            flash('Title, description, location, and date/time are required.')
+            return redirect(url_for('admin_events'))
+
+        # Parse date/time
+        try:
+            event_date_time = datetime.strptime(date_time_str, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            flash('Invalid date/time format.')
+            return redirect(url_for('admin_events'))
+
+        # Parse price (optional)
+        price = None
+        if price_str:
+            try:
+                price = float(price_str)
+                if price < 0:
+                    flash('Price cannot be negative.')
+                    return redirect(url_for('admin_events'))
+            except ValueError:
+                flash('Invalid price format.')
+                return redirect(url_for('admin_events'))
+
+        # Handle picture upload
+        picture = None
+        if 'picture' in request.files:
+            file = request.files['picture']
+            if file and file.filename != '':
+                is_valid, error_msg = validate_file_upload(file.filename)
+                if not is_valid:
+                    flash(error_msg)
+                    return redirect(url_for('admin_events'))
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"event_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
+
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+
+                file_path = os.path.join(upload_folder, unique_filename)
+                file.save(file_path)
+                picture = f'uploads/{unique_filename}'
+
+        # Create event
+        new_event = Event(
+            title=title,
+            description=description,
+            location=location,
+            date_time=event_date_time,
+            price=price,
+            picture=picture,
+            created_by=current_user.id
+        )
+        db.session.add(new_event)
+        db.session.commit()
+
+        flash('Event created successfully!')
+        return redirect(url_for('admin_events'))
+
+    # Get all events (past and future)
+    all_events = Event.query.order_by(Event.date_time.desc()).all()
+
+    # Get RSVP counts and lists for each event
+    event_data = []
+    for event in all_events:
+        rsvps = EventRSVP.query.filter_by(event_id=event.id).all()
+        rsvp_users = []
+        for rsvp in rsvps:
+            user = User.query.get(rsvp.user_id)
+            if user:
+                rsvp_users.append(user)
+
+        event_data.append({
+            'event': event,
+            'rsvp_count': len(rsvps),
+            'rsvp_users': rsvp_users
+        })
+
+    return render_template('admin_events.html', event_data=event_data, now=datetime.utcnow())
+
+@app.route('/api/event/rsvp/<int:event_id>', methods=['POST'])
+@login_required
+def rsvp_event(event_id):
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    # Check if user already RSVP'd
+    existing_rsvp = EventRSVP.query.filter_by(
+        event_id=event_id,
+        user_id=current_user.id
+    ).first()
+
+    if existing_rsvp:
+        return jsonify({'error': 'Already RSVP\'d to this event'}), 400
+
+    # Create RSVP
+    rsvp = EventRSVP(event_id=event_id, user_id=current_user.id)
+    db.session.add(rsvp)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'RSVP successful!'})
+
+@app.route('/api/event/unrsvp/<int:event_id>', methods=['POST'])
+@login_required
+def unrsvp_event(event_id):
+    rsvp = EventRSVP.query.filter_by(
+        event_id=event_id,
+        user_id=current_user.id
+    ).first()
+
+    if not rsvp:
+        return jsonify({'error': 'RSVP not found'}), 404
+
+    db.session.delete(rsvp)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'RSVP removed successfully!'})
+
+@app.route('/admin/events/<int:event_id>/delete', methods=['POST'])
+@login_required
+def delete_event(event_id):
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    event = Event.query.get(event_id)
+    if not event:
+        flash('Event not found.')
+        return redirect(url_for('admin_events'))
+
+    # Delete all RSVPs first
+    EventRSVP.query.filter_by(event_id=event_id).delete()
+
+    # Delete event
+    db.session.delete(event)
+    db.session.commit()
+
+    flash('Event deleted successfully!')
+    return redirect(url_for('admin_events'))
 
 if __name__ == '__main__':
     app.run(debug=True)
