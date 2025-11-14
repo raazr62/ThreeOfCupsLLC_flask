@@ -57,13 +57,15 @@
         </div>
         {% endif %}
 
-        <!-- Matches Section -->
-        <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
-                <h3 class="text-xl font-semibold text-white">Your Matches</h3>
-            </div>
+        <!-- Grid Layout for Matches and Upcoming Events -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Matches Section -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+                    <h3 class="text-xl font-semibold text-white">Your Matches</h3>
+                </div>
 
-            <div class="p-6">
+                <div class="p-6">
                     {% if not email_verified and not current_user.is_admin %}
                         <!-- Email not verified message -->
                         <div class="text-center py-12">
@@ -85,8 +87,8 @@
                                 <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
                                     <div class="flex items-center space-x-4">
                                         {% if user.profile_picture %}
-                                            <img src="{{ url_for('static', filename=user.profile_picture) }}" 
-                                                 alt="{{ user.first_name }}'s Profile" 
+                                            <img src="{{ url_for('static', filename=user.profile_picture) }}"
+                                                 alt="{{ user.first_name }}'s Profile"
                                                  class="w-12 h-12 rounded-full object-cover">
                                         {% else %}
                                             <div class="w-12 h-12 bg-gradient-to-br from-orange-light to-orange-medium rounded-full flex items-center justify-center">
@@ -118,17 +120,16 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <!-- Upcoming Events Section -->
-        <div class="mt-8 dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4">
+            <!-- Upcoming Events Section -->
+            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
                 <h3 class="text-xl font-semibold text-white">Your Upcoming Events</h3>
             </div>
 
             <div class="p-6">
                 {% if upcoming_rsvp_events %}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-6">
                         {% for event in upcoming_rsvp_events %}
                             <div class="bg-white rounded-xl p-5 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                                 {% if event.picture %}
@@ -171,16 +172,10 @@
 
                                 <p class="text-sm text-text-accent mb-4 line-clamp-2">{{ event.description|safe }}</p>
 
-                                <div class="flex gap-2">
-                                    <a href="{{ url_for('events') }}"
-                                       class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                        View Details
-                                    </a>
-                                    <button onclick="unrsvpEvent({{ event.id }})"
-                                            class="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium px-4 py-2 rounded-lg transition-colors text-sm">
-                                        Cancel RSVP
-                                    </button>
-                                </div>
+                                <button type="button" onclick="unrsvpEvent({{ event.id }})"
+                                        class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-medium px-4 py-2 rounded-lg transition-colors text-sm">
+                                    Cancel RSVP
+                                </button>
                             </div>
                         {% endfor %}
                     </div>
@@ -192,12 +187,13 @@
                         <h4 class="text-lg font-semibold text-text-primary mb-2">No Upcoming Events</h4>
                         <p class="text-gray-600 mb-4">You haven't RSVP'd to any upcoming events yet.</p>
                         <a href="{{ url_for('events') }}"
-                           class="inline-block bg-gradient-to-r from-yellow-500 to-yellow-600 text-white font-semibold py-2 px-6 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 shadow-lg">
+                           class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2 px-6 rounded-lg hover:from-orange-dark hover:to-orange-medium transition-all duration-300 shadow-lg">
                             Browse Events
                         </a>
                     </div>
                 {% endif %}
             </div>
+        </div>
         </div>
 
         <!-- Past Events Section -->
@@ -247,6 +243,69 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Feedback Section -->
+        <div class="mt-8 dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4">
+                <h3 class="text-xl font-semibold text-white">Share Your Feedback</h3>
+                <p class="text-white text-sm opacity-90 mt-1">Help us improve! We're in our early stages and your input matters.</p>
+            </div>
+
+            <div class="p-6">
+                <form method="POST" action="{{ url_for('submit_feedback') }}" class="space-y-6">
+                    <!-- Feedback Type -->
+                    <div>
+                        <label for="feedback_type" class="block text-sm font-semibold text-text-primary mb-2">
+                            What would you like to share?
+                        </label>
+                        <select id="feedback_type" name="feedback_type" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                            <option value="">Select a category...</option>
+                            <option value="event_recommendation">Event Recommendation</option>
+                            <option value="app_issue">App Issue/Bug Report</option>
+                            <option value="feature_request">Feature Request</option>
+                            <option value="match_feedback">Feedback on Matches</option>
+                            <option value="general">General Feedback</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <label for="feedback_subject" class="block text-sm font-semibold text-text-primary mb-2">
+                            Subject
+                        </label>
+                        <input type="text" id="feedback_subject" name="feedback_subject" required
+                               placeholder="Brief summary of your feedback"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    </div>
+
+                    <!-- Message -->
+                    <div>
+                        <label for="feedback_message" class="block text-sm font-semibold text-text-primary mb-2">
+                            Your Feedback
+                        </label>
+                        <textarea id="feedback_message" name="feedback_message" required rows="6"
+                                  placeholder="Share your thoughts, suggestions, or describe any issues you've encountered..."
+                                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300 resize-vertical"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex items-center justify-between">
+                        <p class="text-xs text-gray-500">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                            Your feedback will be sent to our team
+                        </p>
+                        <button type="submit"
+                                class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 px-8 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Send Feedback
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

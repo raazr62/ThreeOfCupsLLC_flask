@@ -47,7 +47,7 @@ mail = Mail(app)
 
 # Beta access settings
 BETA_ACCESS_CODE = 'threeofcups2025foundedbyiris'  # Change this to your desired access code
-UNDER_CONSTRUCTION = False  # Set to False when ready to launch
+UNDER_CONSTRUCTION = True  # Set to False when ready to launch
 
 # Reviewer access settings
 REVIEWER_ACCESS_CODE = 'threeofcups2025'  # Change this to your desired reviewer access code
@@ -1208,6 +1208,205 @@ def user_dashboard():
                          email_verified=current_user.email_verified,
                          upcoming_rsvp_events=upcoming_rsvp_events,
                          past_rsvp_events=past_rsvp_events)
+
+@app.route('/submit-feedback', methods=['POST'])
+@login_required
+@beta_access_required
+def submit_feedback():
+    feedback_type = request.form.get('feedback_type', 'general')
+    feedback_subject = sanitize_input(request.form.get('feedback_subject', ''), max_length=200, allow_newlines=False)
+    feedback_message = sanitize_input(request.form.get('feedback_message', ''), max_length=5000, allow_newlines=True)
+
+    if not feedback_subject or not feedback_message:
+        flash('Please provide both a subject and message for your feedback.')
+        return redirect(url_for('user_dashboard'))
+
+    # Map feedback type to readable label
+    feedback_type_labels = {
+        'event_recommendation': 'Event Recommendation',
+        'app_issue': 'App Issue/Bug Report',
+        'feature_request': 'Feature Request',
+        'match_feedback': 'Feedback on Matches',
+        'general': 'General Feedback',
+        'other': 'Other'
+    }
+    feedback_type_label = feedback_type_labels.get(feedback_type, 'General Feedback')
+
+    # Send feedback email to admin
+    try:
+        from flask_mail import Message
+        msg = Message(
+            subject=f'User Feedback: {feedback_type_label} - {feedback_subject}',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['admin@threeofcupsllc.com']
+        )
+
+        msg.body = f"""
+User Feedback Submission
+
+From: {current_user.first_name} {current_user.last_name} ({current_user.email})
+User ID: {current_user.id}
+Category: {feedback_type_label}
+Subject: {feedback_subject}
+
+Message:
+{feedback_message}
+
+---
+Submitted on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+        """
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #C17767, #7A9B8E); padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="color: white; margin: 0;">User Feedback Submission</h2>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">
+                <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #C17767; margin-top: 0;">Feedback Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">From:</td>
+                            <td style="padding: 8px 0;">{current_user.first_name} {current_user.last_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Email:</td>
+                            <td style="padding: 8px 0;">{current_user.email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">User ID:</td>
+                            <td style="padding: 8px 0;">{current_user.id}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Category:</td>
+                            <td style="padding: 8px 0;"><span style="background-color: #C17767; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">{feedback_type_label}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Subject:</td>
+                            <td style="padding: 8px 0;">{feedback_subject}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #7A9B8E; margin-top: 0;">Message:</h4>
+                    <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">{feedback_message}</p>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    Submitted on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        mail.send(msg)
+        flash('Thank you for your feedback! We appreciate you helping us improve Three of Cups.')
+    except Exception as e:
+        print(f"Error sending feedback email: {e}")
+        flash('There was an issue submitting your feedback. Please try again or contact us directly at admin@threeofcupsllc.com')
+
+    return redirect(url_for('user_dashboard'))
+
+@app.route('/submit-event-recommendation', methods=['POST'])
+@login_required
+@beta_access_required
+def submit_event_recommendation():
+    event_type = request.form.get('event_type', '')
+    event_title = sanitize_input(request.form.get('event_title', ''), max_length=200, allow_newlines=False)
+    event_description = sanitize_input(request.form.get('event_description', ''), max_length=2000, allow_newlines=True)
+
+    if not event_type or not event_title or not event_description:
+        flash('Please fill out all fields for your event recommendation.')
+        return redirect(url_for('events'))
+
+    # Map event type to readable label
+    event_type_labels = {
+        'social': 'Social Gathering',
+        'workshop': 'Workshop or Class',
+        'wellness': 'Wellness Activity',
+        'outdoor': 'Outdoor Adventure',
+        'cultural': 'Cultural Experience',
+        'creative': 'Creative Activity',
+        'other': 'Other'
+    }
+    event_type_label = event_type_labels.get(event_type, 'Other')
+
+    # Send event recommendation email to admin
+    try:
+        from flask_mail import Message
+        msg = Message(
+            subject=f'Event Recommendation: {event_type_label} - {event_title}',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['admin@threeofcupsllc.com']
+        )
+
+        msg.body = f"""
+Event Recommendation Submission
+
+From: {current_user.first_name} {current_user.last_name} ({current_user.email})
+User ID: {current_user.id}
+Event Type: {event_type_label}
+Event Idea: {event_title}
+
+Description:
+{event_description}
+
+---
+Submitted on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+        """
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #9333ea, #ec4899); padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="color: white; margin: 0;">Event Recommendation</h2>
+            </div>
+            <div style="background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">
+                <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #9333ea; margin-top: 0;">Recommendation Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">From:</td>
+                            <td style="padding: 8px 0;">{current_user.first_name} {current_user.last_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Email:</td>
+                            <td style="padding: 8px 0;">{current_user.email}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">User ID:</td>
+                            <td style="padding: 8px 0;">{current_user.id}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Event Type:</td>
+                            <td style="padding: 8px 0;"><span style="background-color: #9333ea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">{event_type_label}</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Event Idea:</td>
+                            <td style="padding: 8px 0;">{event_title}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #ec4899; margin-top: 0;">Description:</h4>
+                    <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">{event_description}</p>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    Submitted on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        mail.send(msg)
+        flash('Thank you for your event recommendation! We love hearing ideas from our community.')
+    except Exception as e:
+        print(f"Error sending event recommendation email: {e}")
+        flash('There was an issue submitting your recommendation. Please try again or contact us directly at admin@threeofcupsllc.com')
+
+    return redirect(url_for('events'))
 
 # Reviewer access routes
 @app.route('/reviewer-login', methods=['GET', 'POST'])

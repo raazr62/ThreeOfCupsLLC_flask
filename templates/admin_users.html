@@ -73,6 +73,7 @@
                 <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
                 <option value="{{ url_for('admin_matches') }}">Matches</option>
                 <option value="{{ url_for('admin_reviewer_assessments') }}">Reviewers</option>
+                <option value="{{ url_for('admin_events') }}">Events</option>
             </select>
         </div>
 
@@ -145,21 +146,23 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 {% if data.has_assessment %}
                                     {% if data.assessment_reviewed %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <button type="button" onclick="viewAssessment({{ data.user.id }}, '{{ data.user.first_name }} {{ data.user.last_name }}')"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
                                             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                         </svg>
                                         Reviewed
-                                    </span>
+                                    </button>
                                     {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <button type="button" onclick="viewAssessment({{ data.user.id }}, '{{ data.user.first_name }} {{ data.user.last_name }}')"
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
                                             <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd"></path>
                                         </svg>
                                         Completed
-                                    </span>
+                                    </button>
                                     {% endif %}
                                 {% else %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -190,4 +193,551 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Assessment Modal -->
+<div id="assessmentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-white" id="modalUserName">Assessment Details</h3>
+            <button type="button" onclick="closeAssessmentModal()" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]" id="assessmentContent">
+            <div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Assessment rendering functions (matching admin_assessments.html)
+function renderStructuredAssessment(assessment) {
+    // Define option mappings for fields that store numbers instead of text
+    const RECHARGE_STYLE_OPTIONS = [
+        "I need a lot of alone time",
+        "I need some time to myself",
+        "I need both in balance",
+        "I need some human connection",
+        "I need a lot of meaningful human connection"
+    ];
+
+    const FEEDBACK_COMFORT_OPTIONS = [
+        "1 - very uncomfortable, I take it personally",
+        "2 - uncomfortable",
+        "3 - neutral",
+        "4 - comfortable",
+        "5 - very comfortable, I welcome and appreciate it"
+    ];
+
+    const IDEAL_HANGOUT_OPTIONS = [
+        "Deep one-on-one conversation",
+        "Small, intimate group gathering (3-5 people)",
+        "Larger social events and group activities",
+        "Mix of all three"
+    ];
+
+    const HURT_FEELINGS_NEEDS_OPTIONS = [
+        "Space first, then a conversation when we're both ready",
+        "Immediate acknowledgement of the hurt",
+        "To understand perspective and intentions",
+        "A sincere apology with accountability",
+        "Reassurance from the friend that we're still good"
+    ];
+
+    const CONNECTION_LANGUAGE_OPTIONS = [
+        "Quality time (hangouts, phone calls, etc)",
+        "Physical touch (hugging, holding hands)",
+        "Words of affirmation (encouragement, posts about you)",
+        "Emotional Support (showing up in hard times, being a listening ear)",
+        "Other forms of support (problem-solving, providing resources like money/meals)",
+        "Gifts (items that remind them of you)"
+    ];
+
+    const VALUES_OPTIONS = [
+        "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
+        "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals",
+        "Family (chosen or biological)", "Fun", "Forgiveness", "Generosity", "Genuineness",
+        "Fulfillment", "Gratitude", "Spirituality", "Religion", "Growth", "Honesty", "Trust",
+        "Inclusiveness", "Independence", "Community", "Intuition", "Integrity", "Leadership",
+        "Loyalty", "Love", "Non-conformity", "Order", "Passion", "Patience", "Purpose",
+        "Rationality", "Responsibility", "Resilience", "Self-awareness", "Risk-taking",
+        "Self-expression", "Uniqueness", "Service", "Solitude", "Stability", "Vulnerability",
+        "Thrift", "Wisdom", "Work Ethic", "Sexuality"
+    ];
+
+    let html = '<div class="space-y-6">';
+
+    // Helper functions
+    const renderTextResponse = (question, answer) => {
+        if (!answer || answer.trim() === '') return '';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <p class="text-sm text-gray-700 italic">${answer}</p>
+            </div>
+        `;
+    };
+
+    const renderMultiSelect = (question, answers) => {
+        if (!answers || (Array.isArray(answers) && answers.length === 0)) return '';
+        const answerArray = Array.isArray(answers) ? answers : [answers];
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <div class="flex flex-wrap gap-2">
+                    ${answerArray.map(a => `<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">${a}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    const renderSingleChoice = (question, answer) => {
+        if (!answer) return '';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <p class="text-sm text-gray-700">${answer}</p>
+            </div>
+        `;
+    };
+
+    const renderScale = (question, value) => {
+        if (!value) return '';
+        const percentage = (value / 10) * 100;
+        const color = value >= 7 ? 'green' : value >= 4 ? 'yellow' : 'red';
+        return `
+            <div class="bg-white rounded-lg p-3 shadow-sm">
+                <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full bg-${color}-500" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-sm font-bold text-gray-700">${value}/10</span>
+                </div>
+            </div>
+        `;
+    };
+
+    // TELL US MORE SECTION
+    if (assessment.tell_us_more_what_brings_you || assessment.tell_us_more_friendship_meaning) {
+        html += '<div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border-l-4 border-purple-500">';
+        html += '<h6 class="font-bold text-purple-700 text-lg mb-4">Tell Us More</h6>';
+        html += '<div class="space-y-3">';
+        html += renderTextResponse('What brings you to Three of Cups?', assessment.tell_us_more_what_brings_you);
+        html += renderTextResponse('What does friendship mean to you?', assessment.tell_us_more_friendship_meaning);
+        html += '</div></div>';
+    }
+
+    // FRIENDSHIP READINESS SECTION
+    if (assessment.friendship_readiness_emotional_availability ||
+        assessment.friendship_readiness_time_energy_capacity ||
+        assessment.friendship_readiness_friendship_intention) {
+        html += '<div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border-l-4 border-blue-500">';
+        html += '<h6 class="font-bold text-blue-700 text-lg mb-4">Friendship Readiness</h6>';
+        html += '<div class="space-y-3">';
+        html += renderScale('Emotional Availability (1-10)', assessment.friendship_readiness_emotional_availability);
+        html += renderSingleChoice('Time & Energy Capacity', assessment.friendship_readiness_time_energy_capacity);
+        html += renderSingleChoice('Friendship Intention', assessment.friendship_readiness_friendship_intention);
+        html += renderSingleChoice('Personal Work on Friendship Patterns', assessment.friendship_readiness_personal_work);
+        html += renderMultiSelect('Life Circumstances', assessment.friendship_readiness_life_circumstances);
+        html += renderTextResponse('Life circumstances details', assessment.friendship_readiness_life_circumstances_details);
+        html += renderTextResponse('What does "showing up" look like for you?', assessment.friendship_readiness_showing_up);
+        html += '</div></div>';
+    }
+
+    // PERSONALITY & SOCIAL STYLE SECTION
+    if (assessment.personality_social_style_recharge_style ||
+        assessment.personality_social_style_social_settings) {
+        html += '<div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border-l-4 border-green-500">';
+        html += '<h6 class="font-bold text-green-700 text-lg mb-4">Personality & Social Style</h6>';
+        html += '<div class="space-y-3">';
+
+        // Recharge Style - convert numeric value to option text
+        if (assessment.personality_social_style_recharge_style) {
+            const rechargeValue = parseInt(assessment.personality_social_style_recharge_style);
+            const rechargeText = RECHARGE_STYLE_OPTIONS[rechargeValue - 1] || assessment.personality_social_style_recharge_style;
+            html += renderSingleChoice('Recharge Style', rechargeText);
+        }
+        html += renderSingleChoice('In Social Settings', assessment.personality_social_style_social_settings);
+
+        // Handle ranking - ideal_hangout
+        if (assessment.personality_social_style_ideal_hangout_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 4; i++) {
+                const key = `personality_social_style_ideal_hangout_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: IDEAL_HANGOUT_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Ideal Hangout (Ranked Preferences)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+
+        html += renderSingleChoice('Making Plans', assessment.personality_social_style_making_plans);
+        html += renderMultiSelect('Communication Preferences (Top 2)', assessment.personality_social_style_communication_preference);
+        html += renderSingleChoice('Texting Style', assessment.personality_social_style_texting_style);
+        html += '</div></div>';
+    }
+
+    // CONFLICT & REPAIR SECTION
+    if (assessment.conflict_repair_conflict_response ||
+        assessment.conflict_repair_repair_looks_like) {
+        html += '<div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border-l-4 border-orange-500">';
+        html += '<h6 class="font-bold text-orange-700 text-lg mb-4">Navigating Conflict & Repair</h6>';
+        html += '<div class="space-y-3">';
+        html += renderSingleChoice('When conflict arises, I typically...', assessment.conflict_repair_conflict_response);
+        html += renderMultiSelect('Repair looks like...', assessment.conflict_repair_repair_looks_like);
+        html += renderSingleChoice('Flaky Friend Scenario', assessment.conflict_repair_flaky_friend_scenario);
+
+        // Comfort with Feedback - convert numeric value to option text
+        if (assessment.conflict_repair_feedback_comfort) {
+            const feedbackValue = parseInt(assessment.conflict_repair_feedback_comfort);
+            const feedbackText = FEEDBACK_COMFORT_OPTIONS[feedbackValue - 1] || assessment.conflict_repair_feedback_comfort;
+            html += renderSingleChoice('Comfort with Feedback', feedbackText);
+        }
+
+        // Handle ranking - hurt feelings needs
+        if (assessment.conflict_repair_hurt_feelings_needs_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 5; i++) {
+                const key = `conflict_repair_hurt_feelings_needs_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: HURT_FEELINGS_NEEDS_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">When hurt, I need most (Ranked)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+
+        html += renderSingleChoice('Boundary Setting', assessment.conflict_repair_boundary_setting);
+        html += renderTextResponse('What have past friendship challenges taught you?', assessment.conflict_repair_friendship_lessons);
+        html += '</div></div>';
+    }
+
+    // HOBBIES & INTERESTS SECTION
+    if (assessment.hobbies_interests_activities_interests ||
+        assessment.hobbies_interests_want_to_try) {
+        html += '<div class="bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-4 border-l-4 border-pink-500">';
+        html += '<h6 class="font-bold text-pink-700 text-lg mb-4">Hobbies & Interests</h6>';
+        html += '<div class="space-y-3">';
+        html += renderMultiSelect('Activities & Interests', assessment.hobbies_interests_activities_interests);
+        html += renderTextResponse('Want to try with a friend', assessment.hobbies_interests_want_to_try);
+        html += renderTextResponse('How do you spend free time?', assessment.hobbies_interests_free_time);
+        html += renderSingleChoice('Doing vs Being Friend', assessment.hobbies_interests_doing_vs_being);
+        html += '</div></div>';
+    }
+
+    // VALUES SECTION - with ranking
+    if (assessment.values_top_values_0 !== undefined) {
+        const rankedValues = [];
+        for (let i = 0; i < VALUES_OPTIONS.length; i++) {
+            const key = `values_top_values_${i}`;
+            if (assessment[key]) {
+                const rank = parseInt(assessment[key]);
+                rankedValues.push({ rank: rank, text: VALUES_OPTIONS[i] });
+            }
+        }
+        rankedValues.sort((a, b) => a.rank - b.rank);
+
+        html += '<div class="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-4 border-l-4 border-indigo-500">';
+        html += '<h6 class="font-bold text-indigo-700 text-lg mb-4">Core Values (Top 10, Ranked)</h6>';
+        html += '<ol class="list-decimal list-inside space-y-2">';
+        rankedValues.forEach(value => {
+            html += `<li class="bg-white rounded-lg p-2 text-sm text-gray-700 font-medium">${value.text}</li>`;
+        });
+        html += '</ol></div>';
+    }
+
+    // FRIENDSHIP VALUES SECTION
+    if (assessment.friendship_values_statements_resonate ||
+        assessment.friendship_values_friendship_needs) {
+        html += '<div class="bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-4 border-l-4 border-teal-500">';
+        html += '<h6 class="font-bold text-teal-700 text-lg mb-4">Friendship Values</h6>';
+        html += '<div class="space-y-3">';
+        html += renderMultiSelect('Statements that resonate (Top 3)', assessment.friendship_values_statements_resonate);
+        html += renderMultiSelect('In friendships, you need...', assessment.friendship_values_friendship_needs);
+        html += renderTextResponse('Non-Negotiables', assessment.friendship_values_non_negotiables);
+        html += renderTextResponse('Dealbreakers', assessment.friendship_values_dealbreakers);
+
+        // Handle ranking - connection language
+        if (assessment.friendship_values_connection_language_0 !== undefined) {
+            const rankedOptions = [];
+            for (let i = 0; i < 6; i++) {
+                const key = `friendship_values_connection_language_${i}`;
+                if (assessment[key]) {
+                    const rank = parseInt(assessment[key]);
+                    rankedOptions.push({ rank: rank, text: CONNECTION_LANGUAGE_OPTIONS[i] });
+                }
+            }
+            rankedOptions.sort((a, b) => a.rank - b.rank);
+
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Connection Language (Ranked)</p>';
+            html += '<ol class="list-decimal list-inside space-y-1">';
+            rankedOptions.forEach(option => {
+                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
+            });
+            html += '</ol></div>';
+        }
+        html += '</div></div>';
+    }
+
+    // LOGISTICS SECTION
+    if (assessment.logistics_connection_frequency ||
+        assessment.logistics_connection_type) {
+        html += '<div class="bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg p-4 border-l-4 border-cyan-500">';
+        html += '<h6 class="font-bold text-cyan-700 text-lg mb-4">Logistics</h6>';
+        html += '<div class="space-y-3">';
+        html += renderSingleChoice('Ideal Connection Frequency', assessment.logistics_connection_frequency);
+        html += renderSingleChoice('Connection Type', assessment.logistics_connection_type);
+        html += '</div></div>';
+    }
+
+    // WRAPPING UP SECTION
+    if (assessment.wrapping_up_ideal_friend_words_word1 ||
+        assessment.wrapping_up_what_can_offer) {
+        html += '<div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 border-l-4 border-amber-500">';
+        html += '<h6 class="font-bold text-amber-700 text-lg mb-4">Ideal Friend & Preferences</h6>';
+        html += '<div class="space-y-3">';
+
+        // Three words
+        if (assessment.wrapping_up_ideal_friend_words_word1) {
+            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
+            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Ideal Friend in Three Words</p>';
+            html += '<div class="flex gap-2">';
+            html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word1}</span>`;
+            if (assessment.wrapping_up_ideal_friend_words_word2) {
+                html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word2}</span>`;
+            }
+            if (assessment.wrapping_up_ideal_friend_words_word3) {
+                html += `<span class="bg-amber-600 text-white px-3 py-1 rounded-full text-sm">${assessment.wrapping_up_ideal_friend_words_word3}</span>`;
+            }
+            html += '</div></div>';
+        }
+
+        html += renderTextResponse('What can you offer in friendship?', assessment.wrapping_up_what_can_offer);
+        html += renderTextResponse('What would you like to receive?', assessment.wrapping_up_what_want_receive);
+        html += renderMultiSelect('Gender Preference', assessment.wrapping_up_gender_preference);
+        html += renderMultiSelect('Age Preference', assessment.wrapping_up_age_preference);
+        html += '</div></div>';
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function viewAssessment(userId, userName) {
+    const modal = document.getElementById('assessmentModal');
+    const modalUserName = document.getElementById('modalUserName');
+    const assessmentContent = document.getElementById('assessmentContent');
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modalUserName.textContent = `${userName}'s Assessment`;
+
+    // Show loading spinner
+    assessmentContent.innerHTML = `
+        <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+    `;
+
+    // Fetch assessment data
+    fetch(`/api/user_assessment/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                assessmentContent.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-600">${data.error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build assessment display
+            let html = `
+                <div class="space-y-6">
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <h4 class="font-semibold text-text-primary mb-3">User Information</h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <span class="text-gray-500">Name:</span>
+                                <span class="text-text-primary font-medium ml-2">${data.user.name}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Email:</span>
+                                <span class="text-text-primary ml-2">${data.user.email}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200">
+                        <div class="bg-gradient-to-r from-primary to-secondary px-4 py-3 rounded-t-xl">
+                            <h4 class="font-semibold text-white">Assessment Responses</h4>
+                        </div>
+                        <div class="p-4 space-y-4">
+            `;
+
+            // Display assessment data with scoring
+            const assessment = data.assessment;
+            const scores = data.scores;
+            const overall_score = data.overall_score;
+            const insights = data.insights;
+
+            // Add scoring visualization if available
+            if (scores && overall_score) {
+                html += `
+                    <div class="mb-6 bg-gradient-to-r from-purple-50 to-cyan-50 rounded-xl p-6 border border-purple-200">
+                        <h4 class="text-lg font-bold text-text-primary mb-4">Friendship Readiness Analysis</h4>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Overall Score -->
+                            <div class="text-center">
+                                <div class="relative w-24 h-24 mx-auto mb-3">
+                                    <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" stroke="#e5e7eb" stroke-width="8" fill="none"/>
+                                        <circle cx="50" cy="50" r="40"
+                                                stroke="url(#gradient-modal)"
+                                                stroke-width="8"
+                                                fill="none"
+                                                stroke-dasharray="${(overall_score / 100) * 251} 251"
+                                                stroke-linecap="round"/>
+                                        <defs>
+                                            <linearGradient id="gradient-modal" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                                <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="text-center">
+                                            <span class="text-xl font-bold text-text-primary">${overall_score}</span>
+                                            <span class="text-sm text-gray-500">/100</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h5 class="font-semibold text-text-primary">
+                                    ${overall_score >= 80 ? 'High Readiness' : overall_score >= 60 ? 'Moderate Readiness' : 'Developing Readiness'}
+                                </h5>
+                            </div>
+
+                            <!-- Dimension Scores -->
+                            <div class="space-y-3">
+                `;
+
+                for (const [dimension, score] of Object.entries(scores)) {
+                    html += `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700 capitalize">${dimension.replace(/_/g, ' ')}</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-20 bg-gray-200 rounded-full h-2">
+                                    <div class="h-2 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500" style="width: ${score}%"></div>
+                                </div>
+                                <span class="text-xs font-semibold w-8">${score}</span>
+                                <span class="text-xs px-1 py-0.5 rounded ${score >= 80 ? 'bg-green-100 text-green-800' : score >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                                    ${score >= 80 ? '✓' : score >= 60 ? '⚠' : '📈'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                            </div>
+                        </div>
+                `;
+
+                // Add insights if available
+                if (insights && insights.length > 0) {
+                    html += `
+                        <div class="mt-4">
+                            <h6 class="font-semibold text-gray-800 mb-2">Insights:</h6>
+                            <div class="space-y-2">
+                    `;
+                    insights.forEach(insight => {
+                        html += `
+                            <div class="bg-white rounded-lg p-3 border border-purple-200">
+                                <p class="text-sm text-gray-700">${insight}</p>
+                            </div>
+                        `;
+                    });
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            }
+
+            // Display structured assessment
+            html += renderStructuredAssessment(assessment);
+
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            assessmentContent.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            assessmentContent.innerHTML = `
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-gray-600">Failed to load assessment data</p>
+                </div>
+            `;
+        });
+}
+
+function closeAssessmentModal() {
+    const modal = document.getElementById('assessmentModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('assessmentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAssessmentModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssessmentModal();
+    }
+});
+</script>
 {% endblock %}

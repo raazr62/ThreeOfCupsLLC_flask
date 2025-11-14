@@ -9,76 +9,116 @@
         </div>
 
         {% if events %}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Timeline Container -->
+            <div class="max-w-4xl mx-auto relative">
+                <!-- Vertical Timeline Line (Dotted) -->
+                <div class="absolute top-0 bottom-0 hidden sm:block" style="left: 91px; width: 2px; background-image: repeating-linear-gradient(0deg, #F4A79D 0px, #F4A79D 8px, transparent 8px, transparent 16px, #D4A89E 16px, #D4A89E 24px, transparent 24px, transparent 32px);"></div>
+
                 {% for event in events %}
-                    <div class="dark-card rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 hover:scale-105">
-                        {% if event.picture %}
-                            <div class="w-full h-48 overflow-hidden">
-                                <img src="{{ url_for('static', filename=event.picture) }}" alt="{{ event.title }}" class="w-full h-full object-cover">
+                    <!-- Timeline Item -->
+                    <div class="relative mb-8 last:mb-0 sm:ml-32">
+                        <!-- Timeline Date Badge -->
+                        <div class="absolute top-6 hidden sm:block" style="left: -121px;">
+                            <div class="bg-white rounded-lg shadow-md border border-gray-200 px-3 py-2 text-center" style="width: 60px;">
+                                <div class="text-xs font-semibold text-primary uppercase">
+                                    {{ event.date_time.strftime('%b') }}
+                                </div>
+                                <div class="text-2xl font-bold text-text-primary leading-none">
+                                    {{ event.date_time.strftime('%d') }}
+                                </div>
                             </div>
-                        {% endif %}
+                        </div>
 
-                        <div class="p-6">
-                            <h2 class="text-2xl font-bold text-text-primary mb-3 font-brand">{{ event.title|safe }}</h2>
-
-                            <div class="space-y-3 mb-4">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                    </svg>
-                                    <span class="text-text-accent">{{ event.date_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</span>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    <span class="text-text-accent">{{ event.location|safe }}</span>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    <span class="text-text-accent font-semibold">
-                                        {% if event.price %}
-                                            ${{ "%.2f"|format(event.price) }}
-                                        {% else %}
-                                            Free
-                                        {% endif %}
+                        <!-- Event Card -->
+                        <div>
+                            {% if loop.first %}
+                                <div class="mb-2">
+                                    <span class="inline-block bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        NEXT UP
                                     </span>
                                 </div>
+                            {% endif %}
 
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                    <span class="text-text-accent">{{ event_rsvp_counts[event.id] }} attending</span>
+                            <div class="dark-card rounded-2xl shadow-2xl overflow-hidden">
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-0">
+                                    <!-- Event Image -->
+                                    {% if event.picture %}
+                                        <div class="lg:col-span-1 h-48 lg:h-auto overflow-hidden">
+                                            <img src="{{ url_for('static', filename=event.picture) }}" alt="{{ event.title }}" class="w-full h-full object-cover">
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Event Details -->
+                                    <div class="{% if event.picture %}lg:col-span-2{% else %}lg:col-span-3{% endif %} p-6">
+                                        <div class="flex flex-col h-full">
+                                            <div class="flex-1">
+                                                <h2 class="text-2xl font-bold text-text-primary mb-4 font-brand">{{ event.title|safe }}</h2>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        <span class="text-text-accent text-sm">{{ event.date_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</span>
+                                                    </div>
+
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                        </svg>
+                                                        <span class="text-text-accent text-sm">{{ event.location|safe }}</span>
+                                                    </div>
+
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        <span class="text-text-accent font-semibold text-sm">
+                                                            {% if event.price %}
+                                                                ${{ "%.2f"|format(event.price) }}
+                                                            {% else %}
+                                                                Free
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                        </svg>
+                                                        <span class="text-text-accent text-sm">{{ event_rsvp_counts[event.id] }} attending</span>
+                                                    </div>
+                                                </div>
+
+                                                <p class="text-text-accent mb-6">{{ event.description|safe }}</p>
+                                            </div>
+
+                                            <div>
+                                                {% if current_user.is_authenticated %}
+                                                    {% if event.id in user_rsvps %}
+                                                        <button type="button" onclick="unrsvpEvent({{ event.id }})"
+                                                                id="rsvp-btn-{{ event.id }}"
+                                                                class="w-full bg-secondary hover:bg-primary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
+                                                            RSVP'd - Click to Cancel
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" onclick="rsvpEvent({{ event.id }})"
+                                                                id="rsvp-btn-{{ event.id }}"
+                                                                class="w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
+                                                            RSVP to Event
+                                                        </button>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <a href="{{ url_for('login') }}" class="block w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg text-center">
+                                                        Login to RSVP
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <p class="text-text-accent mb-6 line-clamp-3">{{ event.description|safe }}</p>
-
-                            {% if current_user.is_authenticated %}
-                                {% if event.id in user_rsvps %}
-                                    <button onclick="unrsvpEvent({{ event.id }})"
-                                            id="rsvp-btn-{{ event.id }}"
-                                            class="w-full bg-secondary hover:bg-primary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
-                                        RSVP'd - Click to Cancel
-                                    </button>
-                                {% else %}
-                                    <button onclick="rsvpEvent({{ event.id }})"
-                                            id="rsvp-btn-{{ event.id }}"
-                                            class="w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
-                                        RSVP to Event
-                                    </button>
-                                {% endif %}
-                            {% else %}
-                                <a href="{{ url_for('login') }}" class="block w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg text-center">
-                                    Login to RSVP
-                                </a>
-                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
@@ -89,9 +129,49 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <h2 class="text-3xl font-bold text-text-primary mb-4 font-brand">no events on the horizon... yet</h2>
-                <p class="text-xl text-text-accent mb-2">Our calendar is taking a little breather, but something wonderful is brewing!</p>
                 <p class="text-lg text-text-accent">Stay tuned for upcoming gatherings where connections bloom and friendships flourish.</p>
             </div>
+        {% endif %}
+
+        <!-- Event Recommendation Form -->
+        {% if current_user.is_authenticated %}
+        <div class="mt-8 dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden max-w-4xl mx-auto">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4">
+                <h3 class="text-2xl font-bold text-white font-brand mb-1">suggest an event</h3>
+                <p class="text-white text-sm opacity-90">have an idea for a gathering? we'd love to hear it!</p>
+            </div>
+            <div class="p-6">
+                <form method="POST" action="{{ url_for('submit_event_recommendation') }}" class="space-y-4">
+                    <div>
+                        <label class="block text-text-primary font-semibold mb-2">Event Type</label>
+                        <select name="event_type" required class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                            <option value="">Select an event type...</option>
+                            <option value="social">Social Gathering</option>
+                            <option value="workshop">Workshop or Class</option>
+                            <option value="wellness">Wellness Activity</option>
+                            <option value="outdoor">Outdoor Adventure</option>
+                            <option value="cultural">Cultural Experience</option>
+                            <option value="creative">Creative Activity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-text-primary font-semibold mb-2">Event Idea</label>
+                        <input type="text" name="event_title" required maxlength="200" placeholder="What event would you like to see?" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-text-primary font-semibold mb-2">Description</label>
+                        <textarea name="event_description" rows="6" required maxlength="2000" placeholder="Tell us more about your event idea..." class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300 resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        Submit Event Recommendation
+                    </button>
+                </form>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
