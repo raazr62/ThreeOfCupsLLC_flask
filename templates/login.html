@@ -4,8 +4,8 @@
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div class="text-center">
-            <h2 class="text-3xl font-bold text-text-primary mb-2">welcome back</h2>
-            <p class="text-text-accent opacity-90">sign in to your account to continue connecting</p>
+            <h2 class="text-3xl font-bold text-text-primary mb-2 font-brand">welcome</h2>
+            <p class="text-text-accent opacity-90 font-sans">sign in to your account to continue connecting</p>
         </div>
         
         <div class="dark-card rounded-2xl shadow-2xl p-8">
@@ -20,7 +20,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label for="password" class="block text-sm font-medium text-text-primary">Password</label>
-                        <a href="{{ url_for('forgot_password') }}" class="text-sm text-primary hover:text-accent transition-colors">Forgot password?</a>
+                        <a href="{{ url_for('forgot_password') }}" class="text-sm hover:opacity-80 transition-colors" style="color: #D6653A;">Forgot password?</a>
                     </div>
                     <input type="password" name="password" id="password" required
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
@@ -33,8 +33,8 @@
             </form>
             
             <div class="mt-6 text-center">
-                <p class="text-text-accent">Don't have an account? 
-                    <a href="{{ url_for('register') }}" class="text-primary hover:text-accent font-semibold transition-colors">Register here</a>
+                <p class="text-text-accent">Don't have an account?
+                    <a href="{{ url_for('register') }}" class="font-semibold hover:opacity-80 transition-colors" style="color: #D6653A;">Register here</a>
                 </p>
             </div>
         </div>

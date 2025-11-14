@@ -1031,6 +1031,118 @@ def admin_reviewer_assessments():
     return render_template('admin_reviewer_assessments.html',
                          assessments_with_data=assessments_with_data)
 
+@app.route('/account-settings', methods=['GET', 'POST'])
+@login_required
+@beta_access_required
+def account_settings():
+    if request.method == 'POST':
+        if 'first_name' in request.form:
+            first_name = sanitize_input(request.form.get('first_name', ''), max_length=100, allow_newlines=False)
+            if first_name:
+                current_user.first_name = first_name
+            else:
+                flash('First name is required.')
+                return redirect(url_for('account_settings'))
+
+        if 'last_name' in request.form:
+            last_name = sanitize_input(request.form.get('last_name', ''), max_length=100, allow_newlines=False)
+            if last_name:
+                current_user.last_name = last_name
+            else:
+                flash('Last name is required.')
+                return redirect(url_for('account_settings'))
+
+        if 'email' in request.form:
+            email = sanitize_email(request.form.get('email', ''))
+            if email:
+                # Check if email is different from current email
+                if email != current_user.email:
+                    # Check if email is already used by another user
+                    existing_user = User.query.filter_by(email=email).first()
+                    if existing_user and existing_user.id != current_user.id:
+                        flash('Email already exists.')
+                        return redirect(url_for('account_settings'))
+
+                    # Store old email for notification
+                    old_email = current_user.email
+
+                    # Store the new email as pending
+                    current_user.pending_email = email
+
+                    # Generate email change token
+                    token = current_user.generate_email_change_token()
+                    db.session.commit()
+
+                    # Send notification to old email
+                    send_email_change_notification(
+                        mail,
+                        app.config['MAIL_DEFAULT_SENDER'],
+                        old_email,
+                        current_user.first_name,
+                        email
+                    )
+
+                    # Send verification email to new email
+                    verification_url = url_for('verify_email_change', token=token, _external=True)
+                    send_email_change_verification(
+                        mail,
+                        app.config['MAIL_DEFAULT_SENDER'],
+                        email,
+                        current_user.first_name,
+                        verification_url,
+                        old_email
+                    )
+
+                    flash(f'A verification email has been sent to {email}. Please check your inbox to complete the email change. Your current email will remain {old_email} until verified.')
+                    return redirect(url_for('account_settings'))
+            else:
+                flash('Email is required.')
+                return redirect(url_for('account_settings'))
+
+        if 'username' in request.form:
+            username = sanitize_username(request.form.get('username', ''))
+            if username:
+                # Check if username is already used by another user
+                existing_user = User.query.filter_by(username=username).first()
+                if existing_user and existing_user.id != current_user.id:
+                    flash('Username already exists.')
+                    return redirect(url_for('account_settings'))
+                current_user.username = username
+            else:
+                flash('Username is required.')
+                return redirect(url_for('account_settings'))
+
+        if 'pronouns' in request.form:
+            current_user.pronouns = sanitize_input(request.form.get('pronouns', ''), max_length=100, allow_newlines=False)
+
+        if 'location' in request.form:
+            current_user.location = sanitize_location(request.form.get('location', ''))
+
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename != '':
+                # Validate file upload
+                is_valid, error_msg = validate_file_upload(file.filename)
+                if not is_valid:
+                    flash(error_msg)
+                    return redirect(url_for('account_settings'))
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"{current_user.id}_{filename}"
+
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+
+                file_path = os.path.join(upload_folder, unique_filename)
+                file.save(file_path)
+                current_user.profile_picture = f'uploads/{unique_filename}'
+
+        db.session.commit()
+        flash('Profile updated successfully!')
+        return redirect(url_for('account_settings'))
+
+    return render_template('account_settings.html')
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def user_dashboard():
@@ -1073,128 +1185,22 @@ def user_dashboard():
             matched_user = User.query.get(other_user_id)
             if matched_user and matched_user not in matched_users:
                 matched_users.append(matched_user)
-    
-    if request.method == 'POST':
-        if 'first_name' in request.form:
-            first_name = sanitize_input(request.form.get('first_name', ''), max_length=100, allow_newlines=False)
-            if first_name:
-                current_user.first_name = first_name
-            else:
-                flash('First name is required.')
-                return redirect(url_for('user_dashboard'))
+        
+        # Get user's RSVP'd events
+        user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
+        rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
 
-        if 'last_name' in request.form:
-            last_name = sanitize_input(request.form.get('last_name', ''), max_length=100, allow_newlines=False)
-            if last_name:
-                current_user.last_name = last_name
-            else:
-                flash('Last name is required.')
-                return redirect(url_for('user_dashboard'))
+        # Get upcoming events user has RSVP'd to
+        upcoming_rsvp_events = Event.query.filter(
+            Event.id.in_(rsvp_event_ids),
+            Event.date_time >= datetime.utcnow()
+        ).order_by(Event.date_time.asc()).all() if rsvp_event_ids else []
 
-        if 'email' in request.form:
-            email = sanitize_email(request.form.get('email', ''))
-            if email:
-                # Check if email is different from current email
-                if email != current_user.email:
-                    # Check if email is already used by another user
-                    existing_user = User.query.filter_by(email=email).first()
-                    if existing_user and existing_user.id != current_user.id:
-                        flash('Email already exists.')
-                        return redirect(url_for('user_dashboard'))
-
-                    # Store old email for notification
-                    old_email = current_user.email
-
-                    # Store the new email as pending
-                    current_user.pending_email = email
-
-                    # Generate email change token
-                    token = current_user.generate_email_change_token()
-                    db.session.commit()
-
-                    # Send notification to old email
-                    send_email_change_notification(
-                        mail,
-                        app.config['MAIL_DEFAULT_SENDER'],
-                        old_email,
-                        current_user.first_name,
-                        email
-                    )
-
-                    # Send verification email to new email
-                    verification_url = url_for('verify_email_change', token=token, _external=True)
-                    send_email_change_verification(
-                        mail,
-                        app.config['MAIL_DEFAULT_SENDER'],
-                        email,
-                        current_user.first_name,
-                        verification_url,
-                        old_email
-                    )
-
-                    flash(f'A verification email has been sent to {email}. Please check your inbox to complete the email change. Your current email will remain {old_email} until verified.')
-                    return redirect(url_for('user_dashboard'))
-            else:
-                flash('Email is required.')
-                return redirect(url_for('user_dashboard'))
-
-        if 'username' in request.form:
-            username = sanitize_username(request.form.get('username', ''))
-            if username:
-                # Check if username is already used by another user
-                existing_user = User.query.filter_by(username=username).first()
-                if existing_user and existing_user.id != current_user.id:
-                    flash('Username already exists.')
-                    return redirect(url_for('user_dashboard'))
-                current_user.username = username
-            else:
-                flash('Username is required.')
-                return redirect(url_for('user_dashboard'))
-
-        if 'pronouns' in request.form:
-            current_user.pronouns = sanitize_input(request.form.get('pronouns', ''), max_length=100, allow_newlines=False)
-
-        if 'location' in request.form:
-            current_user.location = sanitize_location(request.form.get('location', ''))
-
-        if 'profile_picture' in request.files:
-            file = request.files['profile_picture']
-            if file and file.filename != '':
-                # Validate file upload
-                is_valid, error_msg = validate_file_upload(file.filename)
-                if not is_valid:
-                    flash(error_msg)
-                    return redirect(url_for('user_dashboard'))
-
-                filename = secure_filename(file.filename)
-                unique_filename = f"{current_user.id}_{filename}"
-
-                upload_folder = app.config['UPLOAD_FOLDER']
-                os.makedirs(upload_folder, exist_ok=True)
-
-                file_path = os.path.join(upload_folder, unique_filename)
-                file.save(file_path)
-                current_user.profile_picture = f'uploads/{unique_filename}'
-
-        db.session.commit()
-        flash('Profile updated successfully!')
-        return redirect(url_for('user_dashboard'))
-
-    # Get user's RSVP'd events
-    user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
-    rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
-
-    # Get upcoming events user has RSVP'd to
-    upcoming_rsvp_events = Event.query.filter(
-        Event.id.in_(rsvp_event_ids),
-        Event.date_time >= datetime.utcnow()
-    ).order_by(Event.date_time.asc()).all() if rsvp_event_ids else []
-
-    # Get past events user has RSVP'd to
-    past_rsvp_events = Event.query.filter(
-        Event.id.in_(rsvp_event_ids),
-        Event.date_time < datetime.utcnow()
-    ).order_by(Event.date_time.desc()).all() if rsvp_event_ids else []
+        # Get past events user has RSVP'd to
+        past_rsvp_events = Event.query.filter(
+            Event.id.in_(rsvp_event_ids),
+            Event.date_time < datetime.utcnow()
+        ).order_by(Event.date_time.desc()).all() if rsvp_event_ids else []
 
     return render_template('user_dashboard.html',
                          matched_users=matched_users,

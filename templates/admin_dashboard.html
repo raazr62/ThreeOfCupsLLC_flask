@@ -1,26 +1,137 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+<style>
+    /* Mobile Dropdown Navigation */
+    .admin-nav-desktop {
+        display: flex;
+    }
+
+    .admin-nav-mobile {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .admin-nav-desktop {
+            display: none;
+        }
+
+        .admin-nav-mobile {
+            display: block;
+        }
+        .match-users-container {
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+
+        .match-users-container > div {
+            width: 100% !important;
+        }
+
+        .match-icon-container {
+            transform: rotate(90deg);
+            margin: 0 auto;
+        }
+
+        .match-info-bottom {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.5rem !important;
+        }
+
+        .user-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .assessment-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.75rem !important;
+        }
+
+        .comparison-modal-content {
+            max-width: 95vw !important;
+            margin: 0.5rem !important;
+        }
+
+        .comparison-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        h2, h3, h4 {
+            word-break: break-word;
+        }
+
+        .assessment-display {
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+<div class="min-h-screen py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h2>
-            <p class="text-text-accent opacity-90">Manage user assessments and create friendship matches</p>
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h2>
+            <p class="text-sm sm:text-base text-text-accent opacity-90">Manage user assessments and create friendship matches</p>
         </div>
-        
-        <!-- Completed Matches Section -->
-        <div class="dark-card rounded-2xl shadow-2xl overflow-hidden mb-8">
-            <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 shadow-lg">
-                <h3 class="text-xl font-semibold text-white">Completed Matches</h3>
+
+        <!-- Navigation - Desktop -->
+        <div class="mb-6 sm:mb-8 admin-nav-desktop justify-center">
+            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+                <a href="{{ url_for('admin_dashboard') }}"
+                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
+                    Overview
+                </a>
+                <a href="{{ url_for('admin_users') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Users
+                </a>
+                <a href="{{ url_for('admin_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Assessments
+                </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Pending Matches
+                </a>
+                <a href="{{ url_for('admin_matches') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Matches
+                </a>
+                <a href="{{ url_for('admin_reviewer_assessments') }}"
+                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
+                    Reviewers
+                </a>
             </div>
-            
-            <div class="p-6">
+        </div>
+
+        <!-- Navigation - Mobile Dropdown -->
+        <div class="mb-6 sm:mb-8 admin-nav-mobile">
+            <select onchange="window.location.href=this.value"
+                    class="w-full bg-white border-2 border-primary rounded-xl px-4 py-3 font-semibold text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="{{ url_for('admin_dashboard') }}" selected>Overview</option>
+                <option value="{{ url_for('admin_users') }}">Users</option>
+                <option value="{{ url_for('admin_assessments') }}">Assessments</option>
+                <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
+                <option value="{{ url_for('admin_matches') }}">Matches</option>
+                <option value="{{ url_for('admin_reviewer_assessments') }}">Reviewers</option>
+            </select>
+        </div>
+
+        <!-- Completed Matches Section -->
+        <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden mb-6 sm:mb-8">
+            <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-3 sm:py-4 shadow-lg">
+                <h3 class="text-lg sm:text-xl font-semibold text-white">Completed Matches</h3>
+            </div>
+
+            <div class="p-4 sm:p-6">
                 {% if completed_matches %}
                     <div class="space-y-4">
                         {% for match in completed_matches %}
-                            <div class="bg-card-light rounded-xl p-6 border border-green-300/30 shadow-lg">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex items-center space-x-6">
+                            <div class="bg-card-light rounded-xl p-4 sm:p-6 border border-green-300/30 shadow-lg">
+                                <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
+                                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 match-users-container">
                                         <!-- User 1 -->
                                         {% for user in users %}
                                             {% if user.id == match.user_id %}
@@ -43,7 +154,7 @@
                                         {% endfor %}
                                         
                                         <!-- Match Icon -->
-                                        <div class="flex items-center">
+                                        <div class="flex items-center match-icon-container">
                                             <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                                             </svg>
@@ -70,8 +181,8 @@
                                             {% endif %}
                                         {% endfor %}
                                     </div>
-                                    
-                                    <div class="flex items-center space-x-4">
+
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 match-info-bottom">
                                         <span class="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">Matched</span>
                                         <span class="text-sm text-text-accent">Assessment #{{ match.id }}</span>
                                     </div>
@@ -94,17 +205,17 @@
         </div>
         
         <!-- Pending Assessments Section -->
-        <div class="dark-card rounded-2xl shadow-2xl overflow-hidden">
-            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 shadow-lg">
-                <h3 class="text-xl font-semibold text-white">Pending Assessments</h3>
+        <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-4 sm:px-6 py-3 sm:py-4 shadow-lg">
+                <h3 class="text-lg sm:text-xl font-semibold text-white">Pending Assessments</h3>
             </div>
-            
-            <div class="p-6">
+
+            <div class="p-4 sm:p-6">
                 {% if assessments %}
                     <div class="space-y-6">
                         {% for assessment in assessments %}
-                            <div class="bg-card-light rounded-xl p-6 border border-soft-purple/30 shadow-lg">
-                                <div class="flex justify-between items-start mb-4">
+                            <div class="bg-card-light rounded-xl p-4 sm:p-6 border border-soft-purple/30 shadow-lg">
+                                <div class="flex flex-col sm:flex-row justify-between items-start mb-4 assessment-header">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                                             <span class="text-white font-semibold text-sm">{{ assessment.id }}</span>
@@ -141,19 +252,19 @@
                                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                             {% for user in users %}
                                                 {% if user.id != assessment.user_id and not user.is_admin %}
-                                                    <div class="relative">
+                                                    <div class="relative flex flex-col">
                                                         <label for="user_{{ assessment.id }}_{{ user.id }}" class="cursor-pointer block">
-                                                            <input type="radio" 
-                                                                   name="matched_user_id" 
-                                                                   value="{{ user.id }}" 
+                                                            <input type="radio"
+                                                                   name="matched_user_id"
+                                                                   value="{{ user.id }}"
                                                                    id="user_{{ assessment.id }}_{{ user.id }}"
                                                                    class="sr-only peer"
                                                                    required>
                                                             <div class="p-3 border-2 border-lavender rounded-lg hover:border-primary hover:shadow-md transition-all peer-checked:border-primary peer-checked:bg-lavender">
                                                                 <div class="flex items-center space-x-3">
                                                                     {% if user.profile_picture %}
-                                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
-                                                                             alt="{{ user.first_name }}'s Profile" 
+                                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}"
+                                                                             alt="{{ user.first_name }}'s Profile"
                                                                              class="w-10 h-10 rounded-full object-cover flex-shrink-0">
                                                                     {% else %}
                                                                         <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
@@ -170,12 +281,19 @@
                                                                 </div>
                                                             </div>
                                                         </label>
-                                                        <button type="button" 
-                                                                class="compare-btn absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors"
+                                                        <button type="button"
+                                                                class="compare-btn hidden sm:block absolute top-2 right-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors"
                                                                 data-assessment-id="{{ assessment.id }}"
                                                                 data-user-id="{{ user.id }}"
                                                                 data-user-name="{{ user.first_name }} {{ user.last_name }}">
                                                             Compare
+                                                        </button>
+                                                        <button type="button"
+                                                                class="compare-btn sm:hidden mt-2 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded transition-colors w-full"
+                                                                data-assessment-id="{{ assessment.id }}"
+                                                                data-user-id="{{ user.id }}"
+                                                                data-user-name="{{ user.first_name }} {{ user.last_name }}">
+                                                            Compare Assessments
                                                         </button>
                                                     </div>
                                                 {% endif %}
@@ -209,22 +327,22 @@
 
 <!-- Comparison Modal -->
 <div id="comparisonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-screen overflow-hidden">
-            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex justify-between items-center">
-                <h3 class="text-xl font-semibold text-white">Assessment Comparison</h3>
-                <button onclick="closeComparison()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+    <div class="flex items-center justify-center min-h-screen p-2 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-screen overflow-hidden comparison-modal-content">
+            <div class="bg-gradient-to-r from-primary to-secondary px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+                <h3 class="text-lg sm:text-xl font-semibold text-white">Assessment Comparison</h3>
+                <button onclick="closeComparison()" class="text-white hover:text-gray-200 text-2xl leading-none">&times;</button>
             </div>
-            
-            <div class="p-6 overflow-y-auto max-h-96">
-                <div id="comparisonContent" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <div class="p-4 sm:p-6 overflow-y-auto max-h-[70vh] sm:max-h-96">
+                <div id="comparisonContent" class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 comparison-grid">
                     <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
             
-            <div class="px-6 py-4 bg-lavender border-t flex justify-end">
-                <button onclick="closeComparison()" 
-                        class="px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
+            <div class="px-4 sm:px-6 py-3 sm:py-4 bg-lavender border-t flex justify-end">
+                <button onclick="closeComparison()"
+                        class="px-4 sm:px-6 py-2 bg-primary hover:bg-secondary text-white rounded-lg transition-colors text-sm sm:text-base">
                     Close
                 </button>
             </div>

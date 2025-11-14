@@ -1,15 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+<style>
+    /* Mobile Dropdown Navigation */
+    .admin-nav-desktop {
+        display: flex;
+    }
+
+    .admin-nav-mobile {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .admin-nav-desktop {
+            display: none;
+        }
+
+        .admin-nav-mobile {
+            display: block;
+        }
+
+        .stat-card h3 {
+            font-size: 1rem !important;
+        }
+
+        .stat-card .stat-number {
+            font-size: 2rem !important;
+        }
+
+        .action-card h3 {
+            font-size: 1.125rem !important;
+        }
+
+        .action-card h4 {
+            font-size: 1rem !important;
+        }
+    }
+</style>
+
+<div class="min-h-screen py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h2>
-            <p class="text-text-accent opacity-90">Manage users, assessments and friendship matches</p>
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Admin Dashboard</h2>
+            <p class="text-sm sm:text-base text-text-accent opacity-90">Manage users, assessments and friendship matches</p>
         </div>
 
-        <!-- Navigation -->
-        <div class="mb-8 flex justify-center">
+        <!-- Navigation - Desktop -->
+        <div class="mb-6 sm:mb-8 admin-nav-desktop justify-center">
             <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
                 <a href="{{ url_for('admin_dashboard') }}"
                    class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
@@ -42,71 +79,84 @@
             </div>
         </div>
 
+        <!-- Navigation - Mobile Dropdown -->
+        <div class="mb-6 sm:mb-8 admin-nav-mobile">
+            <select onchange="window.location.href=this.value"
+                    class="w-full bg-white border-2 border-primary rounded-xl px-4 py-3 font-semibold text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option value="{{ url_for('admin_dashboard') }}" selected>Overview</option>
+                <option value="{{ url_for('admin_users') }}">Users</option>
+                <option value="{{ url_for('admin_assessments') }}">Assessments</option>
+                <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
+                <option value="{{ url_for('admin_matches') }}">Matches</option>
+                <option value="{{ url_for('admin_reviewer_assessments') }}">Reviewers</option>
+            </select>
+        </div>
+
         <!-- Statistics Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <!-- Total Users -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden stat-card">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-lg font-semibold text-white">Total Users</h3>
                 </div>
-                <div class="p-6 text-center">
-                    <div class="text-3xl font-bold text-text-primary mb-2">{{ total_users }}</div>
-                    <p class="text-gray-600">Registered users</p>
+                <div class="p-4 sm:p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2 stat-number">{{ total_users }}</div>
+                    <p class="text-sm sm:text-base text-gray-600">Registered users</p>
                 </div>
             </div>
 
             <!-- Total Assessments -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden stat-card">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-lg font-semibold text-white">Assessments</h3>
                 </div>
-                <div class="p-6 text-center">
-                    <div class="text-3xl font-bold text-text-primary mb-2">{{ total_assessments }}</div>
-                    <p class="text-gray-600">Total completed</p>
+                <div class="p-4 sm:p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2 stat-number">{{ total_assessments }}</div>
+                    <p class="text-sm sm:text-base text-gray-600">Total completed</p>
                 </div>
             </div>
 
             <!-- Pending Reviews -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden stat-card">
+                <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-lg font-semibold text-white">Pending</h3>
                 </div>
-                <div class="p-6 text-center">
-                    <div class="text-3xl font-bold text-text-primary mb-2">{{ pending_assessments }}</div>
-                    <p class="text-gray-600">Need review</p>
+                <div class="p-4 sm:p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2 stat-number">{{ pending_assessments }}</div>
+                    <p class="text-sm sm:text-base text-gray-600">Need review</p>
                 </div>
             </div>
 
             <!-- Completed Matches -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden stat-card">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-lg font-semibold text-white">Matches</h3>
                 </div>
-                <div class="p-6 text-center">
-                    <div class="text-3xl font-bold text-text-primary mb-2">{{ completed_matches }}</div>
-                    <p class="text-gray-600">Successful matches</p>
+                <div class="p-4 sm:p-6 text-center">
+                    <div class="text-3xl font-bold text-text-primary mb-2 stat-number">{{ completed_matches }}</div>
+                    <p class="text-sm sm:text-base text-gray-600">Successful matches</p>
                 </div>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <!-- Pending Assessments Card -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden action-card">
+                <div class="bg-gradient-to-r from-primary to-secondary px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-xl font-semibold text-white">Pending Assessments</h3>
                 </div>
-                <div class="p-6">
-                    <div class="text-center py-8">
-                        <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 sm:p-6">
+                    <div class="text-center py-4 sm:py-8">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
                         <h4 class="text-lg font-semibold text-text-primary mb-2">{{ pending_assessments }} Pending Reviews</h4>
-                        <p class="text-gray-600 mb-4">Review assessments and create matches</p>
+                        <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Review assessments and create matches</p>
                         <a href="{{ url_for('admin_assessments') }}"
-                           class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                           class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
                             Review Assessments
                         </a>
                     </div>
@@ -114,21 +164,21 @@
             </div>
 
             <!-- Pending Matches Card -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden action-card">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-xl font-semibold text-white">Pending Matches</h3>
                 </div>
-                <div class="p-6">
-                    <div class="text-center py-8">
-                        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 sm:p-6">
+                    <div class="text-center py-4 sm:py-8">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                             </svg>
                         </div>
                         <h4 class="text-lg font-semibold text-text-primary mb-2">{{ pending_matches }} Awaiting Review</h4>
-                        <p class="text-gray-600 mb-4">Review, add notes, and finalize matches</p>
+                        <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Review, add notes, and finalize matches</p>
                         <a href="{{ url_for('admin_pending_matches') }}"
-                           class="inline-block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                           class="inline-block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
                             Review Pending Matches
                         </a>
                     </div>
@@ -136,21 +186,21 @@
             </div>
 
             <!-- Completed Matches Card -->
-            <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+            <div class="dark-card rounded-xl sm:rounded-2xl shadow-2xl animate-glow overflow-hidden action-card">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 px-4 sm:px-6 py-3 sm:py-4">
                     <h3 class="text-xl font-semibold text-white">Completed Matches</h3>
                 </div>
-                <div class="p-6">
-                    <div class="text-center py-8">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="p-4 sm:p-6">
+                    <div class="text-center py-4 sm:py-8">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
                         <h4 class="text-lg font-semibold text-text-primary mb-2">{{ completed_matches }} Successful Matches</h4>
-                        <p class="text-gray-600 mb-4">View and manage friendship matches</p>
+                        <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">View and manage friendship matches</p>
                         <a href="{{ url_for('admin_matches') }}"
-                           class="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                           class="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base">
                             View Matches
                         </a>
                     </div>
