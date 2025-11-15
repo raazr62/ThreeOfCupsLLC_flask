@@ -336,9 +336,9 @@ def register():
 
         # Validate and parse date of birth
         try:
-            date_of_birth = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date()
+            date_of_birth = datetime.strptime(date_of_birth_str, '%m/%d/%Y').date()
         except ValueError:
-            flash('Invalid date of birth format.')
+            flash('Invalid date of birth format. Please use MM/DD/YYYY.')
             return redirect(url_for('register'))
 
         # Validate user is at least 18 years old

@@ -31,7 +31,7 @@
 
                 <div>
                     <label for="username" class="block text-sm font-medium text-text-primary mb-2">Username</label>
-                    <input type="text" name="username" id="username" required
+                    <input type="text" name="username" id="username" required autocapitalize="off"
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
                 </div>
 
@@ -57,9 +57,11 @@
 
                 <div>
                     <label for="date_of_birth" class="block text-sm font-medium text-text-primary mb-2">Date of Birth</label>
-                    <input type="date" name="date_of_birth" id="date_of_birth" required
+                    <input type="text" name="date_of_birth" id="date_of_birth" required
+                           placeholder="MM/DD/YYYY"
+                           pattern="\d{2}/\d{2}/\d{4}"
                            class="w-full px-4 py-3 bg-card-light border border-text-primary/30 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all text-text-primary placeholder-gray-400">
-                    <p class="mt-1 text-xs text-text-accent">You must be at least 18 years old to register.</p>
+                    <p class="mt-1 text-xs text-text-accent">You must be at least 18 years old to register. Format: MM/DD/YYYY</p>
                 </div>
 
                 <div>
@@ -206,6 +208,40 @@
             e.preventDefault();
             alert('Please ensure all password requirements are met and passwords match.');
         }
+    });
+
+    // Auto-format date of birth field
+    const dateOfBirthInput = document.getElementById('date_of_birth');
+
+    dateOfBirthInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+        let formattedValue = '';
+
+        if (value.length > 0) {
+            // Add first two digits (month)
+            formattedValue = value.substring(0, 2);
+        }
+        if (value.length >= 3) {
+            // Add slash and next two digits (day)
+            formattedValue += '/' + value.substring(2, 4);
+        }
+        if (value.length >= 5) {
+            // Add slash and remaining digits (year)
+            formattedValue += '/' + value.substring(4, 8);
+        }
+
+        e.target.value = formattedValue;
+    });
+
+    // Prevent pasting non-numeric characters
+    dateOfBirthInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const digitsOnly = pastedText.replace(/\D/g, '');
+
+        // Trigger input event to format the pasted content
+        dateOfBirthInput.value = digitsOnly;
+        dateOfBirthInput.dispatchEvent(new Event('input'));
     });
 </script>
 {% endblock %}
