@@ -299,7 +299,7 @@ const assessmentData = {
                 {
                     "id": "communication_preference",
                     "question": "How do you prefer to communicate with close friends?",
-                    "subtext": "Select your top two:",
+                    "subtext": "Select up to two:",
                     "type": "multi_select_max",
                     "max_selections": 2,
                     "options": [
@@ -1782,8 +1782,8 @@ function validateCurrentQuestion() {
     if (questionData.type === 'mixed' && questionData.mixedType === 'multi_select_max') {
         const checked = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`).length;
         const maxSelections = questionData.max_selections || 2;
-        if (checked !== maxSelections) {
-            alert(`Please select exactly ${maxSelections} options.`);
+        if (checked < 1 || checked > maxSelections) {
+            alert(`Please select at least 1 and up to ${maxSelections} options.`);
             return false;
         }
     }
