@@ -276,11 +276,14 @@ function renderStructuredAssessment(assessment) {
 
     // Helper functions
     const renderTextResponse = (question, answer) => {
-        if (!answer || answer.trim() === '') return '';
+        if (!answer) return '';
+        // Ensure answer is a string before calling trim
+        const answerStr = typeof answer === 'string' ? answer : String(answer);
+        if (answerStr.trim() === '') return '';
         return `
             <div class="bg-white rounded-lg p-3 shadow-sm">
                 <p class="text-xs text-gray-500 mb-2 font-semibold">${question}</p>
-                <p class="text-sm text-gray-700 italic">${answer}</p>
+                <p class="text-sm text-gray-700 italic">${answerStr}</p>
             </div>
         `;
     };
@@ -326,12 +329,11 @@ function renderStructuredAssessment(assessment) {
     };
 
     // TELL US MORE SECTION
-    if (assessment.tell_us_more_what_brings_you || assessment.tell_us_more_friendship_meaning) {
+    if (assessment.tell_us_more_what_brings_you) {
         html += '<div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border-l-4 border-purple-500">';
         html += '<h6 class="font-bold text-purple-700 text-lg mb-4">Tell Us More</h6>';
         html += '<div class="space-y-3">';
         html += renderTextResponse('What brings you to Three of Cups?', assessment.tell_us_more_what_brings_you);
-        html += renderTextResponse('What does friendship mean to you?', assessment.tell_us_more_friendship_meaning);
         html += '</div></div>';
     }
 
@@ -411,27 +413,6 @@ function renderStructuredAssessment(assessment) {
             html += renderSingleChoice('Comfort with Feedback', feedbackText);
         }
 
-        // Handle ranking - hurt feelings needs
-        if (assessment.conflict_repair_hurt_feelings_needs_0 !== undefined) {
-            const rankedOptions = [];
-            for (let i = 0; i < 5; i++) {
-                const key = `conflict_repair_hurt_feelings_needs_${i}`;
-                if (assessment[key]) {
-                    const rank = parseInt(assessment[key]);
-                    rankedOptions.push({ rank: rank, text: HURT_FEELINGS_NEEDS_OPTIONS[i] });
-                }
-            }
-            rankedOptions.sort((a, b) => a.rank - b.rank);
-
-            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
-            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">When hurt, I need most (Ranked)</p>';
-            html += '<ol class="list-decimal list-inside space-y-1">';
-            rankedOptions.forEach(option => {
-                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
-            });
-            html += '</ol></div>';
-        }
-
         html += renderSingleChoice('Boundary Setting', assessment.conflict_repair_boundary_setting);
         html += renderTextResponse('What have past friendship challenges taught you?', assessment.conflict_repair_friendship_lessons);
         html += '</div></div>';
@@ -439,36 +420,21 @@ function renderStructuredAssessment(assessment) {
 
     // HOBBIES & INTERESTS SECTION
     if (assessment.hobbies_interests_activities_interests ||
-        assessment.hobbies_interests_want_to_try) {
+        assessment.hobbies_interests_doing_vs_being) {
         html += '<div class="bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-4 border-l-4 border-pink-500">';
         html += '<h6 class="font-bold text-pink-700 text-lg mb-4">Hobbies & Interests</h6>';
         html += '<div class="space-y-3">';
         html += renderMultiSelect('Activities & Interests', assessment.hobbies_interests_activities_interests);
-        html += renderTextResponse('Want to try with a friend', assessment.hobbies_interests_want_to_try);
-        html += renderTextResponse('How do you spend free time?', assessment.hobbies_interests_free_time);
         html += renderSingleChoice('Doing vs Being Friend', assessment.hobbies_interests_doing_vs_being);
         html += '</div></div>';
     }
 
-    // VALUES SECTION - with ranking
-    if (assessment.values_top_values_0 !== undefined) {
-        const rankedValues = [];
-        for (let i = 0; i < VALUES_OPTIONS.length; i++) {
-            const key = `values_top_values_${i}`;
-            if (assessment[key]) {
-                const rank = parseInt(assessment[key]);
-                rankedValues.push({ rank: rank, text: VALUES_OPTIONS[i] });
-            }
-        }
-        rankedValues.sort((a, b) => a.rank - b.rank);
-
+    // VALUES SECTION - multi-select (3-10 values)
+    if (assessment.values_top_values) {
         html += '<div class="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-4 border-l-4 border-indigo-500">';
-        html += '<h6 class="font-bold text-indigo-700 text-lg mb-4">Core Values (Top 10, Ranked)</h6>';
-        html += '<ol class="list-decimal list-inside space-y-2">';
-        rankedValues.forEach(value => {
-            html += `<li class="bg-white rounded-lg p-2 text-sm text-gray-700 font-medium">${value.text}</li>`;
-        });
-        html += '</ol></div>';
+        html += '<h6 class="font-bold text-indigo-700 text-lg mb-4">Core Values (3-10 selected)</h6>';
+        html += renderMultiSelect('Top Values', assessment.values_top_values);
+        html += '</div>';
     }
 
     // FRIENDSHIP VALUES SECTION
@@ -482,26 +448,8 @@ function renderStructuredAssessment(assessment) {
         html += renderTextResponse('Non-Negotiables', assessment.friendship_values_non_negotiables);
         html += renderTextResponse('Dealbreakers', assessment.friendship_values_dealbreakers);
 
-        // Handle ranking - connection language
-        if (assessment.friendship_values_connection_language_0 !== undefined) {
-            const rankedOptions = [];
-            for (let i = 0; i < 6; i++) {
-                const key = `friendship_values_connection_language_${i}`;
-                if (assessment[key]) {
-                    const rank = parseInt(assessment[key]);
-                    rankedOptions.push({ rank: rank, text: CONNECTION_LANGUAGE_OPTIONS[i] });
-                }
-            }
-            rankedOptions.sort((a, b) => a.rank - b.rank);
-
-            html += '<div class="bg-white rounded-lg p-3 shadow-sm">';
-            html += '<p class="text-xs text-gray-500 mb-2 font-semibold">Connection Language (Ranked)</p>';
-            html += '<ol class="list-decimal list-inside space-y-1">';
-            rankedOptions.forEach(option => {
-                html += `<li class="text-sm text-gray-700">${option.text}</li>`;
-            });
-            html += '</ol></div>';
-        }
+        // Connection language - now multi-select (top 3)
+        html += renderMultiSelect('Connection Language (Top 3)', assessment.friendship_values_connection_language);
         html += '</div></div>';
     }
 
@@ -518,7 +466,7 @@ function renderStructuredAssessment(assessment) {
 
     // WRAPPING UP SECTION
     if (assessment.wrapping_up_ideal_friend_words_word1 ||
-        assessment.wrapping_up_what_can_offer) {
+        assessment.wrapping_up_what_want_receive) {
         html += '<div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 border-l-4 border-amber-500">';
         html += '<h6 class="font-bold text-amber-700 text-lg mb-4">Ideal Friend & Preferences</h6>';
         html += '<div class="space-y-3">';
@@ -538,10 +486,9 @@ function renderStructuredAssessment(assessment) {
             html += '</div></div>';
         }
 
-        html += renderTextResponse('What can you offer in friendship?', assessment.wrapping_up_what_can_offer);
         html += renderTextResponse('What would you like to receive?', assessment.wrapping_up_what_want_receive);
         html += renderMultiSelect('Gender Preference', assessment.wrapping_up_gender_preference);
-        html += renderMultiSelect('Age Preference', assessment.wrapping_up_age_preference);
+        html += renderTextResponse('Age Preference', assessment.wrapping_up_age_preference);
         html += '</div></div>';
     }
 

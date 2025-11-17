@@ -6,6 +6,7 @@ import statistics
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
@@ -787,7 +788,6 @@ def admin_assessments():
 
     # Count how many matches each user has by querying the Match table
     # Also track which users are matched with each assessment's user (to prevent duplicate matches)
-    from sqlalchemy import or_, and_
     user_match_counts = {}
     user_existing_matches = {}  # Maps user_id -> set of user_ids they're already matched with
     finalized_matches = Match.query.filter_by(status='finalized').all()

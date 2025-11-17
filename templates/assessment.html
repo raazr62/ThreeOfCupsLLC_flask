@@ -8,7 +8,7 @@
             <!-- Progress Bar -->
             <div class="mb-8">
                 <div class="flex justify-between text-sm text-text-accent mb-2">
-                    <span>Question <span id="current-question">1</span> of <span id="total-questions">67</span></span>
+                    <span>Question <span id="current-question">1</span> of <span id="total-questions">62</span></span>
                     <span><span id="progress-percent">1</span>% Complete</span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2">
@@ -110,12 +110,6 @@ const assessmentData = {
                     "id": "what_brings_you",
                     "question": "What brings you to Three of Cups?",
                     "subtext": "Tell us your story! What's happening in your life that has you seeking new friendships and community?",
-                    "type": "text"
-                },
-                {
-                    "id": "friendship_meaning",
-                    "question": "What does friendship mean to you?",
-                    "subtext": "There's no right or wrong answer – we just want to know your personal definition:",
                     "type": "text"
                 }
             ]
@@ -343,19 +337,6 @@ const assessmentData = {
                     ]
                 },
                 {
-                    "id": "hurt_feelings_needs",
-                    "question": "When a friend unintentionally hurts your feelings, what do you need most?",
-                    "subtext": "Rank these 1-5 (1 = what you need most)",
-                    "type": "ranking",
-                    "options": [
-                        "Space first, then a conversation when we're both ready",
-                        "Immediate acknowledgement of the hurt",
-                        "To understand perspective and intentions",
-                        "A sincere apology with accountability",
-                        "Reassurance from the friend that we're still good"
-                    ]
-                },
-                {
                     "id": "boundary_setting",
                     "question": "How are you with setting and communicating boundaries in friendships?",
                     "type": "single_choice",
@@ -452,16 +433,6 @@ const assessmentData = {
                     ]
                 },
                 {
-                    "id": "want_to_try",
-                    "question": "What is something you've been wanting to learn or try with a friend?",
-                    "type": "text"
-                },
-                {
-                    "id": "free_time",
-                    "question": "How do you typically spend your free time?",
-                    "type": "text"
-                },
-                {
                     "id": "doing_vs_being",
                     "question": "Are you more of a \"doing\" friend or \"being\" friend?",
                     "type": "single_choice",
@@ -482,9 +453,11 @@ const assessmentData = {
             "questions": [
                 {
                     "id": "top_values",
-                    "question": "Pick 10 values and rank these values in order of what matters most to you (1 = matters most)",
-                    "type": "select_and_rank",
-                    "select_count": 10,
+                    "question": "Pick your top values (choose between 3-10 values)",
+                    "subtext": "Select what matters most to you",
+                    "type": "multi_select_range",
+                    "min_selections": 3,
+                    "max_selections": 10,
                     "options": [
                         "Activism", "Adventure", "Ambition", "Assertiveness", "Beauty", "Career", "Social Justice",
                         "Harmony", "Peace", "Empathy", "Creativity", "Nature", "Health", "Animals",
@@ -556,9 +529,10 @@ const assessmentData = {
                 },
                 {
                     "id": "connection_language",
-                    "question": "Rank how you receive connection in friendship.",
-                    "subtext": "Rank these 1-6",
-                    "type": "ranking",
+                    "question": "How do you receive connection in friendship?",
+                    "subtext": "Select your top 3",
+                    "type": "multi_select_max",
+                    "max_selections": 3,
                     "options": [
                         "Quality time (hangouts, phone calls, etc)",
                         "Physical touch (hugging, holding hands)",
@@ -618,11 +592,6 @@ const assessmentData = {
                     ]
                 },
                 {
-                    "id": "what_can_offer",
-                    "question": "What can you offer in a friendship?",
-                    "type": "text"
-                },
-                {
                     "id": "what_want_receive",
                     "question": "What would you like to receive in friendship and community?",
                     "type": "text"
@@ -640,16 +609,9 @@ const assessmentData = {
                 },
                 {
                     "id": "age_preference",
-                    "question": "Age:",
-                    "type": "multi_select",
-                    "options": [
-                        "18-25",
-                        "26-35",
-                        "36-45",
-                        "46-55",
-                        "56-65",
-                        "65+"
-                    ]
+                    "question": "Do you have any age preferences for friends?",
+                    "subtext": "(optional - e.g., \"similar age to me\", \"25-35\", \"no preference\", etc.)",
+                    "type": "text_optional"
                 },
                 {
                     "id": "open_to_multiple_matches",
@@ -711,6 +673,7 @@ function buildQuestionsList() {
                     categories: question.categories,
                     scale_min: question.scale_min,
                     scale_max: question.scale_max,
+                    min_selections: question.min_selections,
                     max_selections: question.max_selections,
                     select_count: question.select_count,
                     input_fields: question.input_fields,
@@ -875,6 +838,29 @@ function renderMixedQuestion(questionData) {
                                    class="text-primary focus:ring-primary mr-3 multi-select-max-checkbox"
                                    data-field="${questionData.fieldName}" data-max="${maxSelections}">
                             <span class="text-text-primary">${option}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'multi_select_range') {
+        const counterId = `${questionData.fieldName}-count`;
+        const minSelections = questionData.min_selections || 1;
+        const maxSelections = questionData.max_selections || 10;
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-2 italic">${questionData.subtext}</p>` : ''}
+                <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span> (Min: ${minSelections}, Max: ${maxSelections})</p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 border border-primary/20 rounded-lg">
+                    ${questionData.options.map(option => `
+                        <label class="flex items-center p-2 border border-primary/30 rounded hover:bg-accent/10 transition-colors cursor-pointer">
+                            <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                                   class="text-primary focus:ring-primary mr-2 multi-select-range-checkbox"
+                                   data-field="${questionData.fieldName}" data-min="${minSelections}" data-max="${maxSelections}">
+                            <span class="text-text-primary text-sm">${option}</span>
                         </label>
                     `).join('')}
                 </div>
@@ -1050,6 +1036,13 @@ function restoreSavedAnswers(questionData) {
             }
         } else if (questionData.mixedType === 'multi_select_max') {
             // Restore multi-select with max count
+            const savedInputs = hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`);
+            savedInputs.forEach(savedInput => {
+                const checkbox = container.querySelector(`input[name="${questionData.fieldName}"][value="${savedInput.value}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        } else if (questionData.mixedType === 'multi_select_range') {
+            // Restore multi-select with range count
             const savedInputs = hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`);
             savedInputs.forEach(savedInput => {
                 const checkbox = container.querySelector(`input[name="${questionData.fieldName}"][value="${savedInput.value}"]`);
@@ -1236,6 +1229,31 @@ function updateMultiSelectCounters(questionData) {
         }
     }
 
+    // Update counter for multi_select_range
+    if (questionData.type === 'mixed' && questionData.mixedType === 'multi_select_range') {
+        const fieldName = questionData.fieldName;
+        const checked = document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]:checked`).length;
+        const counterId = `${fieldName}-count`;
+        const counterElement = document.getElementById(counterId);
+        if (counterElement) {
+            counterElement.textContent = checked;
+        }
+
+        // Disable unchecked boxes if max reached
+        const maxCount = questionData.max_selections || 10;
+        if (checked >= maxCount) {
+            document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]:not(:checked)`).forEach(cb => {
+                cb.disabled = true;
+                cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+        } else {
+            document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]`).forEach(cb => {
+                cb.disabled = false;
+                cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+        }
+    }
+
     // Update counter for select-and-rank
     if (questionData.type === 'mixed' && questionData.mixedType === 'select_and_rank') {
         const fieldName = questionData.fieldName;
@@ -1338,6 +1356,21 @@ function saveCurrentAnswer() {
             }
         } else if (questionData.mixedType === 'multi_select_max') {
             // Multi-select with max count
+            const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            checkboxes.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+        } else if (questionData.mixedType === 'multi_select_range') {
+            // Multi-select with range (min/max count)
             const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
 
             // Remove old hidden inputs
@@ -1523,6 +1556,36 @@ function setupMultiSelectListeners() {
         });
     });
 
+    // Setup listeners for multi-select-range checkboxes
+    document.querySelectorAll('.multi-select-range-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const fieldName = this.dataset.field;
+            const maxCount = parseInt(this.dataset.max);
+            const checked = document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]:checked`).length;
+
+            const counterId = `${fieldName}-count`;
+            const counterElement = document.getElementById(counterId);
+            if (counterElement) {
+                counterElement.textContent = checked;
+            }
+
+            if (checked >= maxCount) {
+                document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]:not(:checked)`).forEach(cb => {
+                    cb.disabled = true;
+                    cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            } else {
+                document.querySelectorAll(`.multi-select-range-checkbox[data-field="${fieldName}"]`).forEach(cb => {
+                    cb.disabled = false;
+                    cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+
+            // Save answer when checkbox changes
+            saveCurrentAnswer();
+        });
+    });
+
     // Also setup listeners for multi-select in mixed questions
     document.querySelectorAll('input[type="checkbox"]:not(.multi-select-checkbox):not(.multi-select-max-checkbox)').forEach(checkbox => {
         checkbox.addEventListener('change', () => {
@@ -1656,6 +1719,17 @@ function validateCurrentQuestion() {
         const maxSelections = questionData.max_selections || 2;
         if (checked < 1 || checked > maxSelections) {
             alert(`Please select at least 1 and up to ${maxSelections} options.`);
+            return false;
+        }
+    }
+
+    // Check multi-select-range count
+    if (questionData.type === 'mixed' && questionData.mixedType === 'multi_select_range') {
+        const checked = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`).length;
+        const minSelections = questionData.min_selections || 1;
+        const maxSelections = questionData.max_selections || 10;
+        if (checked < minSelections || checked > maxSelections) {
+            alert(`Please select between ${minSelections} and ${maxSelections} options.`);
             return false;
         }
     }
