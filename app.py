@@ -104,10 +104,18 @@ def validate_password(password):
 
     return True, "Password is valid"
 
+def calculate_age(date_of_birth):
+    """Calculate age from date of birth"""
+    if not date_of_birth:
+        return None
+    today = date.today()
+    age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+    return age
+
 def calculate_friendship_scores(assessment_data):
     scores = {
         'emotional_availability': 0,
-        'time_energy': 0, 
+        'time_energy': 0,
         'communication_skills': 0,
         'commitment_level': 0,
         'social_compatibility': 0
@@ -237,6 +245,12 @@ login_manager.init_app(app)
 
 # Set up template filters for security
 setup_template_filters(app)
+
+# Add age calculation filter
+@app.template_filter('calculate_age')
+def calculate_age_filter(date_of_birth):
+    """Template filter to calculate age from date of birth"""
+    return calculate_age(date_of_birth)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -1531,7 +1545,8 @@ def get_user_assessment(user_id):
             'name': f"{user.first_name} {user.last_name}",
             'email': user.email,
             'bio': user.bio or 'No bio available',
-            'profile_picture': user.profile_picture
+            'profile_picture': user.profile_picture,
+            'age': calculate_age(user.date_of_birth) if user.date_of_birth else None
         },
         'assessment': parsed_answers
     })

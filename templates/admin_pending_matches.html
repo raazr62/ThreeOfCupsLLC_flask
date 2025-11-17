@@ -105,6 +105,7 @@
                                         {{ data.user1.first_name }} {{ data.user1.last_name }}
                                     </h4>
                                     <div class="space-y-1 text-sm text-gray-700">
+                                        {% if data.user1.date_of_birth %}<p><span class="font-semibold">Age:</span> {{ data.user1.date_of_birth|calculate_age }}</p>{% endif %}
                                         <p><span class="font-semibold">Email:</span> {{ data.user1.email }}</p>
                                         {% if data.user1.pronouns %}<p><span class="font-semibold">Pronouns:</span> {{ data.user1.pronouns }}</p>{% endif %}
                                         {% if data.user1.location %}<p><span class="font-semibold">Location:</span> {{ data.user1.location }}</p>{% endif %}
@@ -120,6 +121,7 @@
                                         {{ data.user2.first_name }} {{ data.user2.last_name }}
                                     </h4>
                                     <div class="space-y-1 text-sm text-gray-700">
+                                        {% if data.user2.date_of_birth %}<p><span class="font-semibold">Age:</span> {{ data.user2.date_of_birth|calculate_age }}</p>{% endif %}
                                         <p><span class="font-semibold">Email:</span> {{ data.user2.email }}</p>
                                         {% if data.user2.pronouns %}<p><span class="font-semibold">Pronouns:</span> {{ data.user2.pronouns }}</p>{% endif %}
                                         {% if data.user2.location %}<p><span class="font-semibold">Location:</span> {{ data.user2.location }}</p>{% endif %}
@@ -139,7 +141,7 @@
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <!-- User 1 Assessment -->
                                     <div class="bg-purple-50 rounded-xl p-4 border border-purple-200">
-                                        <h5 class="font-bold text-purple-700 mb-3 text-center">{{ data.user1.first_name }}'s Assessment</h5>
+                                        <h5 class="font-bold text-purple-700 mb-3 text-center">{{ data.user1.first_name }}'s Assessment{% if data.user1.date_of_birth %} (Age {{ data.user1.date_of_birth|calculate_age }}){% endif %}</h5>
                                         <div class="space-y-2 text-sm max-h-96 overflow-y-auto">
                                             {% if data.assessment1_answers %}
                                                 {% for key, value in data.assessment1_answers.items() %}
@@ -164,7 +166,7 @@
 
                                     <!-- User 2 Assessment -->
                                     <div class="bg-cyan-50 rounded-xl p-4 border border-cyan-200">
-                                        <h5 class="font-bold text-cyan-700 mb-3 text-center">{{ data.user2.first_name }}'s Assessment</h5>
+                                        <h5 class="font-bold text-cyan-700 mb-3 text-center">{{ data.user2.first_name }}'s Assessment{% if data.user2.date_of_birth %} (Age {{ data.user2.date_of_birth|calculate_age }}){% endif %}</h5>
                                         <div class="space-y-2 text-sm max-h-96 overflow-y-auto">
                                             {% if data.assessment2_answers %}
                                                 {% for key, value in data.assessment2_answers.items() %}

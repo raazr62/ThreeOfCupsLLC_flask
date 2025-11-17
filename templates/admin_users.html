@@ -107,6 +107,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ID</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Age</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Username</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email Status</th>
@@ -122,6 +123,13 @@
                                 <div class="text-sm font-medium text-gray-900">{{ data.user.first_name }} {{ data.user.last_name }}</div>
                                 {% if data.user.pronouns %}
                                 <div class="text-xs text-gray-500">{{ data.user.pronouns }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {% if data.user.date_of_birth %}
+                                    {{ data.user.date_of_birth|calculate_age }}
+                                {% else %}
+                                    -
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ data.user.email }}</td>
@@ -537,6 +545,10 @@ function viewAssessment(userId, userName) {
                             <div>
                                 <span class="text-gray-500">Name:</span>
                                 <span class="text-text-primary font-medium ml-2">${data.user.name}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Age:</span>
+                                <span class="text-text-primary font-medium ml-2">${data.user.age || 'N/A'}</span>
                             </div>
                             <div>
                                 <span class="text-gray-500">Email:</span>

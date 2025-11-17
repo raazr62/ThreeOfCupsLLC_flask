@@ -111,7 +111,7 @@
                                         <h3 class="text-xl font-semibold text-white">Assessment #{{ item.assessment.id }}</h3>
                                         {% for user in users %}
                                             {% if user.id == item.assessment.user_id %}
-                                                <p class="text-white/90">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</p>
+                                                <p class="text-white/90">{{ user.first_name }} {{ user.last_name }}{% if user.date_of_birth %}, Age {{ user.date_of_birth|calculate_age }}{% endif %} ({{ user.email }})</p>
                                             {% endif %}
                                         {% endfor %}
                                     </div>
@@ -240,7 +240,7 @@
                                                                     </div>
                                                                 {% endif %}
                                                                 <div class="flex-1 min-w-0">
-                                                                    <p class="font-semibold text-gray-600 text-sm truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                                                                    <p class="font-semibold text-gray-600 text-sm truncate">{{ user.first_name }} {{ user.last_name }}{% if user.date_of_birth %}, {{ user.date_of_birth|calculate_age }}{% endif %}</p>
                                                                     <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
                                                                     <span class="inline-block mt-1 text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Already Matched</span>
                                                                 </div>
@@ -268,7 +268,7 @@
                                                                             </div>
                                                                         {% endif %}
                                                                         <div class="flex-1 min-w-0">
-                                                                            <p class="font-semibold text-text-primary text-sm truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                                                                            <p class="font-semibold text-text-primary text-sm truncate">{{ user.first_name }} {{ user.last_name }}{% if user.date_of_birth %}, {{ user.date_of_birth|calculate_age }}{% endif %}</p>
                                                                             <p class="text-xs text-gray-600 truncate">{{ user.email }}</p>
                                                                             {% if user.id in user_match_counts %}
                                                                                 <span class="inline-block mt-1 text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
@@ -711,10 +711,10 @@ function displayComparison(currentAnswersData, otherUserData, otherUserName) {
                 </div>
             </div>
         </div>
-        
+
         <div class="space-y-6">
             <div class="text-center">
-                <h4 class="text-lg font-semibold text-gray-900 mb-2">${otherUserData.user.name}</h4>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">${otherUserData.user.name}${otherUserData.user.age ? ', Age ' + otherUserData.user.age : ''}</h4>
                 <div class="bg-blue-50 p-4 rounded-lg">
                     ${renderAssessmentComparison(otherUserData.assessment)}
                 </div>
