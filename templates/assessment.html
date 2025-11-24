@@ -93,43 +93,14 @@
 .question-fade-enter { opacity: 0; transform: translateX(20px); }
 .question-fade-enter-active { opacity: 1; transform: translateX(0); transition: all 0.3s ease; }
 
-/* Scrollable options container with shadow indicator */
+/* Options container - allows natural page scroll */
 .scrollable-options-container {
     position: relative;
-    max-height: 400px;
-    overflow-y: auto;
     border-radius: 0.5rem;
-    padding-right: 0.75rem;
-}
-
-.scrollable-options-container.has-more-content {
-    box-shadow: inset 0 -20px 20px -20px rgba(193, 119, 103, 0.3);
-}
-
-/* Better scrollbar styling for mobile */
-.scrollable-options-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.scrollable-options-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.scrollable-options-container::-webkit-scrollbar-thumb {
-    background: #C17767;
-    border-radius: 10px;
-}
-
-.scrollable-options-container::-webkit-scrollbar-thumb:hover {
-    background: #a86555;
 }
 
 @media (max-width: 640px) {
     .scale-button { width: 2.5rem; height: 2.5rem; font-size: 1rem; }
-    .scrollable-options-container {
-        max-height: 350px;
-    }
 }
 </style>
 
@@ -749,7 +720,7 @@ function renderThisOrThatQuestion(questionData) {
         <div class="question-fade-enter-active">
             <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
             <p class="text-text-primary text-lg mb-2">${questionData.question.question}</p>
-            ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+            ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
             <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
                 <div class="space-y-3">
                     ${questionData.question.options.map(option => `
@@ -796,7 +767,7 @@ function renderMixedQuestion(questionData) {
                 <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
                 ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="space-y-3">
                         ${questionData.options.map((option, idx) => `
@@ -878,7 +849,7 @@ function renderMixedQuestion(questionData) {
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-2 italic">${questionData.subtext}</p>` : ''}
                 <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span>/${maxSelections}</p>
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="space-y-2">
                         ${questionData.options.map(option => `
@@ -906,7 +877,7 @@ function renderMixedQuestion(questionData) {
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-2 italic">${questionData.subtext}</p>` : ''}
                 <p class="text-sm text-text-primary mb-4 font-semibold">Selected: <span id="${counterId}">0</span> (Min: ${minSelections}, Max: ${maxSelections})</p>
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''} p-2 border border-primary/20 rounded-lg" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
                         ${questionData.options.map(option => `
@@ -953,7 +924,7 @@ function renderMixedQuestion(questionData) {
                 ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="space-y-3">
                         ${questionData.options.map(option => `
@@ -976,7 +947,7 @@ function renderMixedQuestion(questionData) {
                 ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''} p-2 border border-primary/20 rounded-lg" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="space-y-4">
                         ${questionData.categories.map(category => `
@@ -1010,7 +981,7 @@ function renderMixedQuestion(questionData) {
                 ${sectionSubtextHtml}
                 <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
                 ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
-                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic">${optionCount} options - scroll to see all</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
                 <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
                     <div class="space-y-2">
                         ${questionData.options.map(option => `
