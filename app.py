@@ -48,7 +48,7 @@ mail = Mail(app)
 
 # Beta access settings
 BETA_ACCESS_CODE = 'threeofcups2025foundedbyiris'  # Change this to your desired access code
-UNDER_CONSTRUCTION = True  # Set to False when ready to launch
+UNDER_CONSTRUCTION = False  # Set to False when ready to launch
 
 # Reviewer access settings
 REVIEWER_ACCESS_CODE = 'threeofcups2025'  # Change this to your desired reviewer access code

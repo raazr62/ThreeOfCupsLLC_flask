@@ -43,12 +43,12 @@
     }
 
     .logo-illustration {
-        width: 350px;
+        width: 220px;
         height: auto;
-        margin: 0 auto -1rem;
+        margin: 0 auto 1.5rem;
         opacity: 0;
         animation: fadeInScale 1.5s ease-out 0.5s forwards;
-        filter: invert(1) brightness(0) drop-shadow(0 0 20px rgba(44, 36, 32, 0.3));
+        filter: drop-shadow(0 0 20px rgba(44, 36, 32, 0.3));
     }
 
     .welcome-to {
@@ -109,8 +109,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 2rem 1rem 4rem;
+        justify-content: flex-start;
+        padding: 5rem 1rem 4rem;
     }
 
     .hero-section {
@@ -119,10 +119,10 @@
     }
 
     .hero-logo {
-        width: 350px;
+        width: 220px;
         height: auto;
-        margin: 0 auto -1rem;
-        filter: invert(1) brightness(0) drop-shadow(0 0 20px rgba(255, 155, 155, 0.5));
+        margin: 0 auto 1.5rem;
+        filter: drop-shadow(0 0 20px rgba(255, 155, 155, 0.5));
         display: block;
     }
 
@@ -152,7 +152,7 @@
 
     /* Scroll Indicator */
     .scroll-indicator {
-        margin-top: 3rem;
+        margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -548,7 +548,7 @@
     <div class="welcome-watercolor"></div>
     <div class="welcome-content">
         <!-- Three of Cups Logo (Black) - Larger Size -->
-        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-white.png') }}"
+        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-new.png') }}"
              alt="Three of Cups Logo"
              class="logo-illustration">
         <div class="welcome-to">welcome to</div>
@@ -561,7 +561,7 @@
 <div class="main-content">
     <div class="hero-section">
         <!-- Black Logo - Larger Size -->
-        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-white.png') }}"
+        <img src="{{ url_for('static', filename='logo/three-of-cups-logo-new.png') }}"
              alt="Three of Cups Logo"
              class="hero-logo">
 
@@ -677,6 +677,16 @@
 </div>
 
 <script>
+    // Disable browser scroll restoration and ensure page starts at the top
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    // Force scroll to top immediately
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
     // Welcome animation with localStorage detection - FIRST VISIT ONLY
     (function() {
         const welcomeOverlay = document.getElementById('welcomeOverlay');
@@ -743,6 +753,13 @@
         const communityCard = document.querySelector('.community-card');
         if (communityCard) observer.observe(communityCard);
     })();
+
+    // Ensure scroll stays at top after page load
+    window.addEventListener('load', function() {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+    });
 </script>
 
 {% endblock %}
