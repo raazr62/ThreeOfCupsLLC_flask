@@ -37,7 +37,7 @@ def send_password_reset_email(mail, sender, user, reset_url):
         return False
 
 
-def send_match_notification_email(mail, sender, user, dashboard_url):
+def send_match_notification_email(mail, sender, user, match_name, dashboard_url):
     """
     Send a match notification email to a user.
 
@@ -45,6 +45,7 @@ def send_match_notification_email(mail, sender, user, dashboard_url):
         mail: Flask-Mail instance
         sender: Email sender address
         user: User object with first_name and email attributes
+        match_name: The first name of the matched user
         dashboard_url: The URL to the user's dashboard
 
     Returns:
@@ -52,6 +53,11 @@ def send_match_notification_email(mail, sender, user, dashboard_url):
     """
     try:
         subject, body_text, body_html = get_match_notification_email(user.first_name, dashboard_url)
+
+        # Replace placeholders with actual values
+        subject = subject.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
+        body_text = body_text.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
+        body_html = body_html.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
 
         msg = Message(
             subject,

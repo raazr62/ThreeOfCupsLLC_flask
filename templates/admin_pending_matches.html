@@ -217,11 +217,10 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-text-primary mb-2">
                                             Draft Email to Both Users
-                                            <span class="text-xs text-gray-500 font-normal ml-2">(Use {first_name} and {dashboard_url} as placeholders)</span>
+                                            <span class="text-xs text-gray-500 font-normal ml-2">(Dynamic: {first_name}, {match_name}, {dashboard_url} | Manual: [values], [shared hobby], etc.)</span>
                                         </label>
-                                        <textarea name="draft_email" rows="8"
-                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
-                                                  placeholder="Hello {first_name},&#10;&#10;Great news! You have been matched with a new friend on Three of Cups...&#10;&#10;Visit your dashboard: {dashboard_url}">{{ data.match.draft_email or '' }}</textarea>
+                                        <textarea name="draft_email" rows="20"
+                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm">{{ data.match.draft_email or "Your Three of Cups Match: Meet {match_name}!\n\nHi {first_name},\n\nI'm so excited to introduce you to {match_name}! After carefully reviewing both of your assessments, I have a really good feeling about this match.\n\nHere's why I think you two will connect:\n\nYou both ranked [values] in your top values, and you each expressed a desire for friendships where you can [friendship desire]. I noticed that {first_name}, you mentioned wanting a friend who \"[X]\" and {match_name}, you described yourself as someone who \"[X].\" That feels like a beautiful alignment.\n\nYou also have complementary [x such as communication styles]—{first_name}, you're a thoughtful processor who likes time before difficult conversations, and {match_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.\n\nSome fun overlaps:\n• You both love [shared hobby]\n• You're both exploring [shared interest]\n• You both value [shared value]\n\nA gentle awareness: {first_name}, you mentioned needing advance notice for plans, and {match_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!\n\nNext steps: I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.\n\nHere are a few ideas from the Three of Cups team:\n\nContact info:\n[Contact method and details]\n\nI'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.\n\nWith so much hope for beautiful connection,\nIris 🌟" }}</textarea>
                                     </div>
                                     <button type="submit"
                                             class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300">
@@ -232,12 +231,21 @@
 
                             <!-- Finalize Match Button -->
                             <div class="border-t border-gray-300 pt-6">
-                                <form method="POST" onsubmit="return confirm('Are you sure you want to finalize this match and send emails to both users?')">
+                                <!-- Temporarily disabled while email service is unavailable -->
+                                <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4">
+                                    <p class="text-sm text-yellow-800 font-medium">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Email service is temporarily unavailable. Match finalization is disabled until service is restored.
+                                    </p>
+                                </div>
+                                <form method="POST" onsubmit="event.preventDefault(); alert('Email service is temporarily unavailable. Cannot finalize matches at this time.');">
                                     <input type="hidden" name="match_id" value="{{ data.match.id }}">
                                     <input type="hidden" name="action" value="finalize">
                                     <button type="submit"
-                                            class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                        Finalize Match & Send Emails
+                                            class="w-full bg-gray-300 text-gray-600 font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60">
+                                        Finalize Match & Send Emails (Temporarily Unavailable)
                                     </button>
                                     <p class="text-sm text-gray-600 text-center mt-2">
                                         This will make the match visible on user dashboards and send the drafted email (or default email if no draft).

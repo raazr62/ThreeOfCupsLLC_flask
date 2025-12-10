@@ -940,13 +940,17 @@ def admin_pending_matches():
                 for user in [user1, user2]:
                     if user:
                         try:
+                            # Determine the match's name (the other person)
+                            match_name = user2.first_name if user.id == user1.id else user1.first_name
+
                             msg = Message(
-                                'You have a new match! - Three of Cups',
+                                f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
                                 recipients=[user.email]
                             )
                             # Replace placeholders in draft email
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
+                            personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
                             msg.body = personalized_email
                             msg.html = personalized_email.replace('\n', '<br>')
@@ -956,9 +960,9 @@ def admin_pending_matches():
             else:
                 # Use default template
                 if user1:
-                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, dashboard_url)
+                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
                 if user2:
-                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, dashboard_url)
+                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
 
             flash('Match finalized successfully! Emails sent to both users.')
 
