@@ -169,6 +169,10 @@
                                                     class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                                 View Details
                                             </button>
+                                            <button onclick="unmatchUsers({{ data.match.id }}, '{{ data.user1.first_name }} {{ data.user1.last_name }}', '{{ data.user2.first_name }} {{ data.user2.last_name }}')"
+                                                    class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                                                Unmatch
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -595,6 +599,37 @@ document.getElementById('matchDetailsModal').addEventListener('click', function(
         closeMatchDetails();
     }
 });
+
+function unmatchUsers(matchId, user1Name, user2Name) {
+    if (!confirm(`Are you sure you want to unmatch ${user1Name} and ${user2Name}?\n\nThis will:\n- Remove the match from both users' dashboards\n- Mark assessments as unreviewed if they have no other matches\n- Keep a record of the previous match for warning purposes`)) {
+        return;
+    }
+
+    fetch(`/admin/unmatch/${matchId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let message = data.message;
+            if (data.user1_assessment_unreviewed || data.user2_assessment_unreviewed) {
+                message += '\n\nAssessments have been marked as unreviewed for users with no remaining matches.';
+            }
+            alert(message);
+            // Reload the page to reflect changes
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to unmatch users'));
+        }
+    })
+    .catch(error => {
+        alert('Error: Failed to unmatch users');
+        console.error('Error:', error);
+    });
+}
 </script>
 
 {% endblock %}

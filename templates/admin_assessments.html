@@ -275,6 +275,12 @@
                                                                                     Already has {{ user_match_counts[user.id] }} match{{ 'es' if user_match_counts[user.id] != 1 else '' }}
                                                                                 </span>
                                                                             {% endif %}
+                                                                            {% set was_previously_matched = item.assessment.user_id in user_previous_matches and user.id in user_previous_matches[item.assessment.user_id] %}
+                                                                            {% if was_previously_matched %}
+                                                                                <span class="inline-block mt-1 text-xs font-semibold text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+                                                                                    ⚠ Previously matched
+                                                                                </span>
+                                                                            {% endif %}
                                                                         </div>
                                                                     </div>
                                                                 </div>

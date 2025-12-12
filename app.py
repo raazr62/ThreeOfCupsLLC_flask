@@ -802,9 +802,12 @@ def admin_assessments():
 
     # Count how many matches each user has by querying the Match table
     # Also track which users are matched with each assessment's user (to prevent duplicate matches)
+    # And track which users were previously matched but are now unmatched (for warnings)
     user_match_counts = {}
     user_existing_matches = {}  # Maps user_id -> set of user_ids they're already matched with
+    user_previous_matches = {}  # Maps user_id -> set of user_ids they were previously matched with but are now unmatched
     finalized_matches = Match.query.filter_by(status='finalized').all()
+    unmatched_matches = Match.query.filter_by(status='unmatched').all()
 
     for match in finalized_matches:
         # Count matches for user1
@@ -825,6 +828,16 @@ def admin_assessments():
         if match.user2_id not in user_existing_matches:
             user_existing_matches[match.user2_id] = set()
         user_existing_matches[match.user2_id].add(match.user1_id)
+
+    # Track previous matches that are now unmatched
+    for match in unmatched_matches:
+        if match.user1_id not in user_previous_matches:
+            user_previous_matches[match.user1_id] = set()
+        user_previous_matches[match.user1_id].add(match.user2_id)
+
+        if match.user2_id not in user_previous_matches:
+            user_previous_matches[match.user2_id] = set()
+        user_previous_matches[match.user2_id].add(match.user1_id)
 
     # Process assessments for display
     assessments_with_scores = []
@@ -857,6 +870,7 @@ def admin_assessments():
                          users=users,
                          user_match_counts=user_match_counts,
                          user_existing_matches=user_existing_matches,
+                         user_previous_matches=user_previous_matches,
                          filter_status=filter_status)
 
 # Admin matches page
@@ -883,6 +897,64 @@ def admin_matches():
             })
 
     return render_template('admin_matches.html', matches_data=matches_data)
+
+# Admin unmatch endpoint
+@app.route('/admin/unmatch/<int:match_id>', methods=['POST'])
+@login_required
+def admin_unmatch(match_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    match = Match.query.get(match_id)
+    if not match:
+        return jsonify({'error': 'Match not found'}), 404
+
+    if match.status != 'finalized':
+        return jsonify({'error': 'Only finalized matches can be unmatched'}), 400
+
+    # Change match status to 'unmatched' to keep history
+    match.status = 'unmatched'
+
+    # Get both assessments
+    assessment1 = Assessment.query.get(match.assessment1_id)
+    assessment2 = Assessment.query.get(match.assessment2_id)
+
+    # Clear the matched_user_id fields (legacy field)
+    if assessment1:
+        assessment1.matched_user_id = None
+    if assessment2:
+        assessment2.matched_user_id = None
+
+    # Check if each user has any other finalized matches
+    # If not, set their assessment back to unreviewed
+    user1_other_matches = Match.query.filter(
+        Match.status == 'finalized',
+        or_(Match.user1_id == match.user1_id, Match.user2_id == match.user1_id),
+        Match.id != match_id
+    ).first()
+
+    user2_other_matches = Match.query.filter(
+        Match.status == 'finalized',
+        or_(Match.user1_id == match.user2_id, Match.user2_id == match.user2_id),
+        Match.id != match_id
+    ).first()
+
+    # If user1 has no other matches, mark their assessment as unreviewed
+    if not user1_other_matches and assessment1:
+        assessment1.reviewed = False
+
+    # If user2 has no other matches, mark their assessment as unreviewed
+    if not user2_other_matches and assessment2:
+        assessment2.reviewed = False
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Match successfully unmatched',
+        'user1_assessment_unreviewed': not user1_other_matches,
+        'user2_assessment_unreviewed': not user2_other_matches
+    })
 
 # Admin pending matches page
 @app.route('/admin/pending-matches', methods=['GET', 'POST'])
