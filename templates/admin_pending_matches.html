@@ -231,21 +231,12 @@
 
                             <!-- Finalize Match Button -->
                             <div class="border-t border-gray-300 pt-6">
-                                <!-- Temporarily disabled while email service is unavailable -->
-                                <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4">
-                                    <p class="text-sm text-yellow-800 font-medium">
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Email service is temporarily unavailable. Match finalization is disabled until service is restored.
-                                    </p>
-                                </div>
-                                <form method="POST" onsubmit="event.preventDefault(); alert('Email service is temporarily unavailable. Cannot finalize matches at this time.');">
+                                <form method="POST" onsubmit="return confirm('Are you sure you want to finalize this match and send emails to both users?');">
                                     <input type="hidden" name="match_id" value="{{ data.match.id }}">
                                     <input type="hidden" name="action" value="finalize">
                                     <button type="submit"
-                                            class="w-full bg-gray-300 text-gray-600 font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60">
-                                        Finalize Match & Send Emails (Temporarily Unavailable)
+                                            class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+                                        Finalize Match & Send Emails
                                     </button>
                                     <p class="text-sm text-gray-600 text-center mt-2">
                                         This will make the match visible on user dashboards and send the drafted email (or default email if no draft).

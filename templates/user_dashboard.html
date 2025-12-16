@@ -21,18 +21,9 @@
                     <div class="ml-4 flex-1">
                         <h3 class="text-lg font-semibold text-yellow-800 mb-1">Please Verify Your Email</h3>
                         <p class="text-yellow-700 mb-3">To unlock your matches and full dashboard access, please verify your email address. Check your inbox for the verification link.</p>
-                        <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-3">
-                            <p class="text-sm text-yellow-800 font-medium">
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Email service is temporarily unavailable, but don't worry! Our team is working hard to resolve the issue. In the meantime, please check back soon to verify your email and access your matches.
-                            </p>
-                        </div>
                         <a href="{{ url_for('resend_verification') }}"
-                           class="inline-block bg-gray-300 text-gray-600 font-semibold py-2 px-4 rounded-lg cursor-not-allowed opacity-60"
-                           onclick="event.preventDefault(); alert('Email service is temporarily unavailable. Please check back soon!');">
-                            Resend Verification Email (Temporarily Unavailable)
+                           class="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300">
+                            Resend Verification Email
                         </a>
                     </div>
                 </div>
@@ -85,18 +76,9 @@
                             </div>
                             <h3 class="text-lg font-medium text-text-primary mb-2">Verify Your Email to See Matches</h3>
                             <p class="text-gray-600 mb-4">Please verify your email address to unlock and view your matches.</p>
-                            <div class="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-3">
-                                <p class="text-sm text-yellow-800 font-medium">
-                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    Email service is temporarily unavailable, but don't worry! Our team is working hard to resolve the issue. In the meantime, please check back soon to verify your email and access your matches.
-                                </p>
-                            </div>
                             <a href="{{ url_for('resend_verification') }}"
-                               class="inline-block bg-gray-300 text-gray-600 font-semibold py-2 px-6 rounded-lg cursor-not-allowed opacity-60"
-                               onclick="event.preventDefault(); alert('Email service is temporarily unavailable. Please check back soon!');">
-                                Resend Verification Email (Temporarily Unavailable)
+                               class="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300">
+                                Resend Verification Email
                             </a>
                         </div>
                     {% elif matched_users %}
