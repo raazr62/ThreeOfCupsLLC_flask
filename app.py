@@ -1081,24 +1081,20 @@ def admin_pending_matches():
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
 
-                            # Create fancy HTML formatting for the email
-                            html_content = format_draft_email_to_html(personalized_email)
-
-                            # Create Flask-Mail Message with UTF-8 charset
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[user.email],
-                                charset='utf-8'
+                                recipients=[user.email]
                             )
                             msg.body = personalized_email
-                            msg.html = html_content
+                            # Convert to formatted HTML with Three of Cups styling
+                            msg.html = format_draft_email_to_html(personalized_email)
 
                             # Send email first (priority)
                             mail.send(msg)
                             emails_sent += 1
 
-                            # Store the plain text content for modal display (not the fancy HTML)
+                            # Store the plain text content for modal display
                             if user.id == user1.id:
                                 match.user1_email_content = personalized_email
                             else:
