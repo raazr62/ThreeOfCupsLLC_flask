@@ -6,6 +6,50 @@ from email_templates.email_change_notification import get_email_change_notificat
 from email_templates.email_change_verification import get_email_change_verification_email
 
 
+def sanitize_email_content(text):
+    """
+    Aggressively sanitize email content to remove ALL non-ASCII characters for SMTP compatibility.
+    This includes Unicode punctuation, emojis, and any other characters that could cause encoding issues.
+
+    Strategy:
+    1. First replace common Unicode characters with ASCII equivalents
+    2. Then strip any remaining non-ASCII characters (including emojis)
+    """
+    if not text:
+        return text
+
+    # First pass: Replace common Unicode punctuation with ASCII equivalents
+    replacements = {
+        '\u2014': '--',          # Em dash
+        '\u2013': '-',           # En dash
+        '\u2018': "'",           # Left single quote
+        '\u2019': "'",           # Right single quote
+        '\u201c': '"',           # Left double quote
+        '\u201d': '"',           # Right double quote
+        '\u2026': '...',         # Ellipsis
+        '\u2022': '*',           # Bullet point
+        '\U0001f31f': '',        # Star emoji 🌟
+        '\U0001f4ab': '',        # Dizzy emoji 💫
+        '\U0001f493': '',        # Beating heart emoji 💓
+        '\U0001f49c': '',        # Purple heart emoji 💜
+        '\u2764\ufe0f': '',      # Red heart emoji ❤️
+        '\u2764': '',            # Red heart (without variation selector)
+    }
+
+    for unicode_char, ascii_char in replacements.items():
+        text = text.replace(unicode_char, ascii_char)
+
+    # Second pass: Aggressively remove any remaining non-ASCII characters
+    # This catches any emojis or Unicode characters we didn't explicitly map
+    try:
+        # Encode to ASCII, replacing any characters that can't be encoded
+        text = text.encode('ascii', 'ignore').decode('ascii')
+    except Exception as e:
+        print(f"Warning: Error during ASCII sanitization: {e}")
+
+    return text
+
+
 def send_password_reset_email(mail, sender, user, reset_url):
     """
     Send a password reset email to a user.
@@ -27,8 +71,10 @@ def send_password_reset_email(mail, sender, user, reset_url):
             sender=sender,
             recipients=[user.email]
         )
-        msg.body = body_text
-        msg.html = body_html
+        # Sanitize content to remove all non-ASCII characters
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
 
         mail.send(msg)
         return True
@@ -58,6 +104,11 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         subject = subject.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
         body_text = body_text.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
         body_html = body_html.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
+
+        # Aggressively sanitize all content to remove non-ASCII characters (including emojis)
+        subject = sanitize_email_content(subject)
+        body_text = sanitize_email_content(body_text)
+        body_html = sanitize_email_content(body_html)
 
         msg = Message(
             subject,
@@ -97,8 +148,10 @@ def send_verification_email(mail, sender, user, verification_url):
             sender=sender,
             recipients=[user.email]
         )
-        msg.body = body_text
-        msg.html = body_html
+        # Sanitize content to remove all non-ASCII characters
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
 
         mail.send(msg)
         return True
@@ -131,8 +184,10 @@ def send_email_change_notification(mail, sender, old_email, user_first_name, new
             sender=sender,
             recipients=[old_email]
         )
-        msg.body = body_text
-        msg.html = body_html
+        # Sanitize content to remove all non-ASCII characters
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
 
         mail.send(msg)
         return True
@@ -166,8 +221,10 @@ def send_email_change_verification(mail, sender, new_email, user_first_name, ver
             sender=sender,
             recipients=[new_email]
         )
-        msg.body = body_text
-        msg.html = body_html
+        # Sanitize content to remove all non-ASCII characters
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
 
         mail.send(msg)
         return True

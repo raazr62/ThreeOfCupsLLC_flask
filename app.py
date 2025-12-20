@@ -43,6 +43,8 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 # Use MAIL_DEFAULT_SENDER if set, otherwise fallback to MAIL_USERNAME
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
+# Force ASCII-safe email handling to prevent encoding issues with strict SMTP servers
+app.config['MAIL_ASCII_ATTACHMENTS'] = False
 
 mail = Mail(app)
 
@@ -78,27 +80,46 @@ def reviewer_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def replace_unicode_punctuation(text):
+def sanitize_email_content(text):
     """
-    Replace Unicode punctuation with ASCII equivalents for SMTP compatibility.
-    Only replaces common problematic characters while preserving text meaning.
+    Aggressively sanitize email content to remove ALL non-ASCII characters for SMTP compatibility.
+    This includes Unicode punctuation, emojis, and any other characters that could cause encoding issues.
+
+    Strategy:
+    1. First replace common Unicode characters with ASCII equivalents
+    2. Then strip any remaining non-ASCII characters (including emojis)
     """
     if not text:
         return text
 
+    # First pass: Replace common Unicode punctuation with ASCII equivalents
     replacements = {
-        '\u2014': '--',      # Em dash
-        '\u2013': '-',       # En dash
-        '\u2018': "'",       # Left single quote
-        '\u2019': "'",       # Right single quote
-        '\u201c': '"',       # Left double quote
-        '\u201d': '"',       # Right double quote
-        '\u2026': '...',     # Ellipsis
-        '\u2022': '*',       # Bullet point
+        '\u2014': '--',          # Em dash
+        '\u2013': '-',           # En dash
+        '\u2018': "'",           # Left single quote
+        '\u2019': "'",           # Right single quote
+        '\u201c': '"',           # Left double quote
+        '\u201d': '"',           # Right double quote
+        '\u2026': '...',         # Ellipsis
+        '\u2022': '*',           # Bullet point
+        '\U0001f31f': '',        # Star emoji 🌟
+        '\U0001f4ab': '',        # Dizzy emoji 💫
+        '\U0001f493': '',        # Beating heart emoji 💓
+        '\U0001f49c': '',        # Purple heart emoji 💜
+        '\u2764\ufe0f': '',      # Red heart emoji ❤️
+        '\u2764': '',            # Red heart (without variation selector)
     }
 
     for unicode_char, ascii_char in replacements.items():
         text = text.replace(unicode_char, ascii_char)
+
+    # Second pass: Aggressively remove any remaining non-ASCII characters
+    # This catches any emojis or Unicode characters we didn't explicitly map
+    try:
+        # Encode to ASCII, replacing any characters that can't be encoded
+        text = text.encode('ascii', 'ignore').decode('ascii')
+    except Exception as e:
+        print(f"Warning: Error during ASCII sanitization: {e}")
 
     return text
 
@@ -110,8 +131,8 @@ def format_draft_email_to_html(plain_text):
     if not plain_text:
         return ""
 
-    # Replace Unicode punctuation for SMTP compatibility
-    plain_text = replace_unicode_punctuation(plain_text)
+    # Sanitize content to remove all non-ASCII characters for SMTP compatibility
+    plain_text = sanitize_email_content(plain_text)
 
     # Escape any existing HTML to prevent issues
     import html
@@ -1108,16 +1129,17 @@ def admin_pending_matches():
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
 
-                            # Replace Unicode punctuation for SMTP compatibility
-                            personalized_email = replace_unicode_punctuation(personalized_email)
+                            # Aggressively sanitize content to remove ALL non-ASCII characters (including emojis)
+                            personalized_email = sanitize_email_content(personalized_email)
 
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
                                 recipients=[user.email]
                             )
-                            msg.body = personalized_email
-                            # Convert to formatted HTML with Three of Cups styling
+                            # Sanitize both body and HTML to ensure no non-ASCII characters
+                            msg.body = sanitize_email_content(personalized_email)
+                            # Convert to formatted HTML with Three of Cups styling (already sanitized in function)
                             msg.html = format_draft_email_to_html(personalized_email)
                             # Set UTF-8 charset for proper Unicode handling
                             msg.charset = 'utf-8'

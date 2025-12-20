@@ -46,7 +46,7 @@ Contact info:
 I'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.
 
 With so much hope for beautiful connection,
-Iris 🌟
+Iris
 '''
 
     body_html = '''
@@ -84,7 +84,7 @@ Iris 🌟
     <p>I'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.</p>
 
     <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-    <p style="font-style: italic;">With so much hope for beautiful connection,<br>Iris 🌟</p>
+    <p style="font-style: italic;">With so much hope for beautiful connection,<br>Iris</p>
 </div>
 '''
 
