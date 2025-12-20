@@ -1076,18 +1076,24 @@ def admin_pending_matches():
                             # Determine the match's name (the other person)
                             match_name = user2.first_name if user.id == user1.id else user1.first_name
 
+                            # Replace placeholders in draft email
+                            personalized_email = match.draft_email.replace('{first_name}', user.first_name)
+                            personalized_email = personalized_email.replace('{match_name}', match_name)
+                            personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
+
+                            # Create fancy HTML formatting for the email
+                            html_content = format_draft_email_to_html(personalized_email)
+
+                            # Create message with explicit charset to prevent encoding issues in production
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
                                 recipients=[user.email]
                             )
-                            # Replace placeholders in draft email
-                            personalized_email = match.draft_email.replace('{first_name}', user.first_name)
-                            personalized_email = personalized_email.replace('{match_name}', match_name)
-                            personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
                             msg.body = personalized_email
-                            # Use fancy HTML formatting for the email
-                            msg.html = format_draft_email_to_html(personalized_email)
+                            msg.html = html_content
+                            # Explicitly set charset to UTF-8 for production environments
+                            msg.charset = 'utf-8'
 
                             # Send email first (priority)
                             mail.send(msg)
