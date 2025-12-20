@@ -1062,6 +1062,10 @@ def admin_pending_matches():
             user2 = User.query.get(match.user2_id)
             dashboard_url = url_for('user_dashboard', _external=True)
 
+            # Track email sending success
+            email_errors = []
+            emails_sent = 0
+
             # Use the drafted email if available, otherwise use default template
             if match.draft_email:
                 # Send custom drafted email to both users
@@ -1087,6 +1091,7 @@ def admin_pending_matches():
 
                             # Send email first (priority)
                             mail.send(msg)
+                            emails_sent += 1
 
                             # Then store the HTML content
                             if user.id == user1.id:
@@ -1094,22 +1099,48 @@ def admin_pending_matches():
                             else:
                                 match.user2_email_content = msg.html
                         except Exception as e:
-                            print(f"Error sending custom match email: {e}")
+                            error_msg = f"Failed to send email to {user.email}: {str(e)}"
+                            print(error_msg)
+                            app.logger.error(error_msg)
+                            email_errors.append(error_msg)
             else:
                 # Use default template
                 if user1:
-                    success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
-                    if success and html_content:
-                        match.user1_email_content = html_content
+                    try:
+                        success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
+                        if success and html_content:
+                            match.user1_email_content = html_content
+                            emails_sent += 1
+                        else:
+                            email_errors.append(f"Failed to send default email to {user1.email}")
+                    except Exception as e:
+                        error_msg = f"Error sending email to {user1.email}: {str(e)}"
+                        print(error_msg)
+                        app.logger.error(error_msg)
+                        email_errors.append(error_msg)
+
                 if user2:
-                    success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
-                    if success and html_content:
-                        match.user2_email_content = html_content
+                    try:
+                        success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
+                        if success and html_content:
+                            match.user2_email_content = html_content
+                            emails_sent += 1
+                        else:
+                            email_errors.append(f"Failed to send default email to {user2.email}")
+                    except Exception as e:
+                        error_msg = f"Error sending email to {user2.email}: {str(e)}"
+                        print(error_msg)
+                        app.logger.error(error_msg)
+                        email_errors.append(error_msg)
 
             # Commit to database after emails are sent
             db.session.commit()
 
-            flash('Match finalized successfully! Emails sent to both users.')
+            # Show appropriate flash message
+            if email_errors:
+                flash(f'Match finalized. {emails_sent} of 2 emails sent. Errors: {"; ".join(email_errors)}', 'warning')
+            else:
+                flash('Match finalized successfully! Emails sent to both users.', 'success')
 
         return redirect(url_for('admin_pending_matches'))
 
