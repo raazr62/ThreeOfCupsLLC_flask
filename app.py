@@ -836,6 +836,66 @@ def admin_users():
                          user_data=user_data,
                          filter_type=filter_type)
 
+# Admin complete assessment on behalf of user
+@app.route('/admin/complete_assessment/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def admin_complete_assessment(user_id):
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    # Get the user
+    user = User.query.get(user_id)
+    if not user:
+        flash('User not found.')
+        return redirect(url_for('admin_users'))
+
+    # Check if user already has an assessment
+    existing_assessment = Assessment.query.filter_by(user_id=user_id).first()
+    if existing_assessment:
+        flash(f'{user.first_name} {user.last_name} already has an assessment. Please view it from the admin users page.')
+        return redirect(url_for('admin_users'))
+
+    if request.method == 'POST':
+        import json
+
+        # Debug: Print all form data
+        print("=== ADMIN ASSESSMENT FORM DATA RECEIVED ===")
+        for key, value in request.form.items():
+            print(f"{key}: {value}")
+        print("=========================")
+
+        # Collect all assessment responses - same logic as regular assessment
+        assessment_data = {}
+
+        # Iterate through all form fields and store them with their exact field names
+        for key in request.form.keys():
+            # Handle multi-value fields (checkboxes, multi-select)
+            values = request.form.getlist(key)
+            if len(values) > 1:
+                # Multiple values selected - sanitize each value
+                assessment_data[key] = [sanitize_input(v, max_length=1000) for v in values]
+            else:
+                # Single value - sanitize
+                assessment_data[key] = sanitize_input(request.form.get(key), max_length=1000)
+
+        # Additional sanitization of the entire data structure
+        assessment_data = sanitize_json_data(assessment_data)
+
+        # Convert to JSON string for storage
+        answers_json = json.dumps(assessment_data, indent=2)
+
+        # Create assessment for the specified user (not current_user)
+        assessment = Assessment(user_id=user_id, answers=answers_json)
+        db.session.add(assessment)
+        db.session.commit()
+
+        flash(f'Assessment completed successfully for {user.first_name} {user.last_name}!')
+        return redirect(url_for('admin_users'))
+
+    # GET request - show the assessment form
+    return render_template('admin_complete_assessment.html', user=user)
+
 # Admin assessments page
 @app.route('/admin/assessments', methods=['GET', 'POST'])
 @login_required
