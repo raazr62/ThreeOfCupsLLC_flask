@@ -1079,7 +1079,8 @@ def admin_pending_matches():
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[user.email]
+                                recipients=[user.email],
+                                charset='utf-8'
                             )
                             # Replace placeholders in draft email
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
