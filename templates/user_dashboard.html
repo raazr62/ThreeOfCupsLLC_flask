@@ -331,7 +331,7 @@
                 <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 <p class="mt-4 text-gray-600">Loading match details...</p>
             </div>
-            <div id="emailContent" class="hidden prose max-w-none"></div>
+            <div id="emailContent" class="hidden text-gray-700 leading-relaxed"></div>
             <div id="emailContentError" class="hidden text-center py-12">
                 <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,8 +424,12 @@ function viewMatchEmail(matchId, matchName) {
 
             if (data.success) {
                 if (data.email_content) {
-                    // Display the HTML email content
-                    content.innerHTML = data.email_content;
+                    // Display the plain text email content with preserved line breaks
+                    // Convert newlines to <br> tags for proper display
+                    const formattedContent = data.email_content.replace(/\n/g, '<br>');
+                    content.innerHTML = formattedContent;
+                    content.style.whiteSpace = 'pre-wrap';
+                    content.style.fontFamily = 'system-ui, -apple-system, sans-serif';
                     content.classList.remove('hidden');
                 } else {
                     // Show message for older matches without email content

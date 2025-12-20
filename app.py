@@ -43,8 +43,6 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 # Use MAIL_DEFAULT_SENDER if set, otherwise fallback to MAIL_USERNAME
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
-# Force UTF-8 encoding for emails to support Unicode characters
-app.config['MAIL_DEFAULT_CHARSET'] = 'utf-8'
 
 mail = Mail(app)
 
@@ -80,32 +78,6 @@ def reviewer_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def sanitize_email_unicode(text):
-    """
-    Replace problematic Unicode characters with ASCII-safe alternatives for email sending.
-    This ensures emails can be sent even if SMTP defaults to ASCII encoding.
-    """
-    if not text:
-        return text
-
-    # Replace common Unicode characters with ASCII equivalents
-    replacements = {
-        '\u2014': '--',      # Em dash
-        '\u2013': '-',       # En dash
-        '\u2018': "'",       # Left single quote
-        '\u2019': "'",       # Right single quote
-        '\u201c': '"',       # Left double quote
-        '\u201d': '"',       # Right double quote
-        '\u2026': '...',     # Ellipsis
-        '\u2022': '*',       # Bullet point
-        '\u00a0': ' ',       # Non-breaking space
-    }
-
-    for unicode_char, ascii_char in replacements.items():
-        text = text.replace(unicode_char, ascii_char)
-
-    return text
-
 def format_draft_email_to_html(plain_text):
     """
     Convert plain text draft email to formatted HTML with Three of Cups styling.
@@ -113,9 +85,6 @@ def format_draft_email_to_html(plain_text):
     """
     if not plain_text:
         return ""
-
-    # Sanitize Unicode characters first
-    plain_text = sanitize_email_unicode(plain_text)
 
     # Escape any existing HTML to prevent issues
     import html
@@ -1110,31 +1079,25 @@ def admin_pending_matches():
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[user.email],
-                                charset='utf-8'
+                                recipients=[user.email]
                             )
                             # Replace placeholders in draft email
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
-
-                            # Sanitize Unicode characters to prevent encoding errors
-                            personalized_email = sanitize_email_unicode(personalized_email)
-
                             msg.body = personalized_email
-                            # Convert to formatted HTML with Three of Cups styling
-                            # (format_draft_email_to_html also calls sanitize_email_unicode)
+                            # Use fancy HTML formatting for the email
                             msg.html = format_draft_email_to_html(personalized_email)
 
                             # Send email first (priority)
                             mail.send(msg)
                             emails_sent += 1
 
-                            # Then store the HTML content
+                            # Store the plain text content for modal display (not the fancy HTML)
                             if user.id == user1.id:
-                                match.user1_email_content = msg.html
+                                match.user1_email_content = personalized_email
                             else:
-                                match.user2_email_content = msg.html
+                                match.user2_email_content = personalized_email
                         except Exception as e:
                             error_msg = f"Failed to send email to {user.email}: {str(e)}"
                             print(error_msg)
@@ -1144,9 +1107,9 @@ def admin_pending_matches():
                 # Use default template
                 if user1:
                     try:
-                        success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
-                        if success and html_content:
-                            match.user1_email_content = html_content
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
+                        if success and text_content:
+                            match.user1_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user1.email}")
@@ -1158,9 +1121,9 @@ def admin_pending_matches():
 
                 if user2:
                     try:
-                        success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
-                        if success and html_content:
-                            match.user2_email_content = html_content
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
+                        if success and text_content:
+                            match.user2_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user2.email}")

@@ -68,7 +68,7 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         msg.html = body_html
 
         mail.send(msg)
-        return True, body_html
+        return True, body_text
     except Exception as e:
         print(f"Error sending match notification email: {e}")
         return False, None
