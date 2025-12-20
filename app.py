@@ -43,6 +43,8 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 # Use MAIL_DEFAULT_SENDER if set, otherwise fallback to MAIL_USERNAME
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
+# Force UTF-8 encoding for emails to support Unicode characters
+app.config['MAIL_DEFAULT_CHARSET'] = 'utf-8'
 
 mail = Mail(app)
 
@@ -1086,6 +1088,11 @@ def admin_pending_matches():
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
+
+                            # Ensure proper UTF-8 encoding
+                            if isinstance(personalized_email, bytes):
+                                personalized_email = personalized_email.decode('utf-8')
+
                             msg.body = personalized_email
                             # Convert to formatted HTML with Three of Cups styling
                             msg.html = format_draft_email_to_html(personalized_email)
