@@ -219,7 +219,7 @@
                                             Draft Email to Both Users
                                             <span class="text-xs text-gray-500 font-normal ml-2">(Dynamic: {first_name}, {match_name}, {dashboard_url} | Manual: [values], [shared hobby], etc.)</span>
                                         </label>
-                                        <textarea name="draft_email" rows="20"
+                                        <textarea name="draft_email" id="draftEmailTextarea_{{ data.match.id }}" rows="20"
                                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm">{{ data.match.draft_email or "Your Three of Cups Match: Meet {match_name}!\n\nHi {first_name},\n\nI'm so excited to introduce you to {match_name}! After carefully reviewing both of your assessments, I have a really good feeling about this match.\n\nHere's why I think you two will connect:\n\nYou both ranked [values] in your top values, and you each expressed a desire for friendships where you can [friendship desire]. I noticed that {first_name}, you mentioned wanting a friend who \"[X]\" and {match_name}, you described yourself as someone who \"[X].\" That feels like a beautiful alignment.\n\nYou also have complementary [x such as communication styles]—{first_name}, you're a thoughtful processor who likes time before difficult conversations, and {match_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.\n\nSome fun overlaps:\n• You both love [shared hobby]\n• You're both exploring [shared interest]\n• You both value [shared value]\n\nA gentle awareness: {first_name}, you mentioned needing advance notice for plans, and {match_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!\n\nNext steps: I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.\n\nHere are a few ideas from the Three of Cups team:\n\nContact info:\n[Contact method and details]\n\nI'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.\n\nWith so much hope for beautiful connection,\nIris 🌟" }}</textarea>
                                     </div>
                                     <button type="submit"
@@ -231,9 +231,10 @@
 
                             <!-- Finalize Match Button -->
                             <div class="border-t border-gray-300 pt-6">
-                                <form method="POST" onsubmit="return confirm('Are you sure you want to finalize this match and send emails to both users?');">
+                                <form method="POST" id="finalizeForm_{{ data.match.id }}" onsubmit="return confirmFinalize({{ data.match.id }});">
                                     <input type="hidden" name="match_id" value="{{ data.match.id }}">
                                     <input type="hidden" name="action" value="finalize">
+                                    <input type="hidden" name="draft_email" id="finalizeEmailInput_{{ data.match.id }}">
                                     <button type="submit"
                                             class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
                                         Finalize Match & Send Emails
@@ -282,6 +283,19 @@ function toggleAssessmentComparison(id) {
             toggleText.textContent = 'Show Assessment Comparison';
         }
     }
+}
+
+function confirmFinalize(matchId) {
+    // Copy the draft email content from textarea to the hidden input in the finalize form
+    const textarea = document.getElementById('draftEmailTextarea_' + matchId);
+    const hiddenInput = document.getElementById('finalizeEmailInput_' + matchId);
+
+    if (textarea && hiddenInput) {
+        hiddenInput.value = textarea.value;
+    }
+
+    // Show confirmation dialog
+    return confirm('Are you sure you want to finalize this match and send emails to both users?');
 }
 </script>
 {% endblock %}

@@ -83,22 +83,25 @@
                         </div>
                     {% elif matched_users %}
                         <div class="space-y-4">
-                            {% for user in matched_users %}
-                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                            {% for match_data in matched_users %}
+                                <div onclick="viewMatchEmail({{ match_data.match_id }}, '{{ match_data.user.first_name }}')"
+                                     class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md hover:border-secondary transition-all cursor-pointer">
                                     <div class="flex items-center space-x-4">
-                                        {% if user.profile_picture %}
-                                            <img src="{{ url_for('static', filename=user.profile_picture) }}"
-                                                 alt="{{ user.first_name }}'s Profile"
+                                        {% if match_data.user.profile_picture %}
+                                            <img src="{{ url_for('static', filename=match_data.user.profile_picture) }}"
+                                                 alt="{{ match_data.user.first_name }}'s Profile"
                                                  class="w-12 h-12 rounded-full object-cover">
                                         {% else %}
                                             <div class="w-12 h-12 bg-gradient-to-br from-orange-light to-orange-medium rounded-full flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
+                                                <span class="text-white font-bold text-sm">{{ match_data.user.first_name[0] }}{{ match_data.user.last_name[0] }}</span>
                                             </div>
                                         {% endif %}
                                         <div class="flex-1">
-                                            <h4 class="font-semibold text-text-primary">{{ user.first_name }} {{ user.last_name }}</h4>
-                                            {% if user.bio %}
-                                                <p class="text-sm text-gray-600 mt-1">{{ user.bio[:100] }}{% if user.bio|length > 100 %}...{% endif %}</p>
+                                            <h4 class="font-semibold text-text-primary group-hover:text-secondary transition-colors">
+                                                {{ match_data.user.first_name }} {{ match_data.user.last_name }}
+                                            </h4>
+                                            {% if match_data.user.bio %}
+                                                <p class="text-sm text-gray-600 mt-1">{{ match_data.user.bio[:100] }}{% if match_data.user.bio|length > 100 %}...{% endif %}</p>
                                             {% else %}
                                                 <p class="text-sm text-gray-500 italic">No bio available</p>
                                             {% endif %}
@@ -309,6 +312,46 @@
     </div>
 </div>
 
+<!-- Match Email Modal -->
+<div id="matchEmailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" onclick="closeModalOnBackdrop(event)">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Peachy gradient header -->
+        <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-white" id="modalMatchName">Your Match</h3>
+            <button onclick="closeMatchEmailModal()" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Email content area with scroll -->
+        <div class="p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+            <div id="emailContentLoading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p class="mt-4 text-gray-600">Loading match details...</p>
+            </div>
+            <div id="emailContent" class="hidden prose max-w-none"></div>
+            <div id="emailContentError" class="hidden text-center py-12">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <p class="text-gray-600" id="errorMessage"></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-warm-cream border-t border-gray-200 flex justify-end">
+            <button onclick="closeMatchEmailModal()"
+                    class="bg-primary hover:bg-orange-dark text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 function toggleEditMode() {
     const summary = document.getElementById('profile-summary');
@@ -355,5 +398,73 @@ function unrsvpEvent(eventId) {
         });
     }
 }
+
+// Match Email Modal Functions
+function viewMatchEmail(matchId, matchName) {
+    const modal = document.getElementById('matchEmailModal');
+    const modalMatchName = document.getElementById('modalMatchName');
+    const loading = document.getElementById('emailContentLoading');
+    const content = document.getElementById('emailContent');
+    const error = document.getElementById('emailContentError');
+
+    // Update modal title
+    modalMatchName.textContent = `Your Match with ${matchName}`;
+
+    // Show modal and loading state
+    modal.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    error.classList.add('hidden');
+
+    // Fetch email content from API
+    fetch(`/api/match_email/${matchId}`)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+
+            if (data.success) {
+                if (data.email_content) {
+                    // Display the HTML email content
+                    content.innerHTML = data.email_content;
+                    content.classList.remove('hidden');
+                } else {
+                    // Show message for older matches without email content
+                    document.getElementById('errorMessage').textContent = data.message || 'Email content not available for this match';
+                    error.classList.remove('hidden');
+                }
+            } else {
+                // Show error message
+                document.getElementById('errorMessage').textContent = data.error || 'Failed to load match details';
+                error.classList.remove('hidden');
+            }
+        })
+        .catch(err => {
+            console.error('Error fetching match email:', err);
+            loading.classList.add('hidden');
+            document.getElementById('errorMessage').textContent = 'Failed to load match details. Please try again.';
+            error.classList.remove('hidden');
+        });
+}
+
+function closeMatchEmailModal() {
+    const modal = document.getElementById('matchEmailModal');
+    modal.classList.add('hidden');
+}
+
+function closeModalOnBackdrop(event) {
+    if (event.target.id === 'matchEmailModal') {
+        closeMatchEmailModal();
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('matchEmailModal');
+        if (!modal.classList.contains('hidden')) {
+            closeMatchEmailModal();
+        }
+    }
+});
 </script>
 {% endblock %}

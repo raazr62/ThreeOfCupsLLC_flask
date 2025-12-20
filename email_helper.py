@@ -49,7 +49,7 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         dashboard_url: The URL to the user's dashboard
 
     Returns:
-        bool: True if email sent successfully, False otherwise
+        tuple: (success: bool, html_content: str or None) - True/HTML if email sent successfully, False/None otherwise
     """
     try:
         subject, body_text, body_html = get_match_notification_email(user.first_name, dashboard_url)
@@ -68,10 +68,10 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         msg.html = body_html
 
         mail.send(msg)
-        return True
+        return True, body_html
     except Exception as e:
         print(f"Error sending match notification email: {e}")
-        return False
+        return False, None
 
 
 def send_verification_email(mail, sender, user, verification_url):

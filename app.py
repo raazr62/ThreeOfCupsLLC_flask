@@ -78,6 +78,60 @@ def reviewer_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def format_draft_email_to_html(plain_text):
+    """
+    Convert plain text draft email to formatted HTML with Three of Cups styling.
+    Uses the app's peachy color palette: #FF9B9B (coral), #FFB88C (peach), #FFD97D (yellow)
+    """
+    if not plain_text:
+        return ""
+
+    # Escape any existing HTML to prevent issues
+    import html
+    text = html.escape(plain_text)
+
+    # Split into paragraphs (double newlines)
+    paragraphs = text.split('\n\n')
+
+    html_parts = []
+    html_parts.append('<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #2C2420;">')
+
+    for para in paragraphs:
+        if not para.strip():
+            continue
+
+        # Check if this looks like a heading (short line, possibly ending with :)
+        if len(para.strip()) < 60 and (para.strip().endswith(':') or para.strip().endswith('!')):
+            html_parts.append(f'<h3 style="color: #FF9B9B; margin-top: 25px; margin-bottom: 15px;">{para.strip()}</h3>')
+        # Check if it's a bulleted list
+        elif '•' in para or para.strip().startswith('-'):
+            items = [line.strip().lstrip('•-').strip() for line in para.split('\n') if line.strip()]
+            if items:
+                html_parts.append('<ul style="margin: 15px 0; padding-left: 20px;">')
+                for item in items:
+                    html_parts.append(f'<li style="margin: 8px 0;">{item}</li>')
+                html_parts.append('</ul>')
+        # Check if it looks like a special callout (contains "awareness" or "note")
+        elif 'awareness' in para.lower() or 'gentle' in para.lower() or 'note:' in para.lower():
+            formatted_para = para.replace('\n', '<br>')
+            html_parts.append(f'<div style="background-color: #FFF7ED; padding: 15px; border-left: 4px solid #FFB88C; border-radius: 4px; margin: 20px 0;">{formatted_para}</div>')
+        # Check if it looks like contact info
+        elif 'contact' in para.lower() and 'info' in para.lower():
+            formatted_para = para.replace('\n', '<br>')
+            html_parts.append(f'<div style="background-color: #FAF7F5; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #FFD97D;">{formatted_para}</div>')
+        # Check if it's the signature (contains "Iris" or ends with emoji)
+        elif 'iris' in para.lower() or '🌟' in para or para.strip().startswith('With '):
+            formatted_para = para.replace('\n', '<br>')
+            html_parts.append(f'<hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;"><p style="font-style: italic; color: #FF9B9B;">{formatted_para}</p>')
+        # Regular paragraph
+        else:
+            formatted_para = para.replace('\n', '<br>')
+            html_parts.append(f'<p style="margin: 15px 0; line-height: 1.6;">{formatted_para}</p>')
+
+    html_parts.append('</div>')
+
+    return ''.join(html_parts)
+
 def validate_password(password):
     """
     Validate password meets security requirements:
@@ -986,6 +1040,11 @@ def admin_pending_matches():
             flash('Draft email updated successfully.')
 
         elif action == 'finalize':
+            # Save any draft email changes from the form before finalizing
+            draft_email_from_form = sanitize_input(request.form.get('draft_email', ''))
+            if draft_email_from_form:
+                match.draft_email = draft_email_from_form
+
             # Finalize the match
             match.status = 'finalized'
             match.finalized_at = datetime.utcnow()
@@ -998,9 +1057,7 @@ def admin_pending_matches():
             if assessment2:
                 assessment2.matched_user_id = match.user1_id
 
-            db.session.commit()
-
-            # Send the drafted email to both users
+            # Send the drafted email to both users (SEND FIRST, then store)
             user1 = User.query.get(match.user1_id)
             user2 = User.query.get(match.user2_id)
             dashboard_url = url_for('user_dashboard', _external=True)
@@ -1025,16 +1082,32 @@ def admin_pending_matches():
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
                             msg.body = personalized_email
-                            msg.html = personalized_email.replace('\n', '<br>')
+                            # Convert to formatted HTML with Three of Cups styling
+                            msg.html = format_draft_email_to_html(personalized_email)
+
+                            # Send email first (priority)
                             mail.send(msg)
+
+                            # Then store the HTML content
+                            if user.id == user1.id:
+                                match.user1_email_content = msg.html
+                            else:
+                                match.user2_email_content = msg.html
                         except Exception as e:
                             print(f"Error sending custom match email: {e}")
             else:
                 # Use default template
                 if user1:
-                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
+                    success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
+                    if success and html_content:
+                        match.user1_email_content = html_content
                 if user2:
-                    send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
+                    success, html_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
+                    if success and html_content:
+                        match.user2_email_content = html_content
+
+            # Commit to database after emails are sent
+            db.session.commit()
 
             flash('Match finalized successfully! Emails sent to both users.')
 
@@ -1277,8 +1350,13 @@ def user_dashboard():
             # Get the other user in the match
             other_user_id = match.user2_id if match.user1_id == current_user.id else match.user1_id
             matched_user = User.query.get(other_user_id)
-            if matched_user and matched_user not in matched_users:
-                matched_users.append(matched_user)
+            if matched_user:
+                # Check if this user is already in the list (avoid duplicates)
+                if not any(m['user'].id == matched_user.id for m in matched_users):
+                    matched_users.append({
+                        'user': matched_user,
+                        'match_id': match.id
+                    })
 
         # Get user's RSVP'd events
         user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
@@ -1302,6 +1380,51 @@ def user_dashboard():
                          email_verified=current_user.email_verified,
                          upcoming_rsvp_events=upcoming_rsvp_events,
                          past_rsvp_events=past_rsvp_events)
+
+@app.route('/api/match_email/<int:match_id>')
+@login_required
+def get_match_email(match_id):
+    """
+    API endpoint to fetch the personalized email content for a match.
+    Returns the email content that was sent to the current user about this match.
+    """
+    # Fetch the match
+    match = Match.query.get(match_id)
+
+    if not match:
+        return jsonify({'success': False, 'error': 'Match not found'}), 404
+
+    # Verify the current user is part of this match (security check)
+    if current_user.id != match.user1_id and current_user.id != match.user2_id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    # Get the appropriate email content for this user
+    if current_user.id == match.user1_id:
+        email_content = match.user1_email_content
+        # Get the match partner's name
+        match_partner = User.query.get(match.user2_id)
+    else:
+        email_content = match.user2_email_content
+        # Get the match partner's name
+        match_partner = User.query.get(match.user1_id)
+
+    # Handle edge case: older matches without stored email content
+    if not email_content:
+        return jsonify({
+            'success': True,
+            'email_content': None,
+            'match_name': match_partner.first_name if match_partner else 'your match',
+            'finalized_at': match.finalized_at.isoformat() if match.finalized_at else None,
+            'message': 'Email content not available for this match'
+        })
+
+    # Return the email content
+    return jsonify({
+        'success': True,
+        'email_content': email_content,
+        'match_name': match_partner.first_name if match_partner else 'your match',
+        'finalized_at': match.finalized_at.isoformat() if match.finalized_at else None
+    })
 
 @app.route('/submit-feedback', methods=['POST'])
 @login_required

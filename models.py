@@ -119,6 +119,8 @@ class Match(db.Model):
     status = db.Column(db.String(20), default='pending')  # 'pending' or 'finalized'
     admin_notes = db.Column(db.Text)
     draft_email = db.Column(db.Text)
+    user1_email_content = db.Column(db.Text, nullable=True)  # HTML email sent to user1
+    user2_email_content = db.Column(db.Text, nullable=True)  # HTML email sent to user2
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     finalized_at = db.Column(db.DateTime, nullable=True)
 
