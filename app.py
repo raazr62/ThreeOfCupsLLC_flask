@@ -80,6 +80,32 @@ def reviewer_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def sanitize_email_unicode(text):
+    """
+    Replace problematic Unicode characters with ASCII-safe alternatives for email sending.
+    This ensures emails can be sent even if SMTP defaults to ASCII encoding.
+    """
+    if not text:
+        return text
+
+    # Replace common Unicode characters with ASCII equivalents
+    replacements = {
+        '\u2014': '--',      # Em dash
+        '\u2013': '-',       # En dash
+        '\u2018': "'",       # Left single quote
+        '\u2019': "'",       # Right single quote
+        '\u201c': '"',       # Left double quote
+        '\u201d': '"',       # Right double quote
+        '\u2026': '...',     # Ellipsis
+        '\u2022': '*',       # Bullet point
+        '\u00a0': ' ',       # Non-breaking space
+    }
+
+    for unicode_char, ascii_char in replacements.items():
+        text = text.replace(unicode_char, ascii_char)
+
+    return text
+
 def format_draft_email_to_html(plain_text):
     """
     Convert plain text draft email to formatted HTML with Three of Cups styling.
@@ -87,6 +113,9 @@ def format_draft_email_to_html(plain_text):
     """
     if not plain_text:
         return ""
+
+    # Sanitize Unicode characters first
+    plain_text = sanitize_email_unicode(plain_text)
 
     # Escape any existing HTML to prevent issues
     import html
@@ -1089,12 +1118,12 @@ def admin_pending_matches():
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
 
-                            # Ensure proper UTF-8 encoding
-                            if isinstance(personalized_email, bytes):
-                                personalized_email = personalized_email.decode('utf-8')
+                            # Sanitize Unicode characters to prevent encoding errors
+                            personalized_email = sanitize_email_unicode(personalized_email)
 
                             msg.body = personalized_email
                             # Convert to formatted HTML with Three of Cups styling
+                            # (format_draft_email_to_html also calls sanitize_email_unicode)
                             msg.html = format_draft_email_to_html(personalized_email)
 
                             # Send email first (priority)
