@@ -66,6 +66,8 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         )
         msg.body = body_text
         msg.html = body_html
+        # Set UTF-8 charset for proper Unicode handling
+        msg.charset = 'utf-8'
 
         mail.send(msg)
         return True, body_text

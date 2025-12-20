@@ -94,6 +94,7 @@ def replace_unicode_punctuation(text):
         '\u201c': '"',       # Left double quote
         '\u201d': '"',       # Right double quote
         '\u2026': '...',     # Ellipsis
+        '\u2022': '*',       # Bullet point
     }
 
     for unicode_char, ascii_char in replacements.items():
@@ -1118,6 +1119,8 @@ def admin_pending_matches():
                             msg.body = personalized_email
                             # Convert to formatted HTML with Three of Cups styling
                             msg.html = format_draft_email_to_html(personalized_email)
+                            # Set UTF-8 charset for proper Unicode handling
+                            msg.charset = 'utf-8'
 
                             # Send email first (priority)
                             mail.send(msg)
