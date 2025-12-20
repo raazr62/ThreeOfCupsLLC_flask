@@ -78,6 +78,29 @@ def reviewer_access_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def replace_unicode_punctuation(text):
+    """
+    Replace Unicode punctuation with ASCII equivalents for SMTP compatibility.
+    Only replaces common problematic characters while preserving text meaning.
+    """
+    if not text:
+        return text
+
+    replacements = {
+        '\u2014': '--',      # Em dash
+        '\u2013': '-',       # En dash
+        '\u2018': "'",       # Left single quote
+        '\u2019': "'",       # Right single quote
+        '\u201c': '"',       # Left double quote
+        '\u201d': '"',       # Right double quote
+        '\u2026': '...',     # Ellipsis
+    }
+
+    for unicode_char, ascii_char in replacements.items():
+        text = text.replace(unicode_char, ascii_char)
+
+    return text
+
 def format_draft_email_to_html(plain_text):
     """
     Convert plain text draft email to formatted HTML with Three of Cups styling.
@@ -85,6 +108,9 @@ def format_draft_email_to_html(plain_text):
     """
     if not plain_text:
         return ""
+
+    # Replace Unicode punctuation for SMTP compatibility
+    plain_text = replace_unicode_punctuation(plain_text)
 
     # Escape any existing HTML to prevent issues
     import html
@@ -1080,6 +1106,9 @@ def admin_pending_matches():
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
+
+                            # Replace Unicode punctuation for SMTP compatibility
+                            personalized_email = replace_unicode_punctuation(personalized_email)
 
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
