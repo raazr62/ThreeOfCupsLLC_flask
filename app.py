@@ -1084,16 +1084,15 @@ def admin_pending_matches():
                             # Create fancy HTML formatting for the email
                             html_content = format_draft_email_to_html(personalized_email)
 
-                            # Create message with explicit charset to prevent encoding issues in production
+                            # Create Flask-Mail Message with UTF-8 charset
                             msg = Message(
                                 f'Your Three of Cups Match: Meet {match_name}!',
                                 sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[user.email]
+                                recipients=[user.email],
+                                charset='utf-8'
                             )
                             msg.body = personalized_email
                             msg.html = html_content
-                            # Explicitly set charset to UTF-8 for production environments
-                            msg.charset = 'utf-8'
 
                             # Send email first (priority)
                             mail.send(msg)
