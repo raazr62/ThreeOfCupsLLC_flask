@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Edit Event</h2>
+            <p class="text-sm sm:text-base text-text-accent opacity-90">Update event details</p>
+        </div>
+
+        <!-- Back to Events Button -->
+        <div class="mb-6">
+            <a href="{{ url_for('admin_events') }}"
+               class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-all duration-300">
+                &larr; Back to Events
+            </a>
+        </div>
+
+        <!-- Edit Event Form -->
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
+            <h3 class="text-2xl font-bold text-text-primary mb-6 font-brand">Edit Event Details</h3>
+
+            {% if rsvp_count > 0 %}
+            <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                <p class="text-sm text-blue-800">
+                    <strong>Note:</strong> This event currently has {{ rsvp_count }} RSVP(s).
+                    {% if event.max_capacity %}
+                        Max capacity cannot be set lower than the current number of RSVPs.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-semibold text-text-primary mb-2">Event Title *</label>
+                        <input type="text" id="title" name="title" required
+                               value="{{ event.title }}"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="e.g., Community Crafting Night">
+                    </div>
+
+                    <div>
+                        <label for="location" class="block text-sm font-semibold text-text-primary mb-2">Location *</label>
+                        <input type="text" id="location" name="location" required
+                               value="{{ event.location }}"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="e.g., 123 Main St, City, State">
+                    </div>
+
+                    <div>
+                        <label for="date_time" class="block text-sm font-semibold text-text-primary mb-2">Date & Time *</label>
+                        <input type="datetime-local" id="date_time" name="date_time" required
+                               value="{{ event.date_time.strftime('%Y-%m-%dT%H:%M') }}"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label for="price" class="block text-sm font-semibold text-text-primary mb-2">Price (leave empty for free)</label>
+                        <input type="number" id="price" name="price" step="0.01" min="0"
+                               value="{% if event.price %}{{ event.price }}{% endif %}"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="0.00">
+                    </div>
+
+                    <div>
+                        <label for="max_capacity" class="block text-sm font-semibold text-text-primary mb-2">
+                            Max Capacity (leave empty for unlimited)
+                            {% if rsvp_count > 0 %}
+                                <span class="text-xs text-blue-600">(minimum: {{ rsvp_count }})</span>
+                            {% endif %}
+                        </label>
+                        <input type="number" id="max_capacity" name="max_capacity" min="{% if rsvp_count > 0 %}{{ rsvp_count }}{% else %}1{% endif %}"
+                               value="{% if event.max_capacity %}{{ event.max_capacity }}{% endif %}"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="Unlimited">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-semibold text-text-primary mb-2">Description *</label>
+                    <textarea id="description" name="description" required rows="4"
+                              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                              placeholder="Describe the event...">{{ event.description }}</textarea>
+                </div>
+
+                <div>
+                    <label for="picture" class="block text-sm font-semibold text-text-primary mb-2">Event Picture</label>
+
+                    {% if event.picture %}
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">Current picture:</p>
+                        <img src="{{ url_for('static', filename=event.picture) }}"
+                             alt="{{ event.title }}"
+                             class="w-48 h-48 object-cover rounded-lg border border-gray-300">
+                    </div>
+                    {% endif %}
+
+                    <input type="file" id="picture" name="picture" accept="image/*"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    <p class="text-sm text-gray-500 mt-2">
+                        {% if event.picture %}
+                            Upload a new image to replace the current one, or leave empty to keep the existing picture.
+                        {% else %}
+                            Upload an image (optional).
+                        {% endif %}
+                        Accepted formats: PNG, JPG, JPEG, GIF (max 16MB)
+                    </p>
+                </div>
+
+                <div class="flex gap-4">
+                    <button type="submit"
+                            class="flex-1 bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-secondary hover:to-primary transition-all duration-300 shadow-lg hover:shadow-xl">
+                        Update Event
+                    </button>
+                    <a href="{{ url_for('admin_events') }}"
+                       class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-all duration-300 text-center">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

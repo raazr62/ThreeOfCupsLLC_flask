@@ -89,6 +89,20 @@
                                                         </svg>
                                                         <span class="text-text-accent text-sm">{{ event_rsvp_counts[event.id] }} attending</span>
                                                     </div>
+
+                                                    {% if event.max_capacity %}
+                                                    <div class="flex items-start gap-2">
+                                                        <svg class="w-5 h-5 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                        </svg>
+                                                        <span class="text-text-accent text-sm">
+                                                            Capacity: {{ event.max_capacity }}
+                                                            {% if event_rsvp_counts[event.id] >= event.max_capacity %}
+                                                                <span class="text-red-600 font-semibold">(AT CAPACITY)</span>
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                    {% endif %}
                                                 </div>
 
                                                 <p class="text-text-accent mb-6">{{ event.description|safe }}</p>
@@ -97,22 +111,34 @@
                                             <div>
                                                 {% if current_user.is_authenticated %}
                                                     {% if event.id in user_rsvps %}
-                                                        <button type="button" onclick="unrsvpEvent({{ event.id }})"
-                                                                id="rsvp-btn-{{ event.id }}"
-                                                                class="w-full bg-secondary hover:bg-primary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
+                                                        <button type="button"
+                                                                data-event-id="{{ event.id }}"
+                                                                class="unrsvp-btn w-full bg-secondary hover:bg-primary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
                                                             RSVP'd - Click to Cancel
                                                         </button>
+                                                    {% elif event.max_capacity and event_rsvp_counts[event.id] >= event.max_capacity %}
+                                                        <button type="button" disabled
+                                                                class="w-full bg-gray-400 text-white font-semibold px-6 py-3 rounded-xl cursor-not-allowed opacity-60">
+                                                            Event at Capacity
+                                                        </button>
                                                     {% else %}
-                                                        <button type="button" onclick="rsvpEvent({{ event.id }})"
-                                                                id="rsvp-btn-{{ event.id }}"
-                                                                class="w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
+                                                        <button type="button"
+                                                                data-event-id="{{ event.id }}"
+                                                                class="rsvp-btn w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg">
                                                             RSVP to Event
                                                         </button>
                                                     {% endif %}
                                                 {% else %}
-                                                    <a href="{{ url_for('login') }}" class="block w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg text-center">
-                                                        Login to RSVP
-                                                    </a>
+                                                    {% if event.max_capacity and event_rsvp_counts[event.id] >= event.max_capacity %}
+                                                        <button type="button" disabled
+                                                                class="w-full bg-gray-400 text-white font-semibold px-6 py-3 rounded-xl cursor-not-allowed opacity-60">
+                                                            Event at Capacity
+                                                        </button>
+                                                    {% else %}
+                                                        <a href="{{ url_for('login') }}" class="block w-full bg-primary hover:bg-secondary text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg text-center">
+                                                            Login to RSVP
+                                                        </a>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                         </div>
@@ -178,49 +204,56 @@
 
 {% if current_user.is_authenticated %}
 <script>
-    function rsvpEvent(eventId) {
-        fetch(`/api/event/rsvp/${eventId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+    document.addEventListener('DOMContentLoaded', function() {
+        // RSVP button event delegation
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('rsvp-btn')) {
+                const eventId = e.target.dataset.eventId;
+                fetch(`/api/event/rsvp/${eventId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Failed to RSVP');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to RSVP to event');
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert(data.error || 'Failed to RSVP');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to RSVP to event');
-        });
-    }
 
-    function unrsvpEvent(eventId) {
-        if (confirm('Are you sure you want to cancel your RSVP?')) {
-            fetch(`/api/event/unrsvp/${eventId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            if (e.target.classList.contains('unrsvp-btn')) {
+                if (confirm('Are you sure you want to cancel your RSVP?')) {
+                    const eventId = e.target.dataset.eventId;
+                    fetch(`/api/event/unrsvp/${eventId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error || 'Failed to remove RSVP');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to remove RSVP');
+                    });
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.error || 'Failed to remove RSVP');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to remove RSVP');
-            });
-        }
-    }
+            }
+        });
+    });
 </script>
 {% endif %}
 {% endblock %}

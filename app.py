@@ -1962,6 +1962,19 @@ def admin_events():
                 flash('Invalid price format.')
                 return redirect(url_for('admin_events'))
 
+        # Parse max_capacity (optional)
+        max_capacity = None
+        max_capacity_str = request.form.get('max_capacity', '').strip()
+        if max_capacity_str:
+            try:
+                max_capacity = int(max_capacity_str)
+                if max_capacity < 1:
+                    flash('Max capacity must be at least 1.')
+                    return redirect(url_for('admin_events'))
+            except ValueError:
+                flash('Invalid max capacity format.')
+                return redirect(url_for('admin_events'))
+
         # Handle picture upload
         picture = None
         if 'picture' in request.files:
@@ -1990,6 +2003,7 @@ def admin_events():
             date_time=event_date_time,
             price=price,
             picture=picture,
+            max_capacity=max_capacity,
             created_by=current_user.id
         )
         db.session.add(new_event)
@@ -2035,6 +2049,12 @@ def rsvp_event(event_id):
     if existing_rsvp:
         return jsonify({'error': 'Already RSVP\'d to this event'}), 400
 
+    # Check if event is at capacity
+    if event.max_capacity:
+        current_rsvp_count = EventRSVP.query.filter_by(event_id=event_id).count()
+        if current_rsvp_count >= event.max_capacity:
+            return jsonify({'error': 'This event is at capacity'}), 400
+
     # Create RSVP
     rsvp = EventRSVP(event_id=event_id, user_id=current_user.id)
     db.session.add(rsvp)
@@ -2079,6 +2099,118 @@ def delete_event(event_id):
 
     flash('Event deleted successfully!')
     return redirect(url_for('admin_events'))
+
+@app.route('/admin/events/<int:event_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_event(event_id):
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+
+    event = Event.query.get(event_id)
+    if not event:
+        flash('Event not found.')
+        return redirect(url_for('admin_events'))
+
+    if request.method == 'POST':
+        # Sanitize inputs
+        title = sanitize_input(request.form.get('title', ''), max_length=200, allow_newlines=False)
+        description = sanitize_input(request.form.get('description', ''), max_length=5000)
+        location = sanitize_location(request.form.get('location', ''))
+        date_time_str = request.form.get('date_time', '').strip()
+        price_str = request.form.get('price', '').strip()
+
+        # Validate required fields
+        if not all([title, description, location, date_time_str]):
+            flash('Title, description, location, and date/time are required.')
+            return redirect(url_for('edit_event', event_id=event_id))
+
+        # Parse date/time
+        try:
+            event_date_time = datetime.strptime(date_time_str, '%Y-%m-%dT%H:%M')
+        except ValueError:
+            flash('Invalid date/time format.')
+            return redirect(url_for('edit_event', event_id=event_id))
+
+        # Parse price (optional)
+        price = None
+        if price_str:
+            try:
+                price = float(price_str)
+                if price < 0:
+                    flash('Price cannot be negative.')
+                    return redirect(url_for('edit_event', event_id=event_id))
+            except ValueError:
+                flash('Invalid price format.')
+                return redirect(url_for('edit_event', event_id=event_id))
+
+        # Parse max_capacity (optional)
+        max_capacity = None
+        max_capacity_str = request.form.get('max_capacity', '').strip()
+        if max_capacity_str:
+            try:
+                max_capacity = int(max_capacity_str)
+                if max_capacity < 1:
+                    flash('Max capacity must be at least 1.')
+                    return redirect(url_for('edit_event', event_id=event_id))
+
+                # Check if new capacity is less than current RSVPs
+                current_rsvp_count = EventRSVP.query.filter_by(event_id=event_id).count()
+                if max_capacity < current_rsvp_count:
+                    flash(f'Max capacity cannot be less than current RSVPs ({current_rsvp_count}).')
+                    return redirect(url_for('edit_event', event_id=event_id))
+            except ValueError:
+                flash('Invalid max capacity format.')
+                return redirect(url_for('edit_event', event_id=event_id))
+
+        # Handle picture upload
+        picture = event.picture  # Keep existing picture by default
+        if 'picture' in request.files:
+            file = request.files['picture']
+            if file and file.filename != '':
+                is_valid, error_msg = validate_file_upload(file.filename)
+                if not is_valid:
+                    flash(error_msg)
+                    return redirect(url_for('edit_event', event_id=event_id))
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"event_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{filename}"
+
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+
+                file_path = os.path.join(upload_folder, unique_filename)
+                file.save(file_path)
+                picture = f'uploads/{unique_filename}'
+
+                # Delete old picture if it exists and is different
+                if event.picture and event.picture != picture:
+                    old_file_path = os.path.join('static', event.picture)
+                    if os.path.exists(old_file_path):
+                        try:
+                            os.remove(old_file_path)
+                        except Exception:
+                            pass  # Ignore errors when deleting old file
+
+        # Update event
+        event.title = title
+        event.description = description
+        event.location = location
+        event.date_time = event_date_time
+        event.price = price
+        event.picture = picture
+        event.max_capacity = max_capacity
+
+        db.session.commit()
+
+        flash('Event updated successfully!')
+        return redirect(url_for('admin_events'))
+
+    # GET request - show edit form
+    # Get RSVP count for capacity validation
+    rsvp_count = EventRSVP.query.filter_by(event_id=event.id).count()
+
+    return render_template('edit_event.html', event=event, rsvp_count=rsvp_count)
 
 if __name__ == '__main__':
     app.run(debug=True)

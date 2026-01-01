@@ -143,6 +143,7 @@ class Event(db.Model):
     date_time = db.Column(db.DateTime, nullable=False)
     price = db.Column(db.Float, nullable=True)  # NULL means free
     picture = db.Column(db.String(200), nullable=True)
+    max_capacity = db.Column(db.Integer, nullable=True)  # NULL means unlimited capacity
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
