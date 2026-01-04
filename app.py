@@ -952,14 +952,99 @@ def admin_assessments():
         else:
             flash('Assessment not found.')
 
-    # Add filter for assessment status
+    # Pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    # Filter parameters
     filter_status = request.args.get('filter', 'unreviewed')
-    if filter_status == 'all':
-        assessments = Assessment.query.all()
-    elif filter_status == 'reviewed':
-        assessments = Assessment.query.filter_by(reviewed=True).all()
-    else:  # Default to unreviewed
-        assessments = Assessment.query.filter_by(reviewed=False).all()
+    search_query = request.args.get('search', '').strip()
+    age_min = request.args.get('age_min', type=int)
+    age_max = request.args.get('age_max', type=int)
+    location_filter = request.args.get('location', '').strip()
+    pronouns_filter = request.args.get('pronouns', '').strip()
+
+    # Assessment answer filters
+    emotional_availability_min = request.args.get('emotional_availability_min', type=int)
+    recharge_style = request.args.get('recharge_style', '').strip()
+
+    # Build base query with join to User table
+    query = Assessment.query.join(User, Assessment.user_id == User.id)
+
+    # Apply review status filter
+    if filter_status == 'reviewed':
+        query = query.filter(Assessment.reviewed == True)
+    elif filter_status == 'unreviewed':
+        query = query.filter(Assessment.reviewed == False)
+    # 'all' means no filter on reviewed status
+
+    # Apply user criteria filters
+    if search_query:
+        search_pattern = f'%{search_query}%'
+        query = query.filter(
+            or_(
+                User.first_name.ilike(search_pattern),
+                User.last_name.ilike(search_pattern),
+                User.email.ilike(search_pattern)
+            )
+        )
+
+    if age_min or age_max:
+        from datetime import date
+        today = date.today()
+
+        if age_min:
+            # Calculate the latest birth date for minimum age
+            max_birth_date = date(today.year - age_min, today.month, today.day)
+            query = query.filter(User.date_of_birth <= max_birth_date)
+
+        if age_max:
+            # Calculate the earliest birth date for maximum age
+            min_birth_date = date(today.year - age_max - 1, today.month, today.day)
+            query = query.filter(User.date_of_birth >= min_birth_date)
+
+    if location_filter:
+        query = query.filter(User.location.ilike(f'%{location_filter}%'))
+
+    if pronouns_filter:
+        query = query.filter(User.pronouns.ilike(f'%{pronouns_filter}%'))
+
+    # Get all assessments matching the filters (we'll filter by assessment answers in Python)
+    all_matching_assessments = query.all()
+
+    # Filter by assessment answers (since answers is JSON, we need to do this in Python)
+    filtered_assessments = []
+    for assessment in all_matching_assessments:
+        if assessment.answers:
+            try:
+                assessment_data = json.loads(assessment.answers)
+
+                # Apply emotional availability filter
+                if emotional_availability_min is not None:
+                    emotional_avail = assessment_data.get('friendship_readiness_emotional_availability')
+                    if emotional_avail is None or int(emotional_avail) < emotional_availability_min:
+                        continue
+
+                # Apply recharge style filter
+                if recharge_style:
+                    recharge = assessment_data.get('personality_social_style_recharge_style')
+                    if recharge != recharge_style:
+                        continue
+
+                filtered_assessments.append(assessment)
+            except:
+                # If JSON parsing fails, include the assessment
+                filtered_assessments.append(assessment)
+        else:
+            filtered_assessments.append(assessment)
+
+    # Manual pagination on filtered results
+    total_items = len(filtered_assessments)
+    total_pages = max(1, (total_items + per_page - 1) // per_page)  # Ceiling division, at least 1 page
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+    assessments = filtered_assessments[start_idx:end_idx]
+
     users = User.query.all()
 
     # Count how many matches each user has by querying the Match table
@@ -1033,7 +1118,18 @@ def admin_assessments():
                          user_match_counts=user_match_counts,
                          user_existing_matches=user_existing_matches,
                          user_previous_matches=user_previous_matches,
-                         filter_status=filter_status)
+                         filter_status=filter_status,
+                         page=page,
+                         per_page=per_page,
+                         total_pages=total_pages,
+                         total_items=total_items,
+                         search_query=search_query,
+                         age_min=age_min,
+                         age_max=age_max,
+                         location_filter=location_filter,
+                         pronouns_filter=pronouns_filter,
+                         emotional_availability_min=emotional_availability_min,
+                         recharge_style=recharge_style)
 
 # Admin matches page
 @app.route('/admin/matches')
