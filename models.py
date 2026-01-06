@@ -28,6 +28,8 @@ class User(UserMixin, db.Model):
     email_change_token = db.Column(db.String(100), nullable=True)
     email_change_token_expiry = db.Column(db.DateTime, nullable=True)
     can_retake_assessment = db.Column(db.Boolean, default=False)  # Flag to allow assessment retakes
+    has_paid = db.Column(db.Boolean, default=False)  # Track if user has paid for match service
+    payment_waived_at = db.Column(db.DateTime, nullable=True)  # Timestamp when admin waived payment
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')

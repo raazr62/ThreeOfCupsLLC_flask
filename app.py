@@ -818,6 +818,9 @@ def admin_users():
         # Get users who have NOT completed an assessment
         user_ids_with_assessment = db.session.query(Assessment.user_id).distinct()
         users_query = users_query.filter(~User.id.in_(user_ids_with_assessment))
+    elif filter_type == 'not_paid':
+        # Get users who have not paid
+        users_query = users_query.filter(User.has_paid == False)
 
     # Order by ID (registration order)
     users = users_query.order_by(User.id.desc()).all()
@@ -968,6 +971,9 @@ def admin_assessments():
     emotional_availability_min = request.args.get('emotional_availability_min', type=int)
     recharge_style = request.args.get('recharge_style', '').strip()
 
+    # Payment status filter
+    payment_status_filter = request.args.getlist('payment_status')
+
     # Build base query with join to User table
     query = Assessment.query.join(User, Assessment.user_id == User.id)
 
@@ -1008,6 +1014,13 @@ def admin_assessments():
 
     if pronouns_filter:
         query = query.filter(User.pronouns.ilike(f'%{pronouns_filter}%'))
+
+    # Apply payment status filter
+    if 'paid' in payment_status_filter and 'not_paid' not in payment_status_filter:
+        query = query.filter(User.has_paid == True)
+    elif 'not_paid' in payment_status_filter and 'paid' not in payment_status_filter:
+        query = query.filter(User.has_paid == False)
+    # If both or neither selected, show all users
 
     # Get all assessments matching the filters (we'll filter by assessment answers in Python)
     all_matching_assessments = query.all()
@@ -1129,7 +1142,8 @@ def admin_assessments():
                          location_filter=location_filter,
                          pronouns_filter=pronouns_filter,
                          emotional_availability_min=emotional_availability_min,
-                         recharge_style=recharge_style)
+                         recharge_style=recharge_style,
+                         payment_status_filter=payment_status_filter)
 
 # Admin matches page
 @app.route('/admin/matches')
@@ -1212,6 +1226,28 @@ def admin_unmatch(match_id):
         'message': 'Match successfully unmatched',
         'user1_assessment_unreviewed': not user1_other_matches,
         'user2_assessment_unreviewed': not user2_other_matches
+    })
+
+# Admin waive payment for user
+@app.route('/admin/waive_payment/<int:user_id>', methods=['POST'])
+@login_required
+def admin_waive_payment(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Mark payment as waived
+    user.has_paid = True
+    user.payment_waived_at = datetime.utcnow()
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Payment waived for {user.first_name} {user.last_name}'
     })
 
 # Admin pending matches page

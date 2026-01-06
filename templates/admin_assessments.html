@@ -158,6 +158,25 @@
                         </div>
                     </div>
 
+                    <!-- Payment Status Filters -->
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold text-gray-700 mb-3">Payment Status</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="payment_status" value="paid"
+                                       {% if 'paid' in payment_status_filter %}checked{% endif %}
+                                       class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <span class="ml-2 text-sm text-gray-700">Show only users who have paid</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="payment_status" value="not_paid"
+                                       {% if 'not_paid' in payment_status_filter %}checked{% endif %}
+                                       class="rounded border-gray-300 text-primary focus:ring-primary">
+                                <span class="ml-2 text-sm text-gray-700">Show only users who have not paid</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <!-- Assessment Answer Filters -->
                     <div class="border-t pt-4">
                         <h4 class="font-semibold text-gray-700 mb-3">Assessment Criteria</h4>
