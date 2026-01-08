@@ -4,6 +4,7 @@ from email_templates.match_notification import get_match_notification_email
 from email_templates.email_verification import get_email_verification_email
 from email_templates.email_change_notification import get_email_change_notification_email
 from email_templates.email_change_verification import get_email_change_verification_email
+from email_templates.walk_in_welcome import get_walk_in_welcome_email
 
 
 def sanitize_email_content(text):
@@ -231,3 +232,40 @@ def send_email_change_verification(mail, sender, new_email, user_first_name, ver
     except Exception as e:
         print(f"Error sending email change verification: {e}")
         return False
+
+
+def send_walk_in_welcome_email(mail, sender, user, event_title, profile_completion_url):
+    """
+    Send welcome email to walk-in attendee with profile completion link.
+
+    Args:
+        mail: Flask-Mail instance
+        sender: Sender email address
+        user: User object
+        event_title: Name of event they attended
+        profile_completion_url: URL to complete profile
+
+    Returns:
+        Tuple (success: bool, error_message: str or None)
+    """
+    try:
+        subject, body_text, body_html = get_walk_in_welcome_email(
+            user.first_name,
+            event_title,
+            profile_completion_url
+        )
+
+        msg = Message(
+            subject=subject,
+            sender=sender,
+            recipients=[user.email]
+        )
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
+
+        mail.send(msg)
+        return True, None
+    except Exception as e:
+        print(f"Error sending walk-in welcome email: {e}")
+        return False, str(e)

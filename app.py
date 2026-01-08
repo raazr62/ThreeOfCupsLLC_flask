@@ -3,15 +3,16 @@ import os
 import json
 import re
 import statistics
-from datetime import datetime, date
+import secrets
+from datetime import datetime, date, timedelta
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP
-from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification
+from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn
+from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
     sanitize_location, sanitize_json_data, setup_template_filters,
@@ -482,9 +483,35 @@ def register():
             return redirect(url_for('register'))
 
         # Check if email already exists
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists.')
-            return redirect(url_for('register'))
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            # Check if it's an incomplete profile from walk-in
+            if existing_user.profile_incomplete:
+                # Always generate a new token and send email
+                token = existing_user.generate_profile_completion_token()
+                db.session.commit()
+
+                # Send profile completion email
+                profile_completion_url = url_for('complete_profile', token=token, _external=True)
+                # Get the event they checked into
+                latest_checkin = EventCheckIn.query.filter_by(user_id=existing_user.id, is_walk_in=True).order_by(EventCheckIn.checked_in_at.desc()).first()
+                event_title = latest_checkin.event.title if latest_checkin else "our event"
+                success, error = send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], existing_user, event_title, profile_completion_url)
+
+                email_sent = False
+                if success:
+                    email_sent = True
+                else:
+                    flash(f'Failed to send profile completion email: {error}', 'error')
+
+                # Render special page for incomplete profile
+                return render_template('profile_incomplete.html',
+                                     user_email=email,
+                                     has_password=False,
+                                     email_sent=email_sent)
+            else:
+                flash('Email already exists.')
+                return redirect(url_for('register'))
 
         # All new registrations are created as regular users (not admin)
         user = User(
@@ -537,17 +564,47 @@ def login():
             (User.username == username_or_email) | (User.email == username_or_email)
         ).first()
 
-        if user and user.check_password(password):
-            login_user(user)
-            if user.is_admin:
-                return redirect(url_for('admin_dashboard'))
-            else:
-                # Check if user has already completed an assessment
-                existing_assessment = Assessment.query.filter_by(user_id=user.id).first()
-                if existing_assessment:
-                    return redirect(url_for('user_dashboard'))
+        if user:
+            # Check if user has incomplete profile (walk-in user)
+            if user.profile_incomplete:
+                # Check if they even have a password set
+                if not user.password_hash:
+                    # Always generate a new token and send email
+                    token = user.generate_profile_completion_token()
+                    db.session.commit()
+
+                    # Send profile completion email
+                    profile_completion_url = url_for('complete_profile', token=token, _external=True)
+                    # Get the event they checked into
+                    latest_checkin = EventCheckIn.query.filter_by(user_id=user.id, is_walk_in=True).order_by(EventCheckIn.checked_in_at.desc()).first()
+                    event_title = latest_checkin.event.title if latest_checkin else "our event"
+                    success, error = send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, event_title, profile_completion_url)
+
+                    email_sent = False
+                    if success:
+                        email_sent = True
+                    else:
+                        flash(f'Failed to send profile completion email: {error}', 'error')
+
+                    # Render special page for incomplete profile
+                    return render_template('profile_incomplete.html',
+                                         user_email=user.email,
+                                         has_password=False,
+                                         email_sent=email_sent)
+
+            # Normal login flow
+            if user.check_password(password):
+                login_user(user)
+                if user.is_admin:
+                    return redirect(url_for('admin_dashboard'))
                 else:
-                    return redirect(url_for('assessment'))
+                    # Check if user has already completed an assessment
+                    existing_assessment = Assessment.query.filter_by(user_id=user.id).first()
+                    if existing_assessment:
+                        return redirect(url_for('user_dashboard'))
+                    else:
+                        return redirect(url_for('assessment'))
+
         flash('Invalid credentials.')
     return render_template('login.html')
 
@@ -578,15 +635,29 @@ def forgot_password():
         flash('If an account exists with that email, you will receive a password reset link shortly.')
 
         if user:
-            # Generate reset token
-            token = user.generate_reset_token()
-            db.session.commit()
+            # Check if user has incomplete profile (walk-in user)
+            if user.profile_incomplete:
+                # Send profile completion email instead of password reset
+                # Always generate a new token and send email
+                token = user.generate_profile_completion_token()
+                db.session.commit()
 
-            # Send email
-            reset_url = url_for('reset_password', token=token, _external=True)
-            send_password_reset_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, reset_url)
-            # Note: Intentionally not checking return value for security reasons
-            # (don't reveal whether email exists)
+                # Send profile completion email
+                profile_completion_url = url_for('complete_profile', token=token, _external=True)
+                # Get the event they checked into
+                latest_checkin = EventCheckIn.query.filter_by(user_id=user.id, is_walk_in=True).order_by(EventCheckIn.checked_in_at.desc()).first()
+                event_title = latest_checkin.event.title if latest_checkin else "our event"
+                send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, event_title, profile_completion_url)
+            else:
+                # Generate reset token
+                token = user.generate_reset_token()
+                db.session.commit()
+
+                # Send email
+                reset_url = url_for('reset_password', token=token, _external=True)
+                send_password_reset_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, reset_url)
+                # Note: Intentionally not checking return value for security reasons
+                # (don't reveal whether email exists)
 
         return redirect(url_for('login'))
 
@@ -604,6 +675,15 @@ def reset_password(token):
     if not user or not user.verify_reset_token(token):
         flash('Invalid or expired reset link. Please request a new password reset.')
         return redirect(url_for('forgot_password'))
+
+    # Check if user has incomplete profile (walk-in user)
+    # They should complete their profile first, not reset password
+    if user.profile_incomplete:
+        flash('Your account was created at an event but is incomplete. Please complete your profile using the link sent to your email.')
+        return render_template('profile_incomplete.html',
+                             user_email=user.email,
+                             has_password=False,
+                             email_sent=False)
 
     if request.method == 'POST':
         password = request.form.get('password', '')
@@ -2032,11 +2112,23 @@ def get_user_assessment(user_id):
 @app.route('/events')
 @beta_access_required
 def events():
-    # Get all upcoming events (future events only)
-    from sqlalchemy import or_
-    upcoming_events = Event.query.filter(
-        Event.date_time >= datetime.utcnow()
-    ).order_by(Event.date_time.asc()).all()
+    # Get view type (upcoming or past)
+    view = request.args.get('view', 'upcoming')
+
+    # Events are considered past 1 hour after their start time
+    # Use datetime.now() instead of utcnow() since events are stored as naive local time
+    cutoff_time = datetime.now() - timedelta(hours=1)
+
+    if view == 'past':
+        # Get past events (ended more than 1 hour ago)
+        events_list = Event.query.filter(
+            Event.date_time < cutoff_time
+        ).order_by(Event.date_time.desc()).all()
+    else:
+        # Get upcoming events (not yet past the 1 hour mark)
+        events_list = Event.query.filter(
+            Event.date_time >= cutoff_time
+        ).order_by(Event.date_time.asc()).all()
 
     # Get user's RSVPs if authenticated
     user_rsvps = set()
@@ -2046,14 +2138,15 @@ def events():
 
     # Get RSVP counts for each event
     event_rsvp_counts = {}
-    for event in upcoming_events:
+    for event in events_list:
         count = EventRSVP.query.filter_by(event_id=event.id).count()
         event_rsvp_counts[event.id] = count
 
     return render_template('events.html',
-                         events=upcoming_events,
+                         events=events_list,
                          user_rsvps=user_rsvps,
-                         event_rsvp_counts=event_rsvp_counts)
+                         event_rsvp_counts=event_rsvp_counts,
+                         current_view=view)
 
 @app.route('/admin/events', methods=['GET', 'POST'])
 @login_required
@@ -2147,9 +2240,10 @@ def admin_events():
     # Get all events (past and future)
     all_events = Event.query.order_by(Event.date_time.desc()).all()
 
-    # Get RSVP counts and lists for each event
+    # Get RSVP counts and check-in data for each event
     event_data = []
     for event in all_events:
+        # RSVPs
         rsvps = EventRSVP.query.filter_by(event_id=event.id).all()
         rsvp_users = []
         for rsvp in rsvps:
@@ -2157,13 +2251,26 @@ def admin_events():
             if user:
                 rsvp_users.append(user)
 
+        # Check-ins
+        check_ins = EventCheckIn.query.filter_by(event_id=event.id).order_by(EventCheckIn.checked_in_at.desc()).all()
+        check_in_count = len(check_ins)
+        check_in_with_rsvp_count = sum(1 for c in check_ins if c.had_rsvp)
+        walk_in_count = sum(1 for c in check_ins if not c.had_rsvp)
+
         event_data.append({
             'event': event,
             'rsvp_count': len(rsvps),
-            'rsvp_users': rsvp_users
+            'rsvp_users': rsvp_users,
+            'check_ins': check_ins,
+            'check_in_count': check_in_count,
+            'check_in_with_rsvp_count': check_in_with_rsvp_count,
+            'walk_in_count': walk_in_count
         })
 
-    return render_template('admin_events.html', event_data=event_data, now=datetime.utcnow())
+    # Events are considered past 1 hour after their start time
+    # Use datetime.now() instead of utcnow() since events are stored as naive local time
+    cutoff_time = datetime.now() - timedelta(hours=1)
+    return render_template('admin_events.html', event_data=event_data, now=cutoff_time)
 
 @app.route('/api/event/rsvp/<int:event_id>', methods=['POST'])
 @login_required
@@ -2343,6 +2450,360 @@ def edit_event(event_id):
     rsvp_count = EventRSVP.query.filter_by(event_id=event.id).count()
 
     return render_template('edit_event.html', event=event, rsvp_count=rsvp_count)
+
+# Event Check-In System Routes
+
+@app.route('/event/<int:event_id>/kiosk')
+@beta_access_required
+def event_kiosk(event_id):
+    # Validate token
+    token = request.args.get('token')
+    event = Event.query.get(event_id)
+
+    if not event:
+        flash('Event not found.')
+        return redirect(url_for('events'))
+
+    if not token or event.kiosk_token != token:
+        flash('Invalid or expired kiosk access link.')
+        return redirect(url_for('events'))
+
+    # Check if token expired
+    if event.kiosk_token_expiry and datetime.utcnow() > event.kiosk_token_expiry:
+        flash('This kiosk link has expired.')
+        return redirect(url_for('events'))
+
+    return render_template('event_kiosk.html', event=event, token=token)
+
+@app.route('/api/event/<int:event_id>/generate-kiosk-token', methods=['POST'])
+@login_required
+def generate_kiosk_token(event_id):
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'success': False, 'error': 'Event not found'}), 404
+
+    # Generate secure token
+    event.kiosk_token = secrets.token_urlsafe(32)
+    # Token expires 24 hours after event ends
+    event.kiosk_token_expiry = event.date_time + timedelta(hours=24)
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'token': event.kiosk_token
+    })
+
+@app.route('/api/event/<int:event_id>/search-attendees')
+def search_attendees(event_id):
+    # Validate token
+    token = request.args.get('token')
+    event = Event.query.get(event_id)
+
+    if not event or event.kiosk_token != token:
+        return jsonify({'error': 'Invalid token'}), 403
+
+    if event.kiosk_token_expiry and datetime.utcnow() > event.kiosk_token_expiry:
+        return jsonify({'error': 'Token expired'}), 403
+
+    query = request.args.get('q', '').strip()
+
+    if len(query) < 2:
+        return jsonify([])
+
+    # Search users by first or last name (case-insensitive)
+    users = User.query.filter(
+        or_(
+            User.first_name.ilike(f'%{query}%'),
+            User.last_name.ilike(f'%{query}%')
+        )
+    ).limit(5).all()
+
+    results = []
+    for user in users:
+        # Check RSVP status
+        has_rsvp = EventRSVP.query.filter_by(event_id=event_id, user_id=user.id).first() is not None
+
+        # Check if already checked in
+        already_checked_in = EventCheckIn.query.filter_by(event_id=event_id, user_id=user.id).first() is not None
+
+        results.append({
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'profile_picture': user.profile_picture,
+            'has_rsvp': has_rsvp,
+            'already_checked_in': already_checked_in
+        })
+
+    return jsonify(results)
+
+@app.route('/api/event/<int:event_id>/checkin', methods=['POST'])
+def checkin_user(event_id):
+    # Validate token
+    token = request.args.get('token') or request.json.get('token')
+    event = Event.query.get(event_id)
+
+    if not event or event.kiosk_token != token:
+        return jsonify({'success': False, 'error': 'Invalid token'}), 403
+
+    if event.kiosk_token_expiry and datetime.utcnow() > event.kiosk_token_expiry:
+        return jsonify({'success': False, 'error': 'Token expired'}), 403
+
+    user_id = request.json.get('user_id')
+
+    if not user_id:
+        return jsonify({'success': False, 'error': 'User ID required'}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    # Check if already checked in
+    existing_checkin = EventCheckIn.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if existing_checkin:
+        return jsonify({
+            'success': True,
+            'already_checked_in': True,
+            'user_name': user.first_name,
+            'message': "You're already checked in!"
+        })
+
+    # Check if user had RSVP
+    had_rsvp = EventRSVP.query.filter_by(event_id=event_id, user_id=user_id).first() is not None
+
+    # Create check-in record
+    checkin = EventCheckIn(
+        event_id=event_id,
+        user_id=user_id,
+        had_rsvp=had_rsvp,
+        is_walk_in=False
+    )
+    db.session.add(checkin)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'already_checked_in': False,
+        'user_name': user.first_name,
+        'had_rsvp': had_rsvp,
+        'message': 'Check-in successful!'
+    })
+
+@app.route('/api/event/<int:event_id>/check-email', methods=['POST'])
+def check_email(event_id):
+    # Validate token
+    token = request.args.get('token') or request.json.get('token')
+    event = Event.query.get(event_id)
+
+    if not event or event.kiosk_token != token:
+        return jsonify({'success': False, 'error': 'Invalid token'}), 403
+
+    if event.kiosk_token_expiry and datetime.utcnow() > event.kiosk_token_expiry:
+        return jsonify({'success': False, 'error': 'Token expired'}), 403
+
+    # Get and sanitize email
+    email = sanitize_email(request.json.get('email', ''))
+
+    if not email:
+        return jsonify({'success': False, 'error': 'Email required'}), 400
+
+    # Check if email exists
+    existing_user = User.query.filter_by(email=email).first()
+
+    if existing_user:
+        # Check if already checked in to this event
+        already_checked_in = EventCheckIn.query.filter_by(
+            event_id=event_id,
+            user_id=existing_user.id
+        ).first() is not None
+
+        return jsonify({
+            'exists': True,
+            'user': {
+                'id': existing_user.id,
+                'first_name': existing_user.first_name,
+                'last_name': existing_user.last_name,
+                'email': existing_user.email,
+                'already_checked_in': already_checked_in
+            }
+        })
+    else:
+        return jsonify({'exists': False})
+
+@app.route('/api/event/<int:event_id>/checkin-walkin', methods=['POST'])
+def checkin_walkin(event_id):
+    # Validate token
+    token = request.args.get('token') or request.json.get('token')
+    event = Event.query.get(event_id)
+
+    if not event or event.kiosk_token != token:
+        return jsonify({'success': False, 'error': 'Invalid token'}), 403
+
+    if event.kiosk_token_expiry and datetime.utcnow() > event.kiosk_token_expiry:
+        return jsonify({'success': False, 'error': 'Token expired'}), 403
+
+    # Get and sanitize form data
+    first_name = sanitize_input(request.json.get('first_name', ''), max_length=100, allow_newlines=False)
+    last_name = sanitize_input(request.json.get('last_name', ''), max_length=100, allow_newlines=False)
+    email = sanitize_email(request.json.get('email', ''))
+    date_of_birth_str = request.json.get('date_of_birth', '').strip()
+
+    # Validate all fields present
+    if not all([first_name, last_name, email, date_of_birth_str]):
+        return jsonify({'success': False, 'error': 'All fields are required'}), 400
+
+    # Validate and parse date of birth
+    try:
+        date_of_birth = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid date format'}), 400
+
+    # Validate age (must be 18+)
+    today = date.today()
+    age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+    if age < 18:
+        return jsonify({'success': False, 'error': 'You must be at least 18 years old'}), 400
+
+    # Check if email already exists
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'success': False, 'error': 'This email is already registered. Please search for your name above.'}), 400
+
+    # Generate username
+    base_username = f"{first_name.lower()}.{last_name.lower()}"
+    username = base_username
+    counter = 1
+    while User.query.filter_by(username=username).first():
+        username = f"{base_username}{counter}"
+        counter += 1
+
+    # Create user account
+    user = User(
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        date_of_birth=date_of_birth,
+        profile_incomplete=True,
+        email_verified=False,
+        is_admin=False
+    )
+
+    # Generate profile completion token
+    token_str = user.generate_profile_completion_token()
+
+    db.session.add(user)
+    db.session.commit()
+
+    # Create check-in record
+    checkin = EventCheckIn(
+        event_id=event_id,
+        user_id=user.id,
+        had_rsvp=False,
+        is_walk_in=True
+    )
+    db.session.add(checkin)
+    db.session.commit()
+
+    # Send welcome email
+    profile_completion_url = url_for('complete_profile', token=token_str, _external=True)
+    send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, event.title, profile_completion_url)
+
+    return jsonify({
+        'success': True,
+        'user_id': user.id,
+        'user_name': user.first_name,
+        'user_email': user.email,
+        'message': 'Check your email to complete your profile!'
+    })
+
+@app.route('/complete-profile/<token>', methods=['GET', 'POST'])
+@beta_access_required
+def complete_profile(token):
+    # Find user with this token
+    user = User.query.filter_by(profile_completion_token=token).first()
+
+    if not user or not user.verify_profile_completion_token(token):
+        flash('Invalid or expired profile completion link. Please contact us for assistance.')
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        # Get form data
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        pronouns = sanitize_input(request.form.get('pronouns', ''), max_length=100, allow_newlines=False)
+        location = sanitize_location(request.form.get('location', ''))
+
+        # Validate passwords
+        if not password or not confirm_password:
+            flash('Please fill in all required fields.')
+            return redirect(url_for('complete_profile', token=token))
+
+        if password != confirm_password:
+            flash('Passwords do not match.')
+            return redirect(url_for('complete_profile', token=token))
+
+        # Validate password strength
+        is_valid, message = validate_password(password)
+        if not is_valid:
+            flash(message)
+            return redirect(url_for('complete_profile', token=token))
+
+        # Handle profile picture upload
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename != '':
+                is_valid_file, error_msg = validate_file_upload(file.filename)
+                if not is_valid_file:
+                    flash(error_msg)
+                    return redirect(url_for('complete_profile', token=token))
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"{user.id}_{filename}"
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+                file_path = os.path.join(upload_folder, unique_filename)
+                file.save(file_path)
+                user.profile_picture = f'uploads/{unique_filename}'
+
+        # Update user
+        user.set_password(password)
+        user.pronouns = pronouns
+        user.location = location
+        user.profile_incomplete = False
+        user.clear_profile_completion_token()
+
+        # Generate email verification token
+        verification_token = user.generate_verification_token()
+
+        db.session.commit()
+
+        # Send verification email
+        verification_url = url_for('verify_email', token=verification_token, _external=True)
+        send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url)
+
+        # Log user in
+        login_user(user)
+
+        flash('Welcome to Three of Cups! Please complete your assessment to get matched.')
+
+        # Check if user has assessment
+        existing_assessment = Assessment.query.filter_by(user_id=user.id).first()
+        if existing_assessment:
+            return redirect(url_for('user_dashboard'))
+        else:
+            return redirect(url_for('assessment'))
+
+    # GET request - show form
+    # Get event they attended
+    latest_checkin = EventCheckIn.query.filter_by(user_id=user.id, is_walk_in=True).order_by(EventCheckIn.checked_in_at.desc()).first()
+    event_title = latest_checkin.event.title if latest_checkin else None
+
+    return render_template('complete_profile.html', user=user, event_title=event_title, token=token)
 
 if __name__ == '__main__':
     app.run(debug=True)

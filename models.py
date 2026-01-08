@@ -30,6 +30,9 @@ class User(UserMixin, db.Model):
     can_retake_assessment = db.Column(db.Boolean, default=False)  # Flag to allow assessment retakes
     has_paid = db.Column(db.Boolean, default=False)  # Track if user has paid for match service
     payment_waived_at = db.Column(db.DateTime, nullable=True)  # Timestamp when admin waived payment
+    profile_incomplete = db.Column(db.Boolean, default=False)
+    profile_completion_token = db.Column(db.String(100), nullable=True)
+    profile_completion_token_expiry = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
@@ -97,6 +100,25 @@ class User(UserMixin, db.Model):
         self.email_change_token_expiry = None
         self.pending_email = None
 
+    def generate_profile_completion_token(self):
+        """Generate a secure profile completion token that expires in 7 days"""
+        self.profile_completion_token = secrets.token_urlsafe(32)
+        self.profile_completion_token_expiry = datetime.utcnow() + timedelta(days=7)
+        return self.profile_completion_token
+
+    def verify_profile_completion_token(self, token):
+        """Verify if the profile completion token is valid and not expired"""
+        if self.profile_completion_token != token:
+            return False
+        if self.profile_completion_token_expiry is None or datetime.utcnow() > self.profile_completion_token_expiry:
+            return False
+        return True
+
+    def clear_profile_completion_token(self):
+        """Clear the profile completion token after use"""
+        self.profile_completion_token = None
+        self.profile_completion_token_expiry = None
+
     def can_access_assessment(self):
         """Check if user can access the assessment (hasn't completed it or is allowed to retake)"""
         from models import Assessment
@@ -148,6 +170,8 @@ class Event(db.Model):
     max_capacity = db.Column(db.Integer, nullable=True)  # NULL means unlimited capacity
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    kiosk_token = db.Column(db.String(100), nullable=True)
+    kiosk_token_expiry = db.Column(db.DateTime, nullable=True)
 
 class EventRSVP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -157,3 +181,18 @@ class EventRSVP(db.Model):
 
     # Ensure a user can only RSVP once per event
     __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_rsvp'),)
+
+class EventCheckIn(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    checked_in_at = db.Column(db.DateTime, default=datetime.utcnow)
+    had_rsvp = db.Column(db.Boolean, default=False)
+    is_walk_in = db.Column(db.Boolean, default=False)  # Track new user walk-ins
+
+    # Relationships
+    event = db.relationship('Event', backref='check_ins')
+    user = db.relationship('User', backref='event_check_ins')
+
+    # Unique constraint - one check-in per user per event
+    __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_checkin'),)

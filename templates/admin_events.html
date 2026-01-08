@@ -168,6 +168,11 @@
                                                     {% endif %}
                                                 </p>
                                                 <p><strong>RSVPs:</strong> {{ data.rsvp_count }} attendee(s)</p>
+                                                <p><strong>Check-Ins:</strong> {{ data.check_in_count }} attendee(s)
+                                                   {% if data.check_in_count > 0 %}
+                                                       ({{ data.check_in_with_rsvp_count }} with RSVP, {{ data.walk_in_count }} walk-ins)
+                                                   {% endif %}
+                                                </p>
                                                 {% if data.event.max_capacity %}
                                                 <p><strong>Capacity:</strong> {{ data.event.max_capacity }}
                                                     {% if data.rsvp_count >= data.event.max_capacity %}
@@ -179,34 +184,81 @@
 
                                             <p class="text-text-accent text-sm mb-3">{{ data.event.description|safe }}</p>
 
-                                            {% if data.rsvp_users %}
-                                                <div class="mt-4">
+                                            <div class="mt-4 flex gap-4 flex-wrap">
+                                                {% if data.rsvp_users %}
                                                     <button onclick="toggleRSVPs({{ data.event.id }})"
                                                             class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
                                                         View RSVPs ({{ data.rsvp_count }})
                                                     </button>
-                                                    <div id="rsvps-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
-                                                        <h5 class="font-semibold text-text-primary mb-2">Attendees:</h5>
-                                                        <ul class="space-y-2">
-                                                            {% for user in data.rsvp_users %}
-                                                                <li class="flex items-center gap-2">
-                                                                    {% if user.profile_picture %}
-                                                                        <img src="{{ url_for('static', filename=user.profile_picture) }}"
-                                                                             alt="{{ user.first_name }}"
+                                                {% endif %}
+
+                                                {% if data.check_ins %}
+                                                    <button onclick="toggleCheckIns({{ data.event.id }})"
+                                                            class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
+                                                        View Check-Ins ({{ data.check_in_count }})
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if data.rsvp_users %}
+                                                <div id="rsvps-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
+                                                    <h5 class="font-semibold text-text-primary mb-2">RSVPs:</h5>
+                                                    <ul class="space-y-2">
+                                                        {% for user in data.rsvp_users %}
+                                                            <li class="flex items-center gap-2">
+                                                                {% if user.profile_picture %}
+                                                                    <img src="{{ url_for('static', filename=user.profile_picture) }}"
+                                                                         alt="{{ user.first_name }}"
+                                                                         class="w-8 h-8 rounded-full object-cover">
+                                                                {% else %}
+                                                                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                                                                        {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                                                    </div>
+                                                                {% endif %}
+                                                                <span class="text-sm text-text-accent">
+                                                                    {{ user.first_name }} {{ user.last_name }}
+                                                                    <span class="text-gray-500">({{ user.email }})</span>
+                                                                </span>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if data.check_ins %}
+                                                <div id="checkins-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
+                                                    <h5 class="font-semibold text-text-primary mb-2">Checked In:</h5>
+                                                    <ul class="space-y-2">
+                                                        {% for checkin in data.check_ins %}
+                                                            <li class="flex items-center gap-2 justify-between">
+                                                                <div class="flex items-center gap-2">
+                                                                    {% if checkin.user.profile_picture %}
+                                                                        <img src="{{ url_for('static', filename=checkin.user.profile_picture) }}"
+                                                                             alt="{{ checkin.user.first_name }}"
                                                                              class="w-8 h-8 rounded-full object-cover">
                                                                     {% else %}
                                                                         <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm">
-                                                                            {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                                                            {{ checkin.user.first_name[0] }}{{ checkin.user.last_name[0] }}
                                                                         </div>
                                                                     {% endif %}
                                                                     <span class="text-sm text-text-accent">
-                                                                        {{ user.first_name }} {{ user.last_name }}
-                                                                        <span class="text-gray-500">({{ user.email }})</span>
+                                                                        {{ checkin.user.first_name }} {{ checkin.user.last_name }}
+                                                                        {% if checkin.had_rsvp %}
+                                                                            <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full">RSVP'd</span>
+                                                                        {% else %}
+                                                                            <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">Walk-in</span>
+                                                                        {% endif %}
+                                                                        {% if checkin.is_walk_in %}
+                                                                            <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">New User</span>
+                                                                        {% endif %}
                                                                     </span>
-                                                                </li>
-                                                            {% endfor %}
-                                                        </ul>
-                                                    </div>
+                                                                </div>
+                                                                <span class="text-xs text-gray-500">
+                                                                    {{ checkin.checked_in_at.strftime('%I:%M %p') }}
+                                                                </span>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
                                                 </div>
                                             {% endif %}
                                         </div>
@@ -226,6 +278,10 @@
                                             Past
                                         {% endif %}
                                     </span>
+                                    <button onclick="generateKioskLink({{ data.event.id }})"
+                                            class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition-all duration-300">
+                                        Generate Kiosk Link
+                                    </button>
                                     <a href="{{ url_for('edit_event', event_id=data.event.id) }}"
                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-all duration-300 text-center">
                                         Edit
@@ -250,10 +306,83 @@
     </div>
 </div>
 
+<!-- Kiosk Link Modals -->
+{% for data in event_data %}
+<div id="kioskModal-{{ data.event.id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-lg w-full mx-4">
+        <h3 class="text-2xl font-bold text-text-primary mb-4">Kiosk Check-In Link</h3>
+        <p class="text-text-accent mb-4">Use this link to set up a check-in kiosk for <strong>{{ data.event.title }}</strong>:</p>
+        <div class="bg-gray-100 p-4 rounded-lg mb-4">
+            <input type="text" id="kioskUrl-{{ data.event.id }}" readonly
+                   class="w-full bg-transparent text-sm select-all break-all"
+                   value="">
+        </div>
+        <p class="text-xs text-gray-600 mb-4">Open this link on a tablet or laptop at the event entrance. Attendees can check themselves in.</p>
+        <div class="flex gap-3">
+            <button onclick="copyKioskLink({{ data.event.id }})"
+                    class="flex-1 bg-primary hover:bg-secondary text-white font-semibold py-2 px-4 rounded-lg transition-all">
+                Copy Link
+            </button>
+            <button onclick="closeKioskModal({{ data.event.id }})"
+                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-all">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 <script>
     function toggleRSVPs(eventId) {
         const rsvpDiv = document.getElementById(`rsvps-${eventId}`);
         rsvpDiv.classList.toggle('hidden');
+    }
+
+    function toggleCheckIns(eventId) {
+        const checkInsDiv = document.getElementById(`checkins-${eventId}`);
+        checkInsDiv.classList.toggle('hidden');
+    }
+
+    function generateKioskLink(eventId) {
+        fetch(`/api/event/${eventId}/generate-kiosk-token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const kioskUrl = `${window.location.origin}/event/${eventId}/kiosk?token=${data.token}`;
+                document.getElementById(`kioskUrl-${eventId}`).value = kioskUrl;
+                document.getElementById(`kioskModal-${eventId}`).classList.remove('hidden');
+            } else {
+                alert('Failed to generate kiosk link: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate kiosk link');
+        });
+    }
+
+    function copyKioskLink(eventId) {
+        const input = document.getElementById(`kioskUrl-${eventId}`);
+        input.select();
+        input.setSelectionRange(0, 99999); // For mobile devices
+
+        // Modern clipboard API
+        navigator.clipboard.writeText(input.value).then(() => {
+            alert('Link copied to clipboard!');
+        }).catch(() => {
+            // Fallback for older browsers
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        });
+    }
+
+    function closeKioskModal(eventId) {
+        document.getElementById(`kioskModal-${eventId}`).classList.add('hidden');
     }
 
     // Get current datetime for the datetime-local input

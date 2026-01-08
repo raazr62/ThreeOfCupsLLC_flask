@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4">
+    <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-text-primary mb-4 font-brand">Complete Your Profile</h1>
+            {% if event_title %}
+            <p class="text-xl text-text-accent">
+                Welcome! It was great to meet you at <strong>{{ event_title }}</strong>
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
+            <div class="bg-gradient-to-r from-primary to-secondary p-6 rounded-xl text-white mb-8">
+                <h3 class="text-xl font-bold mb-3">What happens after you complete your profile?</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Take our friendship assessment</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Get matched with compatible friends in your area</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <svg class="w-6 h-6 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Access exclusive community events</span>
+                    </li>
+                </ul>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mb-6">
+                    <p class="text-blue-800 text-sm">
+                        <strong>Your info so far:</strong> {{ user.first_name }} {{ user.last_name }} ({{ user.email }})
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-text-primary mb-2">Password *</label>
+                    <input type="password" name="password" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                    <p class="text-xs text-gray-600 mt-1">
+                        Must be at least 8 characters with uppercase, lowercase, number, and special character (@$!%*?&)
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-text-primary mb-2">Confirm Password *</label>
+                    <input type="password" name="confirm_password" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-text-primary mb-2">Pronouns *</label>
+                    <input type="text" name="pronouns" required
+                           placeholder="e.g., she/her, he/him, they/them"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-text-primary mb-2">Location *</label>
+                    <input type="text" name="location" required
+                           placeholder="City, State"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-text-primary mb-2">Profile Picture (optional)</label>
+                    <input type="file" name="profile_picture" accept="image/*"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                    <p class="text-xs text-gray-600 mt-1">Accepted formats: PNG, JPG, JPEG, GIF (max 16MB)</p>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-4 px-6 rounded-lg hover:shadow-xl transition-all duration-300">
+                    Complete Profile & Continue
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

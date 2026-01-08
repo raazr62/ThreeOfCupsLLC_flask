@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check In - {{ event.title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'brand': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#FF9B9B',
+                        secondary: '#FFB88C',
+                        accent: '#FFD97D',
+                        'text-primary': '#2C2420',
+                        'text-accent': '#2C2420',
+                        'light-bg': '#FAF7F5'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #FFD1DC 0%, #FFB88C 40%, #FFD97D 100%);
+            background-attachment: fixed;
+        }
+        .dark-card {
+            background: linear-gradient(145deg, rgba(250, 247, 245, 0.95), rgba(255, 155, 155, 0.1));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 155, 155, 0.3);
+            box-shadow: 0 8px 32px rgba(255, 155, 155, 0.15);
+        }
+        @keyframes countdown {
+            from {
+                stroke-dashoffset: 0;
+            }
+            to {
+                stroke-dashoffset: 157; /* 2 * π * 25 (radius) */
+            }
+        }
+        .countdown-circle {
+            animation: countdown 8s linear forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-4 h-screen flex flex-col">
+        <!-- Header with Logo -->
+        <div class="text-center mb-3">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <img src="/static/logo/three-of-cups-logo-new.png" alt="Three of Cups" class="h-12 md:h-16">
+                <h1 class="text-2xl md:text-3xl font-brand text-text-primary">
+                    three of cups
+                </h1>
+            </div>
+            <div class="dark-card rounded-2xl p-4 max-w-2xl mx-auto shadow-2xl">
+                <h2 class="text-xl md:text-2xl font-bold text-text-primary mb-2 pb-2 border-b-2 border-primary/30">
+                    welcome to <span class="font-brand text-2xl md:text-3xl text-[#D84315] drop-shadow-sm">{{ event.title }}</span>
+                </h2>
+                <p class="text-base md:text-lg text-text-accent font-medium">
+                    Check yourself in below
+                </p>
+            </div>
+        </div>
+
+        <!-- Large Search Box -->
+        <div class="max-w-2xl mx-auto mb-4 w-full">
+            <input type="text"
+                   id="searchInput"
+                   class="w-full text-xl md:text-2xl px-4 py-4 rounded-2xl border-2 border-primary/30 bg-white/90 backdrop-blur-sm focus:border-[#D84315] focus:ring-4 focus:ring-[#D84315]/20 focus:outline-none transition-all shadow-lg"
+                   placeholder="Type your first or last name..."
+                   autocomplete="off">
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResults" class="max-w-2xl mx-auto space-y-2 w-full overflow-y-auto flex-1">
+            <!-- Results populated by JavaScript -->
+        </div>
+
+        <!-- Walk-In Section -->
+        <div id="walkInSection" class="max-w-2xl mx-auto text-center w-full mt-3">
+            <p class="text-base text-text-accent mb-2 font-semibold">Don't see your name?</p>
+            <button id="createAccountBtn"
+                    class="w-full bg-[#D84315] text-white text-lg md:text-xl font-bold py-3 px-6 rounded-2xl hover:shadow-2xl hover:scale-[1.02] transition-all shadow-xl">
+                I'm new here! Create account
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="hidden fixed inset-0 flex items-center justify-center z-50" style="background: linear-gradient(135deg, #FFD1DC 0%, #FFB88C 40%, #FFD97D 100%);">
+        <div class="absolute top-8 right-8">
+            <!-- Countdown Circle -->
+            <svg class="absolute inset-0 w-16 h-16 -rotate-90" viewBox="0 0 60 60">
+                <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke="#D84315"
+                    stroke-width="3"
+                    fill="none"
+                    stroke-dasharray="157"
+                    stroke-dashoffset="0"
+                    class="countdown-circle opacity-40"
+                    id="countdownCircle"
+                />
+            </svg>
+            <!-- Close Button -->
+            <button id="closeSuccessBtn" class="relative w-16 h-16 flex items-center justify-center text-text-primary/60 hover:text-text-primary transition-colors">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="text-center dark-card rounded-3xl p-12 max-w-3xl mx-4">
+            <div class="text-[#D84315] mb-6">
+                <svg class="w-32 h-32 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-text-primary mb-4">
+                <span id="checkedInMessage">Welcome, <span id="checkedInName"></span>! You're checked in</span>
+            </h2>
+            <p id="walkInMessage" class="text-lg md:text-xl text-text-accent hidden">
+                Check your email at <span id="walkInEmail" class="font-semibold text-[#D84315]"></span> to complete your profile!
+            </p>
+        </div>
+    </div>
+
+    <!-- Walk-In Modal -->
+    <div id="walkInModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="dark-card rounded-3xl p-8 max-w-2xl w-full max-h-screen overflow-y-auto">
+            <h3 class="text-3xl font-bold text-text-primary mb-2">Great to meet you!</h3>
+            <p class="text-lg text-text-accent mb-6">Just a few quick details...</p>
+
+            <form id="walkInForm" class="space-y-4">
+                <div>
+                    <label class="block text-base font-semibold text-text-primary mb-2">First Name *</label>
+                    <input type="text" name="first_name" required
+                           class="w-full text-lg px-4 py-3 rounded-xl border-2 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-base font-semibold text-text-primary mb-2">Last Name *</label>
+                    <input type="text" name="last_name" required
+                           class="w-full text-lg px-4 py-3 rounded-xl border-2 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-base font-semibold text-text-primary mb-2">Email *</label>
+                    <input type="email" name="email" required
+                           class="w-full text-lg px-4 py-3 rounded-xl border-2 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-base font-semibold text-text-primary mb-2">Date of Birth *</label>
+                    <input type="date" name="date_of_birth" required
+                           class="w-full text-lg px-4 py-3 rounded-xl border-2 border-primary/30 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+
+                <div id="walkInError" class="hidden bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                    <p class="text-red-700"></p>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit"
+                            class="flex-1 bg-[#D84315] text-white text-lg font-bold py-4 rounded-xl hover:shadow-2xl hover:scale-[1.02] transition-all shadow-xl">
+                        Check In
+                    </button>
+                    <button type="button" id="cancelWalkIn"
+                            class="flex-1 bg-light-bg text-text-primary text-lg font-bold py-4 rounded-xl hover:bg-white transition-all shadow-md">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Confirmation Modal -->
+    <div id="emailConfirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="dark-card rounded-3xl p-8 max-w-2xl w-full">
+            <h3 class="text-3xl font-bold text-text-primary mb-4">Is this you?</h3>
+            <p class="text-lg text-text-accent mb-4">
+                We found an account with the email <span id="confirmEmail" class="font-bold text-[#D84315] text-1xl"></span>
+            </p>
+            <p class="text-lg text-text-accent mb-6">
+                Name: <span id="confirmName" class="font-bold text-[#D84315] text-2xl"></span>
+            </p>
+
+            <div class="flex gap-4 pt-4">
+                <button id="confirmYes"
+                        class="flex-1 bg-[#D84315] text-white text-lg font-bold py-4 rounded-xl hover:shadow-2xl hover:scale-[1.02] transition-all shadow-xl">
+                    Yes, that's me!
+                </button>
+                <button id="confirmNo"
+                        class="flex-1 bg-light-bg text-text-primary text-lg font-bold py-4 rounded-xl hover:bg-white transition-all shadow-md">
+                    No, not me
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const eventId = {{ event.id }};
+        const token = '{{ token }}';
+        let searchTimeout;
+        let inactivityTimeout;
+        let successTimeout;
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const createAccountBtn = document.getElementById('createAccountBtn');
+        const walkInModal = document.getElementById('walkInModal');
+        const walkInForm = document.getElementById('walkInForm');
+        const walkInError = document.getElementById('walkInError');
+        const cancelWalkIn = document.getElementById('cancelWalkIn');
+        const emailConfirmModal = document.getElementById('emailConfirmModal');
+        const confirmEmail = document.getElementById('confirmEmail');
+        const confirmName = document.getElementById('confirmName');
+        const confirmYes = document.getElementById('confirmYes');
+        const confirmNo = document.getElementById('confirmNo');
+        const successMessage = document.getElementById('successMessage');
+        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+        const checkedInName = document.getElementById('checkedInName');
+        const checkedInMessage = document.getElementById('checkedInMessage');
+        const walkInMessage = document.getElementById('walkInMessage');
+        const walkInEmail = document.getElementById('walkInEmail');
+        const countdownCircle = document.getElementById('countdownCircle');
+
+        // Store existing user data for confirmation
+        let existingUserData = null;
+
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            clearTimeout(inactivityTimeout);
+
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                searchAttendees(query);
+            }, 300);
+        });
+
+        // Inactivity reset
+        function resetInactivity() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(() => {
+                resetKiosk();
+            }, 30000); // 30 seconds
+        }
+
+        document.addEventListener('click', resetInactivity);
+        document.addEventListener('keypress', resetInactivity);
+
+        function searchAttendees(query) {
+            fetch(`/api/event/${eventId}/search-attendees?q=${encodeURIComponent(query)}&token=${token}`)
+                .then(response => response.json())
+                .then(users => {
+                    if (users.length === 0) {
+                        searchResults.innerHTML = '<p class="text-xl text-text-accent text-center mb-4">No matches found</p>';
+                    } else {
+                        displaySearchResults(users);
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = '<p class="text-red-500 text-center">Error searching. Please try again.</p>';
+                });
+        }
+
+        function displaySearchResults(users) {
+            searchResults.innerHTML = users.map(user => {
+                const initials = user.first_name[0] + user.last_name[0];
+                const profilePic = user.profile_picture
+                    ? `<img src="/static/${user.profile_picture}" alt="${user.first_name}" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-primary/30">`
+                    : `<div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-text-primary text-base md:text-lg font-bold border-2 border-primary/30">${initials}</div>`;
+
+                const badge = user.has_rsvp
+                    ? '<span class="px-2 py-1 bg-primary/20 text-text-primary text-xs font-semibold rounded-full border border-primary/30">RSVP\'d</span>'
+                    : '<span class="px-2 py-1 bg-accent/30 text-text-primary text-xs font-semibold rounded-full border border-accent/40">Walk-in Welcome!</span>';
+
+                const buttonText = user.already_checked_in ? 'Already Checked In' : 'Check In';
+                const buttonClass = user.already_checked_in
+                    ? 'bg-light-bg text-text-primary/60 cursor-not-allowed border-2 border-primary/20'
+                    : 'bg-[#D84315] text-white hover:shadow-2xl hover:scale-105 shadow-xl';
+
+                return `
+                    <div class="dark-card rounded-xl p-3 md:p-4">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            ${profilePic}
+                            <div class="flex-1">
+                                <h3 class="text-lg md:text-xl font-bold text-text-primary mb-1">${user.first_name} ${user.last_name}</h3>
+                                ${badge}
+                            </div>
+                            <button onclick="checkInUser(${user.id}, '${user.first_name}', ${user.has_rsvp}, ${user.already_checked_in})"
+                                    ${user.already_checked_in ? 'disabled' : ''}
+                                    class="${buttonClass} text-base md:text-lg font-bold py-2 md:py-3 px-4 md:px-6 rounded-xl transition-all">
+                                ${buttonText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function checkInUser(userId, firstName, hadRsvp, alreadyCheckedIn) {
+            if (alreadyCheckedIn) {
+                showSuccess(firstName, false, null, true);
+                return;
+            }
+
+            fetch(`/api/event/${eventId}/checkin?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess(firstName, false, null, data.already_checked_in);
+                } else {
+                    alert('Check-in failed: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Check-in error:', error);
+                alert('Check-in failed. Please try again.');
+            });
+        }
+
+        // Walk-in modal
+        createAccountBtn.addEventListener('click', () => {
+            walkInModal.classList.remove('hidden');
+            walkInError.classList.add('hidden');
+        });
+
+        cancelWalkIn.addEventListener('click', () => {
+            walkInModal.classList.add('hidden');
+            walkInForm.reset();
+            walkInError.classList.add('hidden');
+        });
+
+        walkInForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            walkInError.classList.add('hidden');
+
+            const email = walkInForm.email.value;
+
+            // First, check if email already exists
+            fetch(`/api/event/${eventId}/check-email?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    // Store the existing user data
+                    existingUserData = data.user;
+
+                    // Show confirmation modal
+                    confirmEmail.textContent = data.user.email;
+                    confirmName.textContent = `${data.user.first_name} ${data.user.last_name}`;
+                    walkInModal.classList.add('hidden');
+                    emailConfirmModal.classList.remove('hidden');
+                } else {
+                    // Email doesn't exist, proceed with creating new user
+                    createWalkInUser();
+                }
+            })
+            .catch(error => {
+                console.error('Email check error:', error);
+                walkInError.classList.remove('hidden');
+                walkInError.querySelector('p').textContent = 'An error occurred. Please try again.';
+            });
+        });
+
+        function createWalkInUser() {
+            const formData = {
+                first_name: walkInForm.first_name.value,
+                last_name: walkInForm.last_name.value,
+                email: walkInForm.email.value,
+                date_of_birth: walkInForm.date_of_birth.value
+            };
+
+            fetch(`/api/event/${eventId}/checkin-walkin?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    walkInModal.classList.add('hidden');
+                    walkInForm.reset();
+                    showSuccess(data.user_name, true, data.user_email);
+                } else {
+                    walkInModal.classList.remove('hidden');
+                    walkInError.classList.remove('hidden');
+                    walkInError.querySelector('p').textContent = data.error;
+                }
+            })
+            .catch(error => {
+                console.error('Walk-in error:', error);
+                walkInModal.classList.remove('hidden');
+                walkInError.classList.remove('hidden');
+                walkInError.querySelector('p').textContent = 'An error occurred. Please try again.';
+            });
+        }
+
+        // Email confirmation handlers
+        confirmYes.addEventListener('click', () => {
+            if (!existingUserData) return;
+
+            // Close confirmation modal
+            emailConfirmModal.classList.add('hidden');
+
+            // Check in the existing user
+            checkInUser(existingUserData.id, existingUserData.first_name, false, existingUserData.already_checked_in);
+
+            // Reset form
+            walkInForm.reset();
+            existingUserData = null;
+        });
+
+        confirmNo.addEventListener('click', () => {
+            // Close confirmation modal
+            emailConfirmModal.classList.add('hidden');
+
+            // Show error in walk-in modal
+            walkInModal.classList.remove('hidden');
+            walkInError.classList.remove('hidden');
+            walkInError.querySelector('p').textContent = 'This email is already registered. Please use a different email or search for your name above.';
+
+            // Clear existing user data
+            existingUserData = null;
+        });
+
+        function showSuccess(name, isWalkIn, email, alreadyCheckedIn = false) {
+            checkedInName.textContent = name;
+
+            if (alreadyCheckedIn) {
+                checkedInMessage.textContent = `Welcome back, ${name}! You're already checked in`;
+                walkInMessage.classList.add('hidden');
+            } else {
+                checkedInMessage.textContent = `Welcome, ${name}! You're checked in`;
+
+                if (isWalkIn) {
+                    walkInEmail.textContent = email;
+                    walkInMessage.classList.remove('hidden');
+                } else {
+                    walkInMessage.classList.add('hidden');
+                }
+            }
+
+            successMessage.classList.remove('hidden');
+
+            // Restart countdown animation
+            countdownCircle.classList.remove('countdown-circle');
+            void countdownCircle.offsetWidth; // Trigger reflow to restart animation
+            countdownCircle.classList.add('countdown-circle');
+
+            // Clear any existing timeout
+            clearTimeout(successTimeout);
+
+            // Set new auto-close timeout
+            successTimeout = setTimeout(() => {
+                resetKiosk();
+            }, 8000);
+        }
+
+        // Close success message manually
+        closeSuccessBtn.addEventListener('click', () => {
+            clearTimeout(successTimeout);
+            resetKiosk();
+        });
+
+        function resetKiosk() {
+            successMessage.classList.add('hidden');
+            // Reset countdown animation
+            countdownCircle.classList.remove('countdown-circle');
+            searchInput.value = '';
+            searchResults.innerHTML = '';
+            walkInModal.classList.add('hidden');
+            emailConfirmModal.classList.add('hidden');
+            walkInForm.reset();
+            walkInError.classList.add('hidden');
+            existingUserData = null;
+            searchInput.focus();
+        }
+
+        // Focus search on load
+        searchInput.focus();
+        resetInactivity();
+    </script>
+</body>
+</html>
