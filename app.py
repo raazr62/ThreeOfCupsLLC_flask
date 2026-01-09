@@ -1400,6 +1400,8 @@ def admin_pending_matches():
                             personalized_email = match.draft_email.replace('{first_name}', user.first_name)
                             personalized_email = personalized_email.replace('{match_name}', match_name)
                             personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
+                            personalized_email = personalized_email.replace('{user1_name}', user1.first_name)
+                            personalized_email = personalized_email.replace('{user2_name}', user2.first_name)
 
                             # Aggressively sanitize content to remove ALL non-ASCII characters (including emojis)
                             personalized_email = sanitize_email_content(personalized_email)
@@ -1434,7 +1436,7 @@ def admin_pending_matches():
                 # Use default template
                 if user1:
                     try:
-                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url)
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
                             match.user1_email_content = text_content
                             emails_sent += 1
@@ -1448,7 +1450,7 @@ def admin_pending_matches():
 
                 if user2:
                     try:
-                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url)
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
                             match.user2_email_content = text_content
                             emails_sent += 1

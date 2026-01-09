@@ -84,7 +84,7 @@ def send_password_reset_email(mail, sender, user, reset_url):
         return False
 
 
-def send_match_notification_email(mail, sender, user, match_name, dashboard_url):
+def send_match_notification_email(mail, sender, user, match_name, dashboard_url, user1_name=None, user2_name=None):
     """
     Send a match notification email to a user.
 
@@ -94,6 +94,8 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         user: User object with first_name and email attributes
         match_name: The first name of the matched user
         dashboard_url: The URL to the user's dashboard
+        user1_name: First name of user1 (for fixed placeholder)
+        user2_name: First name of user2 (for fixed placeholder)
 
     Returns:
         tuple: (success: bool, html_content: str or None) - True/HTML if email sent successfully, False/None otherwise
@@ -105,6 +107,15 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url)
         subject = subject.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
         body_text = body_text.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
         body_html = body_html.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
+
+        if user1_name:
+            subject = subject.replace('{user1_name}', user1_name)
+            body_text = body_text.replace('{user1_name}', user1_name)
+            body_html = body_html.replace('{user1_name}', user1_name)
+        if user2_name:
+            subject = subject.replace('{user2_name}', user2_name)
+            body_text = body_text.replace('{user2_name}', user2_name)
+            body_html = body_html.replace('{user2_name}', user2_name)
 
         # Aggressively sanitize all content to remove non-ASCII characters (including emojis)
         subject = sanitize_email_content(subject)

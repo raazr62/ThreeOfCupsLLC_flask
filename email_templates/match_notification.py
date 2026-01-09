@@ -3,8 +3,10 @@ def get_match_notification_email(user_first_name=None, dashboard_url=None):
     Generate match notification email content with dynamic and bracketed placeholders.
 
     Dynamic placeholders (replaced at send time):
-        {first_name} - Recipient's first name
-        {match_name} - Match's first name
+        {first_name} - Recipient's first name (swaps based on who receives the email)
+        {match_name} - Match's first name (swaps based on who receives the email)
+        {user1_name} - Always refers to User 1 (does NOT swap)
+        {user2_name} - Always refers to User 2 (does NOT swap)
         {dashboard_url} - Link to recipient's dashboard
 
     Bracketed placeholders (customized by admin):
@@ -25,16 +27,16 @@ I'm so excited to introduce you to {match_name}! After carefully reviewing both 
 
 Here's why I think you two will connect:
 
-You both ranked [values] in your top values, and you each expressed a desire for friendships where you can [friendship desire]. I noticed that {first_name}, you mentioned wanting a friend who "[X]" and {match_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.
+You both ranked [values] in your top values, and you each expressed a desire for friendships where you can [friendship desire]. I noticed that {user1_name}, you mentioned wanting a friend who "[X]" and {user2_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.
 
-You also have complementary [x such as communication styles]—{first_name}, you're a thoughtful processor who likes time before difficult conversations, and {match_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.
+You also have complementary [x such as communication styles]—{user1_name}, you're a thoughtful processor who likes time before difficult conversations, and {user2_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.
 
 Some fun overlaps:
 • You both love [shared hobby]
 • You're both exploring [shared interest]
 • You both value [shared value]
 
-A gentle awareness: {first_name}, you mentioned needing advance notice for plans, and {match_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!
+A gentle awareness: {user1_name}, you mentioned needing advance notice for plans, and {user2_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!
 
 Next steps: I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.
 
@@ -56,9 +58,9 @@ Iris
     <p>I'm so excited to introduce you to <strong>{match_name}</strong>! After carefully reviewing both of your assessments, I have a really good feeling about this match.</p>
 
     <h3 style="color: #06B6D4; margin-top: 25px;">Here's why I think you two will connect:</h3>
-    <p>You both ranked <strong>[values]</strong> in your top values, and you each expressed a desire for friendships where you can <strong>[friendship desire]</strong>. I noticed that {first_name}, you mentioned wanting a friend who "[X]" and {match_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.</p>
+    <p>You both ranked <strong>[values]</strong> in your top values, and you each expressed a desire for friendships where you can <strong>[friendship desire]</strong>. I noticed that {user1_name}, you mentioned wanting a friend who "[X]" and {user2_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.</p>
 
-    <p>You also have complementary <strong>[x such as communication styles]</strong>—{first_name}, you're a thoughtful processor who likes time before difficult conversations, and {match_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.</p>
+    <p>You also have complementary <strong>[x such as communication styles]</strong>—{user1_name}, you're a thoughtful processor who likes time before difficult conversations, and {user2_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.</p>
 
     <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <h4 style="color: #8B5CF6; margin-top: 0;">Some fun overlaps:</h4>
@@ -69,7 +71,7 @@ Iris
         </ul>
     </div>
 
-    <p style="background-color: #fff7ed; padding: 12px; border-left: 4px solid #f59e0b; border-radius: 4px;"><strong>A gentle awareness:</strong> {first_name}, you mentioned needing advance notice for plans, and {match_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!</p>
+    <p style="background-color: #fff7ed; padding: 12px; border-left: 4px solid #f59e0b; border-radius: 4px;"><strong>A gentle awareness:</strong> {user1_name}, you mentioned needing advance notice for plans, and {user2_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!</p>
 
     <h3 style="color: #06B6D4; margin-top: 25px;">Next steps:</h3>
     <p>I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.</p>
