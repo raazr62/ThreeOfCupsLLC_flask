@@ -1422,11 +1422,11 @@ def admin_pending_matches():
                             mail.send(msg)
                             emails_sent += 1
 
-                            # Store the plain text content for modal display
-                            if user.id == user1.id:
-                                match.user1_email_content = personalized_email
-                            else:
-                                match.user2_email_content = personalized_email
+                            # COMMENTED OUT: Store email content for modal display
+                            # if user.id == user1.id:
+                            #     match.user1_email_content = personalized_email
+                            # else:
+                            #     match.user2_email_content = personalized_email
                         except Exception as e:
                             error_msg = f"Failed to send email to {user.email}: {str(e)}"
                             print(error_msg)
@@ -1438,7 +1438,8 @@ def admin_pending_matches():
                     try:
                         success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
-                            match.user1_email_content = text_content
+                            # COMMENTED OUT: Store email content for modal display
+                            # match.user1_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user1.email}")
@@ -1452,7 +1453,8 @@ def admin_pending_matches():
                     try:
                         success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
-                            match.user2_email_content = text_content
+                            # COMMENTED OUT: Store email content for modal display
+                            # match.user2_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user2.email}")
@@ -1741,13 +1743,14 @@ def user_dashboard():
                          upcoming_rsvp_events=upcoming_rsvp_events,
                          past_rsvp_events=past_rsvp_events)
 
+# COMMENTED OUT: API endpoint for viewing match email content in modal
+"""
 @app.route('/api/match_email/<int:match_id>')
 @login_required
 def get_match_email(match_id):
-    """
-    API endpoint to fetch the personalized email content for a match.
-    Returns the email content that was sent to the current user about this match.
-    """
+    # API endpoint to fetch the personalized email content for a match.
+    # Returns the email content that was sent to the current user about this match.
+
     # Fetch the match
     match = Match.query.get(match_id)
 
@@ -1785,6 +1788,7 @@ def get_match_email(match_id):
         'match_name': match_partner.first_name if match_partner else 'your match',
         'finalized_at': match.finalized_at.isoformat() if match.finalized_at else None
     })
+"""
 
 @app.route('/submit-feedback', methods=['POST'])
 @login_required
