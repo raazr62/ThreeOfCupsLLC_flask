@@ -1798,16 +1798,20 @@ def user_dashboard():
         user_rsvps = EventRSVP.query.filter_by(user_id=current_user.id).all()
         rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
 
+        # Events are considered past 1 hour after their start time
+        # Use datetime.now() instead of utcnow() since events are stored in EST (naive local time)
+        cutoff_time = datetime.now() - timedelta(hours=1)
+
         # Get upcoming events user has RSVP'd to
         upcoming_rsvp_events = Event.query.filter(
             Event.id.in_(rsvp_event_ids),
-            Event.date_time >= datetime.utcnow()
+            Event.date_time >= cutoff_time
         ).order_by(Event.date_time.asc()).all() if rsvp_event_ids else []
 
         # Get past events user has RSVP'd to
         past_rsvp_events = Event.query.filter(
             Event.id.in_(rsvp_event_ids),
-            Event.date_time < datetime.utcnow()
+            Event.date_time < cutoff_time
         ).order_by(Event.date_time.desc()).all() if rsvp_event_ids else []
 
     return render_template('user_dashboard.html',
