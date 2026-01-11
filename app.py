@@ -1799,8 +1799,9 @@ def user_dashboard():
         rsvp_event_ids = [rsvp.event_id for rsvp in user_rsvps]
 
         # Events are considered past 1 hour after their start time
-        # Use datetime.now() instead of utcnow() since events are stored in EST (naive local time)
-        cutoff_time = datetime.now() - timedelta(hours=1)
+        # Production server runs in UTC, but events are stored in EST
+        # Convert UTC to EST by subtracting 5 hours, then subtract 1 hour buffer
+        cutoff_time = datetime.now() - timedelta(hours=6)
 
         # Get upcoming events user has RSVP'd to
         upcoming_rsvp_events = Event.query.filter(
@@ -2342,8 +2343,9 @@ def events():
     view = request.args.get('view', 'upcoming')
 
     # Events are considered past 1 hour after their start time
-    # Use datetime.now() instead of utcnow() since events are stored as naive local time
-    cutoff_time = datetime.now() - timedelta(hours=1)
+    # Production server runs in UTC, but events are stored in EST
+    # Convert UTC to EST by subtracting 5 hours, then subtract 1 hour buffer
+    cutoff_time = datetime.now() - timedelta(hours=6)
 
     if view == 'past':
         # Get past events (ended more than 1 hour ago)
@@ -2494,8 +2496,9 @@ def admin_events():
         })
 
     # Events are considered past 1 hour after their start time
-    # Use datetime.now() instead of utcnow() since events are stored as naive local time
-    cutoff_time = datetime.now() - timedelta(hours=1)
+    # Production server runs in UTC, but events are stored in EST
+    # Convert UTC to EST by subtracting 5 hours, then subtract 1 hour buffer
+    cutoff_time = datetime.now() - timedelta(hours=6)
     return render_template('admin_events.html', event_data=event_data, now=cutoff_time)
 
 @app.route('/api/event/rsvp/<int:event_id>', methods=['POST'])
