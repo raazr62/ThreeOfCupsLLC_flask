@@ -1277,25 +1277,25 @@ def admin_unmatch(match_id):
     if assessment2:
         assessment2.matched_user_id = None
 
-    # Check if each user has any other finalized matches
+    # Check if each user has any other matches (pending OR finalized)
     # If not, set their assessment back to unreviewed
     user1_other_matches = Match.query.filter(
-        Match.status == 'finalized',
+        or_(Match.status == 'finalized', Match.status == 'pending'),
         or_(Match.user1_id == match.user1_id, Match.user2_id == match.user1_id),
         Match.id != match_id
     ).first()
 
     user2_other_matches = Match.query.filter(
-        Match.status == 'finalized',
+        or_(Match.status == 'finalized', Match.status == 'pending'),
         or_(Match.user1_id == match.user2_id, Match.user2_id == match.user2_id),
         Match.id != match_id
     ).first()
 
-    # If user1 has no other matches, mark their assessment as unreviewed
+    # If user1 has no other matches (pending or finalized), mark their assessment as unreviewed
     if not user1_other_matches and assessment1:
         assessment1.reviewed = False
 
-    # If user2 has no other matches, mark their assessment as unreviewed
+    # If user2 has no other matches (pending or finalized), mark their assessment as unreviewed
     if not user2_other_matches and assessment2:
         assessment2.reviewed = False
 
@@ -1358,6 +1358,72 @@ def admin_pending_matches():
             match.draft_email = sanitize_input(request.form.get('draft_email', ''))
             db.session.commit()
             flash('Draft email updated successfully.')
+
+        elif action == 'cancel_match':
+            # Cancel the pending match and return assessments to review
+            if match.status != 'pending':
+                flash('Only pending matches can be cancelled.', 'error')
+                return redirect(url_for('admin_pending_matches'))
+
+            # Get both assessments
+            assessment1 = Assessment.query.get(match.assessment1_id)
+            assessment2 = Assessment.query.get(match.assessment2_id)
+
+            # Clear the matched_user_id fields
+            if assessment1:
+                assessment1.matched_user_id = None
+            if assessment2:
+                assessment2.matched_user_id = None
+
+            # Check if each user has any other matches (pending OR finalized)
+            # Only return to unreviewed if they have NO other matches
+            user1_other_matches = Match.query.filter(
+                or_(Match.status == 'finalized', Match.status == 'pending'),
+                or_(Match.user1_id == match.user1_id, Match.user2_id == match.user1_id),
+                Match.id != match.id
+            ).first()
+
+            user2_other_matches = Match.query.filter(
+                or_(Match.status == 'finalized', Match.status == 'pending'),
+                or_(Match.user1_id == match.user2_id, Match.user2_id == match.user2_id),
+                Match.id != match.id
+            ).first()
+
+            # If user1 has no other matches (pending or finalized), mark their assessment as unreviewed
+            if not user1_other_matches and assessment1:
+                assessment1.reviewed = False
+
+            # If user2 has no other matches (pending or finalized), mark their assessment as unreviewed
+            if not user2_other_matches and assessment2:
+                assessment2.reviewed = False
+
+            # Delete the pending match (no need to keep history for unfinalized matches)
+            db.session.delete(match)
+            db.session.commit()
+
+            flash('Pending match cancelled successfully. Assessments returned to unreviewed if user has no other matches.', 'success')
+
+        elif action == 'finalize_no_email':
+            # Finalize the match WITHOUT sending emails
+            match.status = 'finalized'
+            match.finalized_at = datetime.utcnow()
+
+            # Update the assessment records to reflect the match
+            assessment1 = Assessment.query.get(match.assessment1_id)
+            assessment2 = Assessment.query.get(match.assessment2_id)
+            if assessment1:
+                assessment1.matched_user_id = match.user2_id
+            if assessment2:
+                assessment2.matched_user_id = match.user1_id
+
+            # Explicitly leave email content NULL (per user preference)
+            match.user1_email_content = None
+            match.user2_email_content = None
+
+            # Commit to database
+            db.session.commit()
+
+            flash('Match finalized successfully WITHOUT sending emails. Users can now see the match on their dashboards.', 'success')
 
         elif action == 'finalize':
             # Save any draft email changes from the form before finalizing
@@ -1422,11 +1488,11 @@ def admin_pending_matches():
                             mail.send(msg)
                             emails_sent += 1
 
-                            # COMMENTED OUT: Store email content for modal display
-                            # if user.id == user1.id:
-                            #     match.user1_email_content = personalized_email
-                            # else:
-                            #     match.user2_email_content = personalized_email
+                            # Store email content for modal display
+                            if user.id == user1.id:
+                                match.user1_email_content = personalized_email
+                            else:
+                                match.user2_email_content = personalized_email
                         except Exception as e:
                             error_msg = f"Failed to send email to {user.email}: {str(e)}"
                             print(error_msg)
@@ -1438,8 +1504,8 @@ def admin_pending_matches():
                     try:
                         success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
-                            # COMMENTED OUT: Store email content for modal display
-                            # match.user1_email_content = text_content
+                            # Store email content for modal display
+                            match.user1_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user1.email}")
@@ -1453,8 +1519,8 @@ def admin_pending_matches():
                     try:
                         success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url, user1.first_name, user2.first_name)
                         if success and text_content:
-                            # COMMENTED OUT: Store email content for modal display
-                            # match.user2_email_content = text_content
+                            # Store email content for modal display
+                            match.user2_email_content = text_content
                             emails_sent += 1
                         else:
                             email_errors.append(f"Failed to send default email to {user2.email}")
@@ -1715,9 +1781,17 @@ def user_dashboard():
             if matched_user:
                 # Check if this user is already in the list (avoid duplicates)
                 if not any(m['user'].id == matched_user.id for m in matched_users):
+                    # Determine if email content exists for THIS user
+                    has_email = False
+                    if current_user.id == match.user1_id:
+                        has_email = match.user1_email_content is not None and match.user1_email_content.strip() != ''
+                    else:
+                        has_email = match.user2_email_content is not None and match.user2_email_content.strip() != ''
+
                     matched_users.append({
                         'user': matched_user,
-                        'match_id': match.id
+                        'match_id': match.id,
+                        'has_email_content': has_email
                     })
 
         # Get user's RSVP'd events
@@ -1743,14 +1817,14 @@ def user_dashboard():
                          upcoming_rsvp_events=upcoming_rsvp_events,
                          past_rsvp_events=past_rsvp_events)
 
-# COMMENTED OUT: API endpoint for viewing match email content in modal
-"""
+# API endpoint for viewing match email content in modal
 @app.route('/api/match_email/<int:match_id>')
 @login_required
 def get_match_email(match_id):
-    # API endpoint to fetch the personalized email content for a match.
-    # Returns the email content that was sent to the current user about this match.
-
+    """
+    API endpoint to fetch the personalized email content for a match.
+    Returns the email content that was sent to the current user about this match.
+    """
     # Fetch the match
     match = Match.query.get(match_id)
 
@@ -1788,7 +1862,149 @@ def get_match_email(match_id):
         'match_name': match_partner.first_name if match_partner else 'your match',
         'finalized_at': match.finalized_at.isoformat() if match.finalized_at else None
     })
-"""
+
+# Admin API: Get all matches for a user
+@app.route('/api/admin/user_matches/<int:user_id>')
+@login_required
+def admin_get_user_matches(user_id):
+    """Get all finalized matches for a specific user (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    from sqlalchemy import or_
+    matches = Match.query.filter(
+        Match.status == 'finalized',
+        or_(Match.user1_id == user_id, Match.user2_id == user_id)
+    ).all()
+
+    matches_data = []
+    for match in matches:
+        user1 = User.query.get(match.user1_id)
+        user2 = User.query.get(match.user2_id)
+
+        matches_data.append({
+            'id': match.id,
+            'user1_id': match.user1_id,
+            'user2_id': match.user2_id,
+            'user1': {
+                'first_name': user1.first_name,
+                'last_name': user1.last_name,
+                'email': user1.email
+            },
+            'user2': {
+                'first_name': user2.first_name,
+                'last_name': user2.last_name,
+                'email': user2.email
+            },
+            'user1_email_content': match.user1_email_content,
+            'user2_email_content': match.user2_email_content,
+            'finalized_at': match.finalized_at.isoformat() if match.finalized_at else None
+        })
+
+    return jsonify({'success': True, 'user_id': user_id, 'matches': matches_data})
+
+# Admin API: Get email content for one user in a match
+@app.route('/api/admin/match_email_content/<int:match_id>/<user_position>')
+@login_required
+def admin_get_match_email_content(match_id, user_position):
+    """Get email content for a specific user in a match (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    if user_position not in ['user1', 'user2']:
+        return jsonify({'error': 'Invalid user position. Must be user1 or user2'}), 400
+
+    match = Match.query.get(match_id)
+    if not match:
+        return jsonify({'error': 'Match not found'}), 404
+
+    email_content = match.user1_email_content if user_position == 'user1' else match.user2_email_content
+
+    return jsonify({
+        'success': True,
+        'email_content': email_content,
+        'has_content': email_content is not None and email_content.strip() != ''
+    })
+
+# Admin API: Update email content for one user in a match
+@app.route('/api/admin/update_match_email', methods=['POST'])
+@login_required
+def admin_update_match_email():
+    """Update email content for a specific user in a match (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
+    match_id = data.get('match_id')
+    user_position = data.get('user_position')
+    email_content = data.get('email_content', '')
+
+    if not match_id or not user_position:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    if user_position not in ['user1', 'user2']:
+        return jsonify({'error': 'Invalid user position'}), 400
+
+    match = Match.query.get(match_id)
+    if not match:
+        return jsonify({'error': 'Match not found'}), 404
+
+    # Sanitize input
+    email_content = sanitize_input(email_content)
+
+    # Update the appropriate field
+    if user_position == 'user1':
+        match.user1_email_content = email_content if email_content.strip() else None
+    else:
+        match.user2_email_content = email_content if email_content.strip() else None
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Email content updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating match email: {str(e)}")
+        return jsonify({'error': 'Failed to update email content'}), 500
+
+# Admin API: Update email content for BOTH users in a match
+@app.route('/api/admin/update_match_emails_both', methods=['POST'])
+@login_required
+def admin_update_match_emails_both():
+    """Update email content for both users in a match (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
+    match_id = data.get('match_id')
+    user1_email_content = data.get('user1_email_content', '')
+    user2_email_content = data.get('user2_email_content', '')
+
+    if not match_id:
+        return jsonify({'error': 'Missing match_id'}), 400
+
+    match = Match.query.get(match_id)
+    if not match:
+        return jsonify({'error': 'Match not found'}), 404
+
+    # Sanitize inputs
+    user1_email_content = sanitize_input(user1_email_content)
+    user2_email_content = sanitize_input(user2_email_content)
+
+    # Update both fields
+    match.user1_email_content = user1_email_content if user1_email_content.strip() else None
+    match.user2_email_content = user2_email_content if user2_email_content.strip() else None
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Email contents updated successfully for both users'})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error updating match emails: {str(e)}")
+        return jsonify({'error': 'Failed to update email contents'}), 500
 
 @app.route('/submit-feedback', methods=['POST'])
 @login_required

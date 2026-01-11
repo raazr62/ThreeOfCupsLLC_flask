@@ -114,6 +114,7 @@
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email Status</th>
                             <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Matches</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -214,6 +215,15 @@
                             <td class="px-6 py-4 text-sm text-gray-600">
                                 {{ data.user.location if data.user.location else '-' }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button type="button" onclick="viewUserMatches({{ data.user.id }}, '{{ data.user.first_name }} {{ data.user.last_name }}')"
+                                        class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors cursor-pointer">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                                    </svg>
+                                    Manage Matches
+                                </button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -250,6 +260,81 @@
             <div class="flex items-center justify-center py-12">
                 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Matches Management Modal -->
+<div id="userMatchesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-white" id="modalUserMatchesTitle">User Matches</h3>
+            <button type="button" onclick="closeUserMatchesModal()" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-160px)]" id="userMatchesContent">
+            <div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t flex justify-end">
+            <button onclick="closeUserMatchesModal()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Email Content Edit Modal -->
+<div id="emailContentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-white" id="modalEmailTitle">Edit Email Content</h3>
+            <button type="button" onclick="closeEmailContentModal()" class="text-white hover:text-gray-200 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-240px)]">
+            <form id="emailContentForm">
+                <input type="hidden" id="emailEditMatchId">
+                <input type="hidden" id="emailEditUserPosition">
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Content
+                        <span class="text-xs text-gray-500 font-normal ml-2">(Plain text, will be formatted when displayed)</span>
+                    </label>
+                    <textarea id="emailContentTextarea" rows="20"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent font-mono text-sm"
+                              placeholder="Enter the email content here..."></textarea>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                    <p class="text-sm text-blue-800">
+                        <strong>Note:</strong> Changes will be immediately visible to the user on their dashboard. This email content was NOT originally sent to them.
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t flex justify-between">
+            <button onclick="closeEmailContentModal()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button onclick="saveEmailContent()"
+                    class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                Save Email Content
+            </button>
         </div>
     </div>
 </div>
@@ -749,6 +834,178 @@ document.getElementById('assessmentModal')?.addEventListener('click', function(e
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeAssessmentModal();
+    }
+});
+
+// User Matches Management Functions
+function viewUserMatches(userId, userName) {
+    const modal = document.getElementById('userMatchesModal');
+    const modalTitle = document.getElementById('modalUserMatchesTitle');
+    const content = document.getElementById('userMatchesContent');
+
+    modalTitle.textContent = `Matches for ${userName}`;
+    modal.classList.remove('hidden');
+
+    // Show loading state
+    content.innerHTML = `
+        <div class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
+    `;
+
+    // Fetch user's matches
+    fetch(`/api/admin/user_matches/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                content.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-600">${data.error}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.matches.length === 0) {
+                content.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-gray-600">This user has no finalized matches yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            displayUserMatches(data.matches, data.user_id);
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="text-center py-12">
+                    <p class="text-red-600">Failed to load matches. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function displayUserMatches(matches, userId) {
+    const content = document.getElementById('userMatchesContent');
+
+    let html = '<div class="space-y-4">';
+
+    matches.forEach(match => {
+        const userPosition = match.user1_id === userId ? 'user1' : 'user2';
+        const otherUser = match.user1_id === userId ? match.user2 : match.user1;
+        const emailContent = userPosition === 'user1' ? match.user1_email_content : match.user2_email_content;
+        const hasEmail = emailContent && emailContent.trim() !== '';
+
+        html += `
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-semibold text-gray-900">Matched with: ${otherUser.first_name} ${otherUser.last_name}</h4>
+                        <p class="text-sm text-gray-600">Match ID: ${match.id}</p>
+                        <p class="text-sm text-gray-600">Finalized: ${new Date(match.finalized_at).toLocaleDateString()}</p>
+                        <p class="text-sm ${hasEmail ? 'text-green-600' : 'text-orange-600'} font-medium mt-1">
+                            ${hasEmail ? '✓ Email content exists' : '⚠ No email content'}
+                        </p>
+                    </div>
+                    <button onclick="editEmailContent(${match.id}, '${userPosition}', '${otherUser.first_name} ${otherUser.last_name}')"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        ${hasEmail ? 'Edit' : 'Add'} Email Content
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+function closeUserMatchesModal() {
+    document.getElementById('userMatchesModal').classList.add('hidden');
+}
+
+function editEmailContent(matchId, userPosition, otherUserName) {
+    const modal = document.getElementById('emailContentModal');
+    const modalTitle = document.getElementById('modalEmailTitle');
+    const textarea = document.getElementById('emailContentTextarea');
+    const matchIdInput = document.getElementById('emailEditMatchId');
+    const userPositionInput = document.getElementById('emailEditUserPosition');
+
+    modalTitle.textContent = `Edit Email Content - Match with ${otherUserName}`;
+    matchIdInput.value = matchId;
+    userPositionInput.value = userPosition;
+
+    // Fetch current email content
+    fetch(`/api/admin/match_email_content/${matchId}/${userPosition}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                textarea.value = data.email_content || '';
+                modal.classList.remove('hidden');
+            } else {
+                alert('Error loading email content: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Failed to load email content');
+        });
+}
+
+function closeEmailContentModal() {
+    document.getElementById('emailContentModal').classList.add('hidden');
+}
+
+function saveEmailContent() {
+    const matchId = document.getElementById('emailEditMatchId').value;
+    const userPosition = document.getElementById('emailEditUserPosition').value;
+    const emailContent = document.getElementById('emailContentTextarea').value;
+
+    fetch('/api/admin/update_match_email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            match_id: matchId,
+            user_position: userPosition,
+            email_content: emailContent
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Email content saved successfully!');
+            closeEmailContentModal();
+            // Refresh the matches list if it's still open
+            const userMatchesModal = document.getElementById('userMatchesModal');
+            if (!userMatchesModal.classList.contains('hidden')) {
+                // Re-fetch to update the UI
+                const titleElement = document.getElementById('modalUserMatchesTitle');
+                const titleText = titleElement.textContent;
+                const userName = titleText.replace('Matches for ', '');
+                // Find the user ID from the current content (this is a workaround)
+                location.reload(); // Simplest solution for now
+            }
+        } else {
+            alert('Error saving email content: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Failed to save email content');
+    });
+}
+
+// Close modals when clicking outside
+document.getElementById('userMatchesModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeUserMatchesModal();
+    }
+});
+
+document.getElementById('emailContentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEmailContentModal();
     }
 });
 </script>

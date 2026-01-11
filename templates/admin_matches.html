@@ -169,6 +169,10 @@
                                                     class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                                 View Details
                                             </button>
+                                            <button onclick="editMatchEmails({{ data.match.id }}, '{{ data.user1.first_name }} {{ data.user1.last_name }}', '{{ data.user2.first_name }} {{ data.user2.last_name }}')"
+                                                    class="bg-purple-500 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                                                Edit Emails
+                                            </button>
                                             <button onclick="unmatchUsers({{ data.match.id }}, '{{ data.user1.first_name }} {{ data.user1.last_name }}', '{{ data.user2.first_name }} {{ data.user2.last_name }}')"
                                                     class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                                                 Unmatch
@@ -220,6 +224,63 @@
                     Close
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Match Emails Edit Modal -->
+<div id="matchEmailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-white" id="matchEmailsTitle">Edit Match Email Content</h3>
+            <button onclick="closeMatchEmailsModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+        </div>
+
+        <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 160px);">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- User 1 Email -->
+                <div>
+                    <h4 class="font-bold text-lg text-purple-700 mb-3" id="user1Name">User 1</h4>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Content for User 1
+                        <span class="text-xs text-gray-500 font-normal ml-2">(What they see when viewing the match)</span>
+                    </label>
+                    <textarea id="user1EmailContent" rows="18"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                              placeholder="Email content for user 1..."></textarea>
+                    <p class="text-xs text-gray-500 mt-2" id="user1EmailStatus"></p>
+                </div>
+
+                <!-- User 2 Email -->
+                <div>
+                    <h4 class="font-bold text-lg text-cyan-700 mb-3" id="user2Name">User 2</h4>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Content for User 2
+                        <span class="text-xs text-gray-500 font-normal ml-2">(What they see when viewing the match)</span>
+                    </label>
+                    <textarea id="user2EmailContent" rows="18"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent font-mono text-sm"
+                              placeholder="Email content for user 2..."></textarea>
+                    <p class="text-xs text-gray-500 mt-2" id="user2EmailStatus"></p>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-6">
+                <p class="text-sm text-blue-800">
+                    <strong>Note:</strong> Changes will be immediately visible to users on their dashboards. These email contents may or may not have been originally sent to them.
+                </p>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t flex justify-between">
+            <button onclick="closeMatchEmailsModal()"
+                    class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button onclick="saveMatchEmails()"
+                    class="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg transition-colors">
+                Save Both Emails
+            </button>
         </div>
     </div>
 </div>
@@ -630,6 +691,95 @@ function unmatchUsers(matchId, user1Name, user2Name) {
         console.error('Error:', error);
     });
 }
+
+// Match Email Management Functions
+let currentEditMatchId = null;
+
+function editMatchEmails(matchId, user1Name, user2Name) {
+    currentEditMatchId = matchId;
+    const modal = document.getElementById('matchEmailsModal');
+    const title = document.getElementById('matchEmailsTitle');
+    const user1NameEl = document.getElementById('user1Name');
+    const user2NameEl = document.getElementById('user2Name');
+    const user1Textarea = document.getElementById('user1EmailContent');
+    const user2Textarea = document.getElementById('user2EmailContent');
+    const user1Status = document.getElementById('user1EmailStatus');
+    const user2Status = document.getElementById('user2EmailStatus');
+
+    title.textContent = `Edit Match Email Content - Match #${matchId}`;
+    user1NameEl.textContent = `${user1Name}'s Email`;
+    user2NameEl.textContent = `${user2Name}'s Email`;
+
+    // Show modal with loading state
+    user1Textarea.value = 'Loading...';
+    user2Textarea.value = 'Loading...';
+    user1Status.textContent = '';
+    user2Status.textContent = '';
+    modal.classList.remove('hidden');
+
+    // Fetch current email contents
+    Promise.all([
+        fetch(`/api/admin/match_email_content/${matchId}/user1`).then(r => r.json()),
+        fetch(`/api/admin/match_email_content/${matchId}/user2`).then(r => r.json())
+    ])
+    .then(([data1, data2]) => {
+        user1Textarea.value = data1.email_content || '';
+        user2Textarea.value = data2.email_content || '';
+
+        user1Status.textContent = data1.email_content ? 'Has existing content' : 'No content (will create new)';
+        user1Status.className = data1.email_content ? 'text-xs text-green-600 mt-2' : 'text-xs text-orange-600 mt-2';
+
+        user2Status.textContent = data2.email_content ? 'Has existing content' : 'No content (will create new)';
+        user2Status.className = data2.email_content ? 'text-xs text-green-600 mt-2' : 'text-xs text-orange-600 mt-2';
+    })
+    .catch(error => {
+        alert('Failed to load email contents');
+        closeMatchEmailsModal();
+    });
+}
+
+function closeMatchEmailsModal() {
+    document.getElementById('matchEmailsModal').classList.add('hidden');
+    currentEditMatchId = null;
+}
+
+function saveMatchEmails() {
+    if (!currentEditMatchId) return;
+
+    const user1Content = document.getElementById('user1EmailContent').value;
+    const user2Content = document.getElementById('user2EmailContent').value;
+
+    fetch('/api/admin/update_match_emails_both', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            match_id: currentEditMatchId,
+            user1_email_content: user1Content,
+            user2_email_content: user2Content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Email contents saved successfully for both users!');
+            closeMatchEmailsModal();
+        } else {
+            alert('Error saving: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Failed to save email contents');
+    });
+}
+
+// Close modal on backdrop click
+document.getElementById('matchEmailsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeMatchEmailsModal();
+    }
+});
 </script>
 
 {% endblock %}

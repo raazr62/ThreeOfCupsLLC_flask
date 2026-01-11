@@ -84,32 +84,31 @@
                     {% elif matched_users %}
                         <div class="space-y-4">
                             {% for match_data in matched_users %}
-                                <!-- COMMENTED OUT: Match click to view email modal functionality -->
-                                <!-- <div onclick="viewMatchEmail({{ match_data.match_id }}, '{{ match_data.user.first_name }}')"
-                                     class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md hover:border-secondary transition-all cursor-pointer"> -->
-                                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                    <div class="flex items-center space-x-4">
-                                        {% if match_data.user.profile_picture %}
-                                            <img src="{{ url_for('static', filename=match_data.user.profile_picture) }}"
-                                                 alt="{{ match_data.user.first_name }}'s Profile"
-                                                 class="w-12 h-12 rounded-full object-cover">
-                                        {% else %}
-                                            <div class="w-12 h-12 bg-gradient-to-br from-orange-light to-orange-medium rounded-full flex items-center justify-center">
-                                                <span class="text-white font-bold text-sm">{{ match_data.user.first_name[0] }}{{ match_data.user.last_name[0] }}</span>
-                                            </div>
-                                        {% endif %}
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold text-text-primary group-hover:text-secondary transition-colors">
-                                                {{ match_data.user.first_name }} {{ match_data.user.last_name }}
-                                            </h4>
-                                            {% if match_data.user.bio %}
-                                                <p class="text-sm text-gray-600 mt-1">{{ match_data.user.bio[:100] }}{% if match_data.user.bio|length > 100 %}...{% endif %}</p>
+                                {% if match_data.has_email_content %}
+                                    <!-- Clickable card with email content -->
+                                    <div onclick="viewMatchEmail({{ match_data.match_id }}, '{{ match_data.user.first_name }}')"
+                                         class="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md hover:border-secondary transition-all cursor-pointer">
+                                {% else %}
+                                    <!-- Non-clickable card without email content -->
+                                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                {% endif %}
+                                        <div class="flex items-center space-x-4">
+                                            {% if match_data.user.profile_picture %}
+                                                <img src="{{ url_for('static', filename=match_data.user.profile_picture) }}"
+                                                     alt="{{ match_data.user.first_name }}'s Profile"
+                                                     class="w-12 h-12 rounded-full object-cover">
                                             {% else %}
-                                                <p class="text-sm text-gray-500 italic">No bio available</p>
+                                                <div class="w-12 h-12 bg-gradient-to-br from-orange-light to-orange-medium rounded-full flex items-center justify-center">
+                                                    <span class="text-white font-bold text-sm">{{ match_data.user.first_name[0] }}{{ match_data.user.last_name[0] }}</span>
+                                                </div>
                                             {% endif %}
+                                            <div class="flex-1">
+                                                <h4 class="font-semibold text-text-primary">
+                                                    {{ match_data.user.first_name }} {{ match_data.user.last_name }}
+                                                </h4>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
                             {% endfor %}
                         </div>
                     {% else %}
@@ -314,8 +313,7 @@
     </div>
 </div>
 
-<!-- COMMENTED OUT: Match Email Modal -->
-<!--
+<!-- Match Email Modal -->
 <div id="matchEmailModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" onclick="closeModalOnBackdrop(event)">
     <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden" onclick="event.stopPropagation()">
         <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex justify-between items-center">
@@ -351,7 +349,6 @@
         </div>
     </div>
 </div>
--->
 
 <script>
 function toggleEditMode() {
@@ -400,8 +397,7 @@ function unrsvpEvent(eventId) {
     }
 }
 
-// COMMENTED OUT: Match Email Modal Functions
-/*
+// Match Email Modal Functions
 function viewMatchEmail(matchId, matchName) {
     const modal = document.getElementById('matchEmailModal');
     const modalMatchName = document.getElementById('modalMatchName');
@@ -472,6 +468,5 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
-*/
 </script>
 {% endblock %}

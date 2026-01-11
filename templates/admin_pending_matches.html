@@ -232,20 +232,51 @@
                                 </form>
                             </div>
 
-                            <!-- Finalize Match Button -->
+                            <!-- Finalize Match Buttons -->
                             <div class="border-t border-gray-300 pt-6">
-                                <form method="POST" id="finalizeForm_{{ data.match.id }}" onsubmit="return confirmFinalize({{ data.match.id }});">
-                                    <input type="hidden" name="match_id" value="{{ data.match.id }}">
-                                    <input type="hidden" name="action" value="finalize">
-                                    <input type="hidden" name="draft_email" id="finalizeEmailInput_{{ data.match.id }}">
-                                    <button type="submit"
-                                            class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
-                                        Finalize Match & Send Emails
-                                    </button>
-                                    <p class="text-sm text-gray-600 text-center mt-2">
-                                        This will make the match visible on user dashboards and send the drafted email (or default email if no draft).
-                                    </p>
-                                </form>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Option 1: Finalize WITH emails -->
+                                    <form method="POST" id="finalizeForm_{{ data.match.id }}" onsubmit="return confirmFinalize({{ data.match.id }});">
+                                        <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                        <input type="hidden" name="action" value="finalize">
+                                        <input type="hidden" name="draft_email" id="finalizeEmailInput_{{ data.match.id }}">
+                                        <button type="submit"
+                                                class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+                                            Finalize Match & Send Emails
+                                        </button>
+                                        <p class="text-sm text-gray-600 text-center mt-2">
+                                            Sends the drafted email (or default email if no draft) and makes the match visible on user dashboards.
+                                        </p>
+                                    </form>
+
+                                    <!-- Option 2: Finalize WITHOUT emails -->
+                                    <form method="POST" onsubmit="return confirmFinalizeNoEmail({{ data.match.id }});">
+                                        <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                        <input type="hidden" name="action" value="finalize_no_email">
+                                        <button type="submit"
+                                                class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+                                            Finalize Match (No Email)
+                                        </button>
+                                        <p class="text-sm text-gray-600 text-center mt-2">
+                                            Makes the match visible on user dashboards WITHOUT sending emails or storing email content.
+                                        </p>
+                                    </form>
+                                </div>
+
+                                <!-- Cancel Match Button -->
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <form method="POST" onsubmit="return confirmCancelMatch({{ data.match.id }});">
+                                        <input type="hidden" name="match_id" value="{{ data.match.id }}">
+                                        <input type="hidden" name="action" value="cancel_match">
+                                        <button type="submit"
+                                                class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+                                            Cancel Match
+                                        </button>
+                                        <p class="text-sm text-gray-600 text-center mt-2">
+                                            Cancels this pending match and returns both assessments to review status.
+                                        </p>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -299,6 +330,14 @@ function confirmFinalize(matchId) {
 
     // Show confirmation dialog
     return confirm('Are you sure you want to finalize this match and send emails to both users?');
+}
+
+function confirmFinalizeNoEmail(matchId) {
+    return confirm('Are you sure you want to finalize this match WITHOUT sending emails?\n\nThe match will be visible on both users\' dashboards, but they will NOT receive any email notification.');
+}
+
+function confirmCancelMatch(matchId) {
+    return confirm('Are you sure you want to CANCEL this pending match?\n\nBoth assessments will be returned to review status and the match will be deleted. This action cannot be undone.');
 }
 </script>
 {% endblock %}
