@@ -804,8 +804,12 @@ def verify_email_change(token):
 
 # Assessment route
 @app.route('/assessment', methods=['GET', 'POST'])
-@login_required
 def assessment():
+    # Check if user is logged in
+    if not current_user.is_authenticated:
+        flash('Please log in to access the assessment.')
+        return redirect(url_for('login'))
+
     # Check if user can access the assessment
     if not current_user.can_access_assessment():
         flash('You have already completed your assessment. Please contact us if you would like to retake it!')
@@ -3035,4 +3039,4 @@ def complete_profile(token):
     return render_template('complete_profile.html', user=user, event_title=event_title, token=token)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

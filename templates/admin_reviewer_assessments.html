@@ -384,12 +384,36 @@ function renderStructuredAssessment(assessment) {
     };
 
     // TELL US MORE SECTION
-    if (assessment.tell_us_more_what_brings_you || assessment.tell_us_more_friendship_meaning) {
+    if (assessment.tell_us_more_what_brings_you ||
+        assessment.tell_us_more_friendship_meaning ||
+        assessment.tell_us_more_political_leanings ||
+        assessment.tell_us_more_gender_identity ||
+        assessment.tell_us_more_about_yourself) {
         html += '<div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border-l-4 border-purple-500">';
         html += '<h6 class="font-bold text-purple-700 text-lg mb-4">Tell Us More</h6>';
         html += '<div class="space-y-3">';
         html += renderTextResponse('What brings you to Three of Cups?', assessment.tell_us_more_what_brings_you);
         html += renderTextResponse('What does friendship mean to you?', assessment.tell_us_more_friendship_meaning);
+        html += renderMultiSelect('Political Leanings', assessment.tell_us_more_political_leanings);
+
+        // Gender identity with details
+        if (assessment.tell_us_more_gender_identity) {
+            let genderDisplay = assessment.tell_us_more_gender_identity;
+            if (assessment.tell_us_more_gender_identity_details) {
+                const details = Array.isArray(assessment.tell_us_more_gender_identity_details)
+                    ? assessment.tell_us_more_gender_identity_details
+                    : [assessment.tell_us_more_gender_identity_details];
+                if (details.length > 0) {
+                    genderDisplay += ' (' + details.join(', ') + ')';
+                }
+            }
+            if (assessment.tell_us_more_gender_identity_other_text) {
+                genderDisplay += ' - ' + assessment.tell_us_more_gender_identity_other_text;
+            }
+            html += renderSingleChoice('Gender Identity', genderDisplay);
+        }
+
+        html += renderTextResponse('Tell us about yourself', assessment.tell_us_more_about_yourself);
         html += '</div></div>';
     }
 
@@ -497,11 +521,13 @@ function renderStructuredAssessment(assessment) {
 
     // HOBBIES & INTERESTS SECTION
     if (assessment.hobbies_interests_activities_interests ||
-        assessment.hobbies_interests_want_to_try) {
+        assessment.hobbies_interests_want_to_try ||
+        assessment.hobbies_interests_hobbies_details) {
         html += '<div class="bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-4 border-l-4 border-pink-500">';
         html += '<h6 class="font-bold text-pink-700 text-lg mb-4">Hobbies & Interests</h6>';
         html += '<div class="space-y-3">';
         html += renderMultiSelect('Activities & Interests', assessment.hobbies_interests_activities_interests);
+        html += renderTextResponse('Additional Hobbies Details', assessment.hobbies_interests_hobbies_details);
         html += renderTextResponse('Want to try with a friend', assessment.hobbies_interests_want_to_try);
         html += renderTextResponse('How do you spend free time?', assessment.hobbies_interests_free_time);
         html += renderSingleChoice('Doing vs Being Friend', assessment.hobbies_interests_doing_vs_being);

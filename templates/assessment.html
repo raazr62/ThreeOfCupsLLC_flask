@@ -117,6 +117,76 @@ const assessmentData = {
                     "question": "What brings you to Three of Cups?",
                     "subtext": "Tell us your story! What's happening in your life that has you seeking new friendships and community?",
                     "type": "text"
+                },
+                {
+                    "id": "political_leanings",
+                    "question": "What are your political leanings? (optional – we ask this because this is a dealbreaker for some folk! this helps reduce harm)",
+                    "type": "multi_select_optional",
+                    "options": [
+                        "Liberal",
+                        "Moderate",
+                        "Leftist",
+                        "Conservative",
+                        "Apolitical",
+                        "Prefer not to say"
+                    ]
+                },
+                {
+                    "id": "gender_identity",
+                    "question": "Which gender best describes you?",
+                    "subtext": "Pick the option that best describes you, then you can add more details if you'd like.",
+                    "type": "gender_with_details",
+                    "options": [
+                        "Woman",
+                        "Man",
+                        "Non-binary",
+                        "Gender not listed here"
+                    ],
+                    "detail_options": {
+                        "Woman": [
+                            "Intersex woman",
+                            "Trans woman",
+                            "Transfeminine",
+                            "Woman & Nonbinary",
+                            "Cis woman"
+                        ],
+                        "Man": [
+                            "Intersex man",
+                            "Trans man",
+                            "Transmasculine",
+                            "Man & Nonbinary",
+                            "Cis man"
+                        ],
+                        "Non-binary": [
+                            "Agender",
+                            "Bigender",
+                            "Genderfluid",
+                            "Genderqueer",
+                            "Gender nonconforming",
+                            "Gender questioning",
+                            "Gender variant",
+                            "Intersex",
+                            "Intersex man",
+                            "Intersex woman",
+                            "Neutrois",
+                            "Nonbinary man",
+                            "Nonbinary woman",
+                            "Pangender",
+                            "Polygender",
+                            "Transgender",
+                            "Trans man",
+                            "Transmasculine",
+                            "Trans woman",
+                            "Transfeminine",
+                            "Two-spirit"
+                        ]
+                    }
+                },
+                {
+                    "id": "about_yourself",
+                    "question": "Tell us about yourself!",
+                    "subtext": "For example, how would you describe yourself? How would your loved ones/friends describe you?",
+                    "type": "text"
                 }
             ]
         },
@@ -431,12 +501,24 @@ const assessmentData = {
                             ]
                         },
                         {
+                            "name": "Entertainment",
+                            "options": [
+                                "Video games (PC, PS, XBOX, Switch)"
+                            ]
+                        },
+                        {
                             "name": "Other",
                             "options": [
                                 "Other"
                             ]
                         }
                     ]
+                },
+                {
+                    "id": "hobbies_details",
+                    "question": "Is there anything else you'd like to share about your hobbies and interests?",
+                    "subtext": "(optional)",
+                    "type": "text_optional"
                 },
                 {
                     "id": "doing_vs_being",
@@ -683,6 +765,7 @@ function buildQuestionsList() {
                     max_selections: question.max_selections,
                     select_count: question.select_count,
                     input_fields: question.input_fields,
+                    detail_options: question.detail_options,
                     fieldName: `${section.id}_${question.id}`
                 });
             });
@@ -1033,6 +1116,75 @@ function renderMixedQuestion(questionData) {
                 </div>
             </div>
         `;
+    } else if (questionData.mixedType === 'multi_select_optional') {
+        const optionCount = questionData.options.length;
+        const needsScroll = optionCount > 5;
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+                ${needsScroll ? `<p class="text-sm text-text-accent mb-3 italic md:hidden">${optionCount} options - scroll to see all</p>` : ''}
+                <div class="scrollable-options-container ${needsScroll ? 'has-more-content' : ''}" data-field="${questionData.fieldName}" data-scroll-container="true">
+                    <div class="space-y-2">
+                        ${questionData.options.map(option => `
+                            <label class="flex items-center p-3 border border-primary/30 rounded-lg hover:bg-accent/10 cursor-pointer transition-colors">
+                                <input type="checkbox" name="${questionData.fieldName}" value="${option}"
+                                       class="text-primary focus:ring-primary mr-3 multi-select-optional-checkbox"
+                                       data-field="${questionData.fieldName}">
+                                <span class="text-text-primary">${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (questionData.mixedType === 'gender_with_details') {
+        return `
+            <div class="question-fade-enter-active">
+                <h3 class="text-xl font-semibold text-text-primary mb-2 font-brand">${questionData.sectionTitle}</h3>
+                ${sectionSubtextHtml}
+                <p class="text-text-primary text-lg mb-2">${questionData.question}</p>
+                ${questionData.subtext ? `<p class="text-text-accent text-sm mb-4 italic">${questionData.subtext}</p>` : ''}
+                <div class="space-y-3">
+                    ${questionData.options.map(option => `
+                        <div class="gender-option-container">
+                            <label class="flex items-center p-4 border-2 border-primary/30 rounded-lg hover:bg-accent/10 hover:border-primary/50 cursor-pointer transition-all">
+                                <input type="radio" name="${questionData.fieldName}" value="${option}" required
+                                       class="text-primary focus:ring-primary mr-3 gender-radio"
+                                       data-field="${questionData.fieldName}"
+                                       data-has-details="${questionData.detail_options && questionData.detail_options[option] ? 'true' : 'false'}">
+                                <span class="text-text-primary text-lg">${option}</span>
+                            </label>
+                            ${questionData.detail_options && questionData.detail_options[option] ? `
+                                <div class="gender-details-container hidden mt-3 ml-8 p-4 bg-accent/5 rounded-lg border border-primary/20" data-gender="${option}">
+                                    <button type="button" class="text-text-primary hover:text-secondary font-medium text-sm mb-3 flex items-center gap-2 gender-details-toggle" onclick="toggleGenderDetails(this)">
+                                        <span class="toggle-icon">▶</span> Add more about your gender (optional)
+                                    </button>
+                                    <div class="gender-details-options hidden space-y-2">
+                                        ${questionData.detail_options[option].map(detail => `
+                                            <label class="flex items-center p-2 border border-primary/20 rounded hover:bg-accent/10 cursor-pointer transition-colors">
+                                                <input type="checkbox" name="${questionData.fieldName}_details" value="${detail}"
+                                                       class="text-primary focus:ring-primary mr-3 gender-detail-checkbox"
+                                                       data-field="${questionData.fieldName}_details">
+                                                <span class="text-text-primary text-sm">${detail}</span>
+                                            </label>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-4">
+                    <label class="block text-text-primary text-sm mb-2">Anything else you'd like to share about your gender? (optional)</label>
+                    <input type="text" name="${questionData.fieldName}_other_text"
+                           class="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white text-text-primary"
+                           placeholder="Share more if you'd like...">
+                </div>
+            </div>
+        `;
     }
 }
 
@@ -1194,6 +1346,50 @@ function restoreSavedAnswers(questionData) {
                 const input = container.querySelector(`input[name="${savedInput.name}"]`);
                 if (input) input.value = savedInput.value;
             });
+        } else if (questionData.mixedType === 'multi_select_optional') {
+            // Restore multi-select optional checkboxes
+            const savedInputs = hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`);
+            savedInputs.forEach(savedInput => {
+                const checkbox = container.querySelector(`input[name="${questionData.fieldName}"][value="${savedInput.value}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        } else if (questionData.mixedType === 'gender_with_details') {
+            // Restore gender radio selection
+            const savedRadio = hiddenContainer.querySelector(`input[name="${questionData.fieldName}"]`);
+            if (savedRadio) {
+                const radio = container.querySelector(`input[name="${questionData.fieldName}"][value="${savedRadio.value}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    // Show the details container for the selected gender
+                    const detailsContainer = container.querySelector(`.gender-details-container[data-gender="${savedRadio.value}"]`);
+                    if (detailsContainer) {
+                        detailsContainer.classList.remove('hidden');
+                    }
+                }
+            }
+
+            // Restore gender detail selections
+            const savedDetails = hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}_details"]`);
+            savedDetails.forEach(savedDetail => {
+                const checkbox = container.querySelector(`input[name="${questionData.fieldName}_details"][value="${savedDetail.value}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    // Expand the details section
+                    const optionsDiv = checkbox.closest('.gender-details-options');
+                    if (optionsDiv) {
+                        optionsDiv.classList.remove('hidden');
+                        const toggleIcon = optionsDiv.previousElementSibling.querySelector('.toggle-icon');
+                        if (toggleIcon) toggleIcon.textContent = '▼';
+                    }
+                }
+            });
+
+            // Restore other text
+            const savedOtherText = hiddenContainer.querySelector(`input[name="${questionData.fieldName}_other_text"]`);
+            if (savedOtherText) {
+                const otherTextInput = container.querySelector(`input[name="${questionData.fieldName}_other_text"]`);
+                if (otherTextInput) otherTextInput.value = savedOtherText.value;
+            }
         }
     }
 }
@@ -1317,6 +1513,51 @@ function updateMultiSelectCounters(questionData) {
     }
 }
 
+function toggleGenderDetails(button) {
+    const optionsContainer = button.nextElementSibling;
+    const toggleIcon = button.querySelector('.toggle-icon');
+
+    if (optionsContainer.classList.contains('hidden')) {
+        optionsContainer.classList.remove('hidden');
+        toggleIcon.textContent = '▼';
+    } else {
+        optionsContainer.classList.add('hidden');
+        toggleIcon.textContent = '▶';
+    }
+}
+
+function setupGenderRadioListeners() {
+    // Handle gender radio button changes to show/hide detail options
+    document.querySelectorAll('.gender-radio').forEach(radio => {
+        radio.addEventListener('change', () => {
+            const container = document.getElementById('question-container');
+
+            // Hide all gender details containers
+            container.querySelectorAll('.gender-details-container').forEach(details => {
+                details.classList.add('hidden');
+                // Reset the toggle state
+                const toggleBtn = details.querySelector('.gender-details-toggle');
+                const optionsDiv = details.querySelector('.gender-details-options');
+                const toggleIcon = details.querySelector('.toggle-icon');
+                if (toggleBtn && optionsDiv && toggleIcon) {
+                    optionsDiv.classList.add('hidden');
+                    toggleIcon.textContent = '▶';
+                }
+            });
+
+            // Show the details container for the selected gender (if it has one)
+            const selectedGender = radio.value;
+            const detailsContainer = container.querySelector(`.gender-details-container[data-gender="${selectedGender}"]`);
+            if (detailsContainer) {
+                detailsContainer.classList.remove('hidden');
+            }
+
+            // Save the answer
+            saveCurrentAnswer();
+        });
+    });
+}
+
 function setupAutoNavigation() {
     // Auto-navigate on single-choice radio buttons
     document.querySelectorAll('.single-choice-radio').forEach(radio => {
@@ -1332,6 +1573,9 @@ function setupAutoNavigation() {
             }, 400);
         });
     });
+
+    // Setup gender radio listeners
+    setupGenderRadioListeners();
 
     // Setup scroll indicators for scrollable containers
     setupScrollIndicators();
@@ -1549,6 +1793,58 @@ function saveCurrentAnswer() {
                     hiddenContainer.appendChild(hiddenInput);
                 }
             });
+        } else if (questionData.mixedType === 'multi_select_optional') {
+            // Multi-select optional checkboxes
+            const checkboxes = container.querySelectorAll(`input[name="${questionData.fieldName}"]:checked`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+
+            // Create new hidden inputs
+            checkboxes.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+        } else if (questionData.mixedType === 'gender_with_details') {
+            // Gender radio button with optional details
+            const selectedRadio = container.querySelector(`input[name="${questionData.fieldName}"]:checked`);
+            const detailCheckboxes = container.querySelectorAll(`input[name="${questionData.fieldName}_details"]:checked`);
+            const otherTextInput = container.querySelector(`input[name="${questionData.fieldName}_other_text"]`);
+
+            // Remove old hidden inputs
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}"]`).forEach(inp => inp.remove());
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}_details"]`).forEach(inp => inp.remove());
+            hiddenContainer.querySelectorAll(`input[name="${questionData.fieldName}_other_text"]`).forEach(inp => inp.remove());
+
+            // Save main gender selection
+            if (selectedRadio) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = questionData.fieldName;
+                hiddenInput.value = selectedRadio.value;
+                hiddenContainer.appendChild(hiddenInput);
+            }
+
+            // Save detail selections
+            detailCheckboxes.forEach(checkbox => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = `${questionData.fieldName}_details`;
+                hiddenInput.value = checkbox.value;
+                hiddenContainer.appendChild(hiddenInput);
+            });
+
+            // Save other text if present
+            if (otherTextInput && otherTextInput.value.trim() !== '') {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = `${questionData.fieldName}_other_text`;
+                hiddenInput.value = otherTextInput.value;
+                hiddenContainer.appendChild(hiddenInput);
+            }
         }
     }
 }
