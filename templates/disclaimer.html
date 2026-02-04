@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="dark-card rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-text-primary font-brand">Service Agreement</h2>
+                <p class="text-text-accent mt-2">Please read and agree to the following terms before continuing</p>
+            </div>
+
+            <div class="bg-warm-cream rounded-xl p-6 mb-8 max-h-[50vh] overflow-y-auto border border-gray-200">
+                <h3 class="text-xl font-bold text-text-primary mb-4">DISCLAIMER</h3>
+
+                <p class="text-text-primary mb-4">
+                    The friendship matchmaking services provided through this platform are operated by Three of Cups LLC.
+                    By using this service, you acknowledge and agree to the following:
+                </p>
+
+                <div class="space-y-4 text-text-primary">
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">No Guarantee of Compatibility</h4>
+                        <p class="text-sm">
+                            While we strive to create meaningful matches based on the information you provide, we cannot guarantee
+                            that every match will result in a successful or lasting friendship. Compatibility depends on numerous
+                            factors beyond our control, and not all matches will be perfect or meet your expectations.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">Limited Liability</h4>
+                        <p class="text-sm">
+                            Three of Cups LLC and its operators, employees, and affiliates are not responsible for any adverse
+                            outcomes, disputes, disagreements, emotional distress, or other negative consequences that may arise
+                            from connections made through our service. You assume all risks associated with meeting, interacting,
+                            and being matched with other users.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">User Responsibility</h4>
+                        <p class="text-sm">
+                            You are solely responsible for your interactions with other users, including exercising good judgment,
+                            taking appropriate safety precautions when meeting in person, and conducting yourself respectfully.
+                            We strongly encourage you to meet new connections in public places and inform friends or family of your plans.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">No Professional Relationship Advice</h4>
+                        <p class="text-sm">
+                            This service does not provide professional counseling, therapy, or relationship advice. Our matching
+                            algorithm is designed for social connection purposes only and should not be considered a substitute
+                            for professional mental health or social services.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">Accuracy of Information</h4>
+                        <p class="text-sm">
+                            While we encourage users to provide accurate information, we cannot verify the truthfulness or
+                            completeness of user profiles and are not liable for any misrepresentations made by users.
+                        </p>
+                    </div>
+
+                    <p class="text-sm font-semibold mt-6 pt-4 border-t border-gray-300">
+                        By continuing to use this platform, you acknowledge that you have read, understood, and agree to this disclaimer.
+                    </p>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                <div class="flex items-start space-x-3">
+                    <input type="checkbox" id="agree_checkbox" name="agree_disclaimer" required
+                           class="mt-1 h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary">
+                    <label for="agree_checkbox" class="text-text-primary">
+                        I have read, understood, and agree to the disclaimer and terms of service outlined above.
+                    </label>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="submit" id="agree-btn"
+                            class="px-8 py-3 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        I Agree - Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enable/disable submit button based on checkbox
+document.getElementById('agree_checkbox').addEventListener('change', function() {
+    document.getElementById('agree-btn').disabled = !this.checked;
+});
+</script>
+{% endblock %}

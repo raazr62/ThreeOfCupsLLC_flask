@@ -423,6 +423,12 @@ def about():
 def services():
     return render_template('services.html')
 
+# Privacy Policy route
+@app.route('/privacy')
+@beta_access_required
+def privacy():
+    return render_template('privacy.html')
+
 # Register route
 @app.route('/register', methods=['GET', 'POST'])
 @beta_access_required
@@ -856,6 +862,36 @@ def assessment():
 @login_required
 def assessment_thank_you():
     return render_template('assessment_thank_you.html')
+
+# Disclaimer page - standalone page for agreeing to terms
+@app.route('/disclaimer', methods=['GET', 'POST'])
+@login_required
+def disclaimer():
+    # If already agreed, redirect to dashboard
+    if current_user.disclaimer_agreed:
+        return redirect(url_for('user_dashboard'))
+
+    if request.method == 'POST':
+        if request.form.get('agree_disclaimer'):
+            # Mark user as having agreed to disclaimer
+            current_user.disclaimer_agreed = True
+            current_user.disclaimer_agreed_at = datetime.utcnow()
+            db.session.commit()
+            return redirect(url_for('user_dashboard'))
+        else:
+            flash('You must agree to the terms to continue.')
+
+    return render_template('disclaimer.html')
+
+# API endpoint for agreeing to disclaimer from dashboard modal
+@app.route('/api/agree_disclaimer', methods=['POST'])
+@login_required
+def api_agree_disclaimer():
+    """API endpoint for users to agree to disclaimer from the dashboard modal"""
+    current_user.disclaimer_agreed = True
+    current_user.disclaimer_agreed_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'success': True})
 
 # Admin dashboard route - main overview
 @app.route('/admin')
@@ -1819,12 +1855,16 @@ def user_dashboard():
             Event.date_time < cutoff_time
         ).order_by(Event.date_time.desc()).all() if rsvp_event_ids else []
 
+    # Show disclaimer modal if user has completed assessment but hasn't agreed to disclaimer
+    show_disclaimer_modal = user_assessment is not None and not current_user.disclaimer_agreed
+
     return render_template('user_dashboard.html',
                          matched_users=matched_users,
                          results_data=results_data,
                          email_verified=current_user.email_verified,
                          upcoming_rsvp_events=upcoming_rsvp_events,
-                         past_rsvp_events=past_rsvp_events)
+                         past_rsvp_events=past_rsvp_events,
+                         show_disclaimer_modal=show_disclaimer_modal)
 
 # API endpoint for viewing match email content in modal
 @app.route('/api/match_email/<int:match_id>')

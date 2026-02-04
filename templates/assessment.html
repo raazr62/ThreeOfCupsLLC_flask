@@ -5,8 +5,8 @@
     <div class="max-w-3xl mx-auto">
 
         <div class="dark-card rounded-2xl shadow-2xl p-8">
-            <!-- Progress Bar -->
-            <div class="mb-8">
+            <!-- Progress Bar (hidden during disclaimer) -->
+            <div id="progress-container" class="mb-8 {% if not current_user.disclaimer_agreed %}hidden{% endif %}">
                 <div class="flex justify-between text-sm text-text-accent mb-2">
                     <span>Question <span id="current-question">1</span> of <span id="total-questions">62</span></span>
                     <span><span id="progress-percent">1</span>% Complete</span>
@@ -16,11 +16,95 @@
                 </div>
             </div>
 
-            <form method="POST" id="assessment-form" class="space-y-6">
+            <!-- Disclaimer Screen (shown first if not agreed) -->
+            <div id="disclaimer-screen" class="{% if current_user.disclaimer_agreed %}hidden{% endif %}">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-text-primary font-brand">Service Agreement</h3>
+                    <p class="text-text-accent mt-2">Please read and agree to the following terms before continuing</p>
+                </div>
+
+                <div class="bg-warm-cream rounded-xl p-6 mb-6 max-h-[45vh] overflow-y-auto border border-gray-200">
+                    <h4 class="text-lg font-bold text-text-primary mb-4">DISCLAIMER</h4>
+
+                    <p class="text-text-primary mb-4 text-sm">
+                        The friendship matchmaking services provided through this platform are operated by Three of Cups LLC.
+                        By using this service, you acknowledge and agree to the following:
+                    </p>
+
+                    <div class="space-y-4 text-text-primary">
+                        <div>
+                            <h5 class="font-semibold text-primary text-sm mb-1">No Guarantee of Compatibility</h5>
+                            <p class="text-xs">
+                                While we strive to create meaningful matches based on the information you provide, we cannot guarantee
+                                that every match will result in a successful or lasting friendship. Compatibility depends on numerous
+                                factors beyond our control, and not all matches will be perfect or meet your expectations.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="font-semibold text-primary text-sm mb-1">Limited Liability</h5>
+                            <p class="text-xs">
+                                Three of Cups LLC and its operators, employees, and affiliates are not responsible for any adverse
+                                outcomes, disputes, disagreements, emotional distress, or other negative consequences that may arise
+                                from connections made through our service. You assume all risks associated with meeting, interacting,
+                                and being matched with other users.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="font-semibold text-primary text-sm mb-1">User Responsibility</h5>
+                            <p class="text-xs">
+                                You are solely responsible for your interactions with other users, including exercising good judgment,
+                                taking appropriate safety precautions when meeting in person, and conducting yourself respectfully.
+                                We strongly encourage you to meet new connections in public places and inform friends or family of your plans.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="font-semibold text-primary text-sm mb-1">No Professional Relationship Advice</h5>
+                            <p class="text-xs">
+                                This service does not provide professional counseling, therapy, or relationship advice. Our matching
+                                algorithm is designed for social connection purposes only and should not be considered a substitute
+                                for professional mental health or social services.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="font-semibold text-primary text-sm mb-1">Accuracy of Information</h5>
+                            <p class="text-xs">
+                                While we encourage users to provide accurate information, we cannot verify the truthfulness or
+                                completeness of user profiles and are not liable for any misrepresentations made by users.
+                            </p>
+                        </div>
+
+                        <p class="text-xs font-semibold mt-4 pt-4 border-t border-gray-300">
+                            By continuing to use this platform, you acknowledge that you have read, understood, and agree to this disclaimer.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-3 mb-6">
+                    <input type="checkbox" id="disclaimer_checkbox"
+                           class="mt-1 h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary">
+                    <label for="disclaimer_checkbox" class="text-text-primary text-sm">
+                        I have read, understood, and agree to the disclaimer and terms of service outlined above.
+                    </label>
+                </div>
+
+                <div class="flex justify-center">
+                    <button type="button" id="disclaimer-agree-btn" onclick="agreeToDisclaimer()"
+                            class="px-8 py-3 bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        I Agree - Continue to Assessment
+                    </button>
+                </div>
+            </div>
+
+            <form method="POST" id="assessment-form" class="space-y-6 {% if not current_user.disclaimer_agreed %}hidden{% endif %}">
                 <!-- Hidden container to store all answers -->
                 <div id="hidden-answers" style="display: none;"></div>
 
-                <!-- Welcome screen (shown first) -->
+                <!-- Welcome screen (shown first after disclaimer) -->
                 <div id="welcome-screen" class="min-h-[400px]">
                     <div class="text-center space-y-6 py-8">
                         <h3 class="text-2xl font-bold text-text-primary font-brand">welcome to three of cups, llc!</h3>
@@ -105,6 +189,48 @@
 </style>
 
 <script>
+// Disclaimer agreement handling
+const disclaimerCheckbox = document.getElementById('disclaimer_checkbox');
+const disclaimerAgreeBtn = document.getElementById('disclaimer-agree-btn');
+
+if (disclaimerCheckbox) {
+    disclaimerCheckbox.addEventListener('change', function() {
+        disclaimerAgreeBtn.disabled = !this.checked;
+    });
+}
+
+function agreeToDisclaimer() {
+    const btn = document.getElementById('disclaimer-agree-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    fetch('/api/agree_disclaimer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Hide disclaimer, show assessment form and progress bar
+            document.getElementById('disclaimer-screen').classList.add('hidden');
+            document.getElementById('assessment-form').classList.remove('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+        } else {
+            alert('Failed to save agreement. Please try again.');
+            btn.disabled = false;
+            btn.textContent = 'I Agree - Continue to Assessment';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to save agreement. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'I Agree - Continue to Assessment';
+    });
+}
+
 const assessmentData = {
     "sections": [
         {

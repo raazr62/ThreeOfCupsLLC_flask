@@ -33,6 +33,8 @@ class User(UserMixin, db.Model):
     profile_incomplete = db.Column(db.Boolean, default=False)
     profile_completion_token = db.Column(db.String(100), nullable=True)
     profile_completion_token_expiry = db.Column(db.DateTime, nullable=True)
+    disclaimer_agreed = db.Column(db.Boolean, default=False)  # Track if user agreed to service disclaimer
+    disclaimer_agreed_at = db.Column(db.DateTime, nullable=True)  # When user agreed to disclaimer
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
