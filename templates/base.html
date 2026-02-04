@@ -275,6 +275,7 @@
                     <a href="{{ url_for('about') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">about</a>
                     <a href="{{ url_for('services') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">services</a>
                     <a href="{{ url_for('events') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">events</a>
+                    <a href="{{ url_for('contact') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">contact</a>
                     {% if not current_user.is_authenticated or current_user.can_access_assessment() %}
                         <a href="{{ url_for('assessment') }}" class="text-text-accent hover:text-secondary transition-colors px-3 py-2 rounded-md text-sm font-medium font-sans">assessment</a>
                     {% endif %}
@@ -339,6 +340,7 @@
                 <a href="{{ url_for('about') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">about</a>
                 <a href="{{ url_for('services') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">services</a>
                 <a href="{{ url_for('events') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">events</a>
+                <a href="{{ url_for('contact') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">contact</a>
                 {% if not current_user.is_authenticated or current_user.can_access_assessment() %}
                     <a href="{{ url_for('assessment') }}" class="block text-text-accent hover:text-secondary hover:bg-accent/10 transition-colors px-3 py-2 rounded-md text-base font-medium font-sans">assessment</a>
                 {% endif %}

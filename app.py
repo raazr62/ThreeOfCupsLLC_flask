@@ -429,6 +429,86 @@ def services():
 def privacy():
     return render_template('privacy.html')
 
+# Contact route
+@app.route('/contact')
+@beta_access_required
+def contact():
+    return render_template('contact.html')
+
+@app.route('/submit-contact', methods=['POST'])
+@beta_access_required
+def submit_contact():
+    contact_name = sanitize_input(request.form.get('contact_name', ''), max_length=200, allow_newlines=False)
+    contact_email = sanitize_email(request.form.get('contact_email', ''))
+    contact_message = sanitize_input(request.form.get('contact_message', ''), max_length=5000, allow_newlines=True)
+
+    if not contact_name or not contact_email or not contact_message:
+        flash('Please fill out all fields.')
+        return redirect(url_for('contact'))
+
+    # Send contact form email to admin
+    try:
+        from flask_mail import Message
+        msg = Message(
+            subject=f'Contact Form: Message from {contact_name}',
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=['admin@threeofcupsllc.com'],
+            reply_to=contact_email
+        )
+
+        msg.body = f"""
+Contact Form Submission
+
+From: {contact_name}
+Email: {contact_email}
+
+Message:
+{contact_message}
+
+---
+Submitted on: {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+        """
+
+        msg.html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #FF9B9B, #FFB88C); padding: 20px; border-radius: 8px 8px 0 0;">
+                <h2 style="color: white; margin: 0;">Contact Form Submission</h2>
+            </div>
+            <div style="background-color: #FAF7F5; padding: 30px; border-radius: 0 0 8px 8px;">
+                <div style="background-color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="color: #FF9B9B; margin-top: 0;">Contact Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Name:</td>
+                            <td style="padding: 8px 0;">{contact_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; color: #666;">Email:</td>
+                            <td style="padding: 8px 0;"><a href="mailto:{contact_email}" style="color: #FFB88C;">{contact_email}</a></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #FFB88C; margin-top: 0;">Message:</h4>
+                    <p style="line-height: 1.6; color: #333; white-space: pre-wrap;">{contact_message}</p>
+                </div>
+
+                <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                    Submitted on {datetime.utcnow().strftime('%B %d, %Y at %I:%M %p UTC')}
+                </p>
+            </div>
+        </div>
+        """
+
+        mail.send(msg)
+        flash('Thank you for reaching out! We\'ll get back to you soon.')
+    except Exception as e:
+        print(f"Error sending contact form email: {e}")
+        flash('There was an issue sending your message. Please try again or email us directly at admin@threeofcupsllc.com')
+
+    return redirect(url_for('contact'))
+
 # Register route
 @app.route('/register', methods=['GET', 'POST'])
 @beta_access_required
