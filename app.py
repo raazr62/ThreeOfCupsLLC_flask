@@ -11,8 +11,8 @@ from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn
-from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email
+from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange
+from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email, send_rsvp_admin_notification, send_rsvp_cancellation_admin_notification
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
     sanitize_location, sanitize_json_data, setup_template_filters,
@@ -1171,8 +1171,11 @@ def admin_assessments():
     emotional_availability_min = request.args.get('emotional_availability_min', type=int)
     recharge_style = request.args.get('recharge_style', '').strip()
 
-    # Payment status filter
+    # Payment status filter (hidden from UI but kept for backward compat)
     payment_status_filter = request.args.getlist('payment_status')
+
+    # RSVP event filter
+    rsvp_event_filter = request.args.get('rsvp_event', type=int)
 
     # Build base query with join to User table
     query = Assessment.query.join(User, Assessment.user_id == User.id)
@@ -1221,6 +1224,11 @@ def admin_assessments():
     elif 'not_paid' in payment_status_filter and 'paid' not in payment_status_filter:
         query = query.filter(User.has_paid == False)
     # If both or neither selected, show all users
+
+    # Apply RSVP event filter
+    if rsvp_event_filter:
+        rsvp_user_ids = [r.user_id for r in EventRSVP.query.filter_by(event_id=rsvp_event_filter).all()]
+        query = query.filter(User.id.in_(rsvp_user_ids))
 
     # Get all assessments matching the filters (we'll filter by assessment answers in Python)
     all_matching_assessments = query.all()
@@ -1325,6 +1333,9 @@ def admin_assessments():
             'insights': insights
         })
 
+    # Events for RSVP filter dropdown
+    all_events = Event.query.order_by(Event.date_time.desc()).all()
+
     return render_template('admin_assessments.html',
                          assessments_with_scores=assessments_with_scores,
                          users=users,
@@ -1343,7 +1354,9 @@ def admin_assessments():
                          pronouns_filter=pronouns_filter,
                          emotional_availability_min=emotional_availability_min,
                          recharge_style=recharge_style,
-                         payment_status_filter=payment_status_filter)
+                         payment_status_filter=payment_status_filter,
+                         all_events=all_events,
+                         rsvp_event_filter=rsvp_event_filter)
 
 # Admin matches page
 @app.route('/admin/matches')
@@ -2511,13 +2524,16 @@ def admin_events():
         # Sanitize inputs
         title = sanitize_input(request.form.get('title', ''), max_length=200, allow_newlines=False)
         description = sanitize_input(request.form.get('description', ''), max_length=5000)
-        location = sanitize_location(request.form.get('location', ''))
+        location = sanitize_location(request.form.get('location', ''))  # venue name
+        address = sanitize_input(request.form.get('address', ''), max_length=500, allow_newlines=False)
         date_time_str = request.form.get('date_time', '').strip()
+        end_time_str = request.form.get('end_time', '').strip()
         price_str = request.form.get('price', '').strip()
+        price_max_str = request.form.get('price_max', '').strip()
 
         # Validate required fields
         if not all([title, description, location, date_time_str]):
-            flash('Title, description, location, and date/time are required.')
+            flash('Title, description, venue name, and date/time are required.')
             return redirect(url_for('admin_events'))
 
         # Parse date/time
@@ -2527,16 +2543,39 @@ def admin_events():
             flash('Invalid date/time format.')
             return redirect(url_for('admin_events'))
 
-        # Parse price (optional)
+        # Parse end time (optional)
+        end_time = None
+        if end_time_str:
+            try:
+                end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Invalid end time format.')
+                return redirect(url_for('admin_events'))
+
+        # Parse price / energy exchange (optional)
         price = None
         if price_str:
             try:
                 price = float(price_str)
                 if price < 0:
-                    flash('Price cannot be negative.')
+                    flash('Energy exchange amount cannot be negative.')
                     return redirect(url_for('admin_events'))
             except ValueError:
-                flash('Invalid price format.')
+                flash('Invalid energy exchange format.')
+                return redirect(url_for('admin_events'))
+
+        price_max = None
+        if price_max_str:
+            try:
+                price_max = float(price_max_str)
+                if price_max < 0:
+                    flash('Energy exchange max cannot be negative.')
+                    return redirect(url_for('admin_events'))
+                if price is not None and price_max < price:
+                    flash('Energy exchange max must be greater than the minimum.')
+                    return redirect(url_for('admin_events'))
+            except ValueError:
+                flash('Invalid energy exchange max format.')
                 return redirect(url_for('admin_events'))
 
         # Parse max_capacity (optional)
@@ -2577,8 +2616,11 @@ def admin_events():
             title=title,
             description=description,
             location=location,
+            address=address if address else None,
             date_time=event_date_time,
+            end_time=end_time,
             price=price,
+            price_max=price_max,
             picture=picture,
             max_capacity=max_capacity,
             created_by=current_user.id
@@ -2609,6 +2651,14 @@ def admin_events():
         check_in_with_rsvp_count = sum(1 for c in check_ins if c.had_rsvp)
         walk_in_count = sum(1 for c in check_ins if not c.had_rsvp)
 
+        # Energy exchanges (persist even after RSVP cancellation)
+        energy_exchanges_raw = EventEnergyExchange.query.filter_by(event_id=event.id).all()
+        energy_exchange_data = []
+        for ee in energy_exchanges_raw:
+            ee_user = User.query.get(ee.user_id)
+            if ee_user:
+                energy_exchange_data.append({'exchange': ee, 'user': ee_user})
+
         event_data.append({
             'event': event,
             'rsvp_count': len(rsvps),
@@ -2616,7 +2666,8 @@ def admin_events():
             'check_ins': check_ins,
             'check_in_count': check_in_count,
             'check_in_with_rsvp_count': check_in_with_rsvp_count,
-            'walk_in_count': walk_in_count
+            'walk_in_count': walk_in_count,
+            'energy_exchanges': energy_exchange_data
         })
 
     # Events are considered past 1 hour after their start time
@@ -2628,9 +2679,14 @@ def admin_events():
 @app.route('/api/event/rsvp/<int:event_id>', methods=['POST'])
 @login_required
 def rsvp_event(event_id):
+    """Handle RSVP for free events. Paid events use /api/event/rsvp/confirm/<id>."""
     event = Event.query.get(event_id)
     if not event:
         return jsonify({'error': 'Event not found'}), 404
+
+    # If event has a price, client should use the confirm endpoint (after modal)
+    if event.price:
+        return jsonify({'error': 'This event requires energy exchange confirmation', 'requires_payment': True}), 400
 
     # Check if user already RSVP'd
     existing_rsvp = EventRSVP.query.filter_by(
@@ -2654,9 +2710,72 @@ def rsvp_event(event_id):
 
     return jsonify({'success': True, 'message': 'RSVP successful!'})
 
+
+@app.route('/api/event/rsvp/confirm/<int:event_id>', methods=['POST'])
+@login_required
+def rsvp_event_confirm(event_id):
+    """Finalize RSVP for paid events after user confirms energy exchange was sent."""
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    # Check if user already RSVP'd
+    existing_rsvp = EventRSVP.query.filter_by(
+        event_id=event_id,
+        user_id=current_user.id
+    ).first()
+
+    if existing_rsvp:
+        return jsonify({'error': 'Already RSVP\'d to this event'}), 400
+
+    # Check if event is at capacity
+    if event.max_capacity:
+        current_rsvp_count = EventRSVP.query.filter_by(event_id=event_id).count()
+        if current_rsvp_count >= event.max_capacity:
+            return jsonify({'error': 'This event is at capacity'}), 400
+
+    # Create RSVP
+    rsvp = EventRSVP(event_id=event_id, user_id=current_user.id)
+    db.session.add(rsvp)
+
+    # Record energy exchange indication (idempotent - only create if not already there)
+    existing_ee = EventEnergyExchange.query.filter_by(
+        event_id=event_id,
+        user_id=current_user.id
+    ).first()
+    if not existing_ee:
+        ee = EventEnergyExchange(event_id=event_id, user_id=current_user.id)
+        db.session.add(ee)
+
+    db.session.commit()
+
+    # Build energy exchange display string for admin email
+    if event.price and event.price_max:
+        ee_amount = f'${event.price:.2f} - ${event.price_max:.2f}'
+    elif event.price:
+        ee_amount = f'${event.price:.2f}'
+    else:
+        ee_amount = None
+
+    # Notify admin
+    try:
+        send_rsvp_admin_notification(
+            mail,
+            app.config['MAIL_DEFAULT_SENDER'],
+            'admin@threeofcupsllc.com',
+            current_user,
+            event,
+            energy_exchange_amount=ee_amount
+        )
+    except Exception as e:
+        print(f"Admin RSVP notification error: {e}")
+
+    return jsonify({'success': True, 'message': 'RSVP confirmed! We can\'t wait to see you!'})
+
 @app.route('/api/event/unrsvp/<int:event_id>', methods=['POST'])
 @login_required
 def unrsvp_event(event_id):
+    event = Event.query.get(event_id)
     rsvp = EventRSVP.query.filter_by(
         event_id=event_id,
         user_id=current_user.id
@@ -2668,7 +2787,50 @@ def unrsvp_event(event_id):
     db.session.delete(rsvp)
     db.session.commit()
 
+    # Notify admin of cancellation
+    if event:
+        try:
+            send_rsvp_cancellation_admin_notification(
+                mail,
+                app.config['MAIL_DEFAULT_SENDER'],
+                'admin@threeofcupsllc.com',
+                current_user,
+                event
+            )
+        except Exception as e:
+            print(f"Admin cancellation notification error: {e}")
+
     return jsonify({'success': True, 'message': 'RSVP removed successfully!'})
+
+
+@app.route('/api/admin/event/<int:event_id>/energy-exchange/confirm', methods=['POST'])
+@login_required
+def confirm_energy_exchange(event_id):
+    """Admin confirms an energy exchange payment for a specific user."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
+    user_id = data.get('user_id')
+    amount = data.get('amount')
+    notes = data.get('notes', '')
+
+    ee = EventEnergyExchange.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if not ee:
+        return jsonify({'error': 'Energy exchange record not found'}), 404
+
+    ee.confirmed = True
+    if amount is not None:
+        try:
+            ee.amount_confirmed = float(amount)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid amount'}), 400
+    if notes:
+        ee.admin_notes = notes[:500]
+
+    db.session.commit()
+    return jsonify({'success': True})
+
 
 @app.route('/admin/events/<int:event_id>/delete', methods=['POST'])
 @login_required
@@ -2708,13 +2870,16 @@ def edit_event(event_id):
         # Sanitize inputs
         title = sanitize_input(request.form.get('title', ''), max_length=200, allow_newlines=False)
         description = sanitize_input(request.form.get('description', ''), max_length=5000)
-        location = sanitize_location(request.form.get('location', ''))
+        location = sanitize_location(request.form.get('location', ''))  # venue name
+        address = sanitize_input(request.form.get('address', ''), max_length=500, allow_newlines=False)
         date_time_str = request.form.get('date_time', '').strip()
+        end_time_str = request.form.get('end_time', '').strip()
         price_str = request.form.get('price', '').strip()
+        price_max_str = request.form.get('price_max', '').strip()
 
         # Validate required fields
         if not all([title, description, location, date_time_str]):
-            flash('Title, description, location, and date/time are required.')
+            flash('Title, description, venue name, and date/time are required.')
             return redirect(url_for('edit_event', event_id=event_id))
 
         # Parse date/time
@@ -2724,16 +2889,39 @@ def edit_event(event_id):
             flash('Invalid date/time format.')
             return redirect(url_for('edit_event', event_id=event_id))
 
-        # Parse price (optional)
+        # Parse end time (optional)
+        end_time = None
+        if end_time_str:
+            try:
+                end_time = datetime.strptime(end_time_str, '%Y-%m-%dT%H:%M')
+            except ValueError:
+                flash('Invalid end time format.')
+                return redirect(url_for('edit_event', event_id=event_id))
+
+        # Parse price / energy exchange (optional)
         price = None
         if price_str:
             try:
                 price = float(price_str)
                 if price < 0:
-                    flash('Price cannot be negative.')
+                    flash('Energy exchange amount cannot be negative.')
                     return redirect(url_for('edit_event', event_id=event_id))
             except ValueError:
-                flash('Invalid price format.')
+                flash('Invalid energy exchange format.')
+                return redirect(url_for('edit_event', event_id=event_id))
+
+        price_max = None
+        if price_max_str:
+            try:
+                price_max = float(price_max_str)
+                if price_max < 0:
+                    flash('Energy exchange max cannot be negative.')
+                    return redirect(url_for('edit_event', event_id=event_id))
+                if price is not None and price_max < price:
+                    flash('Energy exchange max must be greater than the minimum.')
+                    return redirect(url_for('edit_event', event_id=event_id))
+            except ValueError:
+                flash('Invalid energy exchange max format.')
                 return redirect(url_for('edit_event', event_id=event_id))
 
         # Parse max_capacity (optional)
@@ -2788,8 +2976,11 @@ def edit_event(event_id):
         event.title = title
         event.description = description
         event.location = location
+        event.address = address if address else None
         event.date_time = event_date_time
+        event.end_time = end_time
         event.price = price
+        event.price_max = price_max
         event.picture = picture
         event.max_capacity = max_capacity
 

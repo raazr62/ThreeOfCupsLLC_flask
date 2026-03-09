@@ -165,11 +165,14 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    location = db.Column(db.String(500), nullable=False)
+    location = db.Column(db.String(500), nullable=False)  # Venue/place name
+    address = db.Column(db.String(500), nullable=True)    # Street address (optional)
     date_time = db.Column(db.DateTime, nullable=False)
-    price = db.Column(db.Float, nullable=True)  # NULL means free
+    end_time = db.Column(db.DateTime, nullable=True)      # Optional end time
+    price = db.Column(db.Float, nullable=True)            # NULL means free; single price or range min
+    price_max = db.Column(db.Float, nullable=True)        # If set, price is a range (price–price_max)
     picture = db.Column(db.String(200), nullable=True)
-    max_capacity = db.Column(db.Integer, nullable=True)  # NULL means unlimited capacity
+    max_capacity = db.Column(db.Integer, nullable=True)   # NULL means unlimited capacity
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     kiosk_token = db.Column(db.String(100), nullable=True)
@@ -198,3 +201,18 @@ class EventCheckIn(db.Model):
 
     # Unique constraint - one check-in per user per event
     __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_checkin'),)
+
+class EventEnergyExchange(db.Model):
+    """Tracks energy exchange (payment) indications for paid events.
+    Persists even if the user later cancels their RSVP."""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    indicated_at = db.Column(db.DateTime, default=datetime.utcnow)  # When user indicated payment sent
+    confirmed = db.Column(db.Boolean, default=False)                 # Admin confirmed receipt
+    amount_confirmed = db.Column(db.Float, nullable=True)            # Amount admin confirmed
+    admin_notes = db.Column(db.String(500), nullable=True)
+
+    # Relationships
+    event = db.relationship('Event', backref='energy_exchanges')
+    user = db.relationship('User', backref='energy_exchanges')

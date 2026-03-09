@@ -85,23 +85,47 @@
                     </div>
 
                     <div>
-                        <label for="location" class="block text-sm font-semibold text-text-primary mb-2">Location *</label>
+                        <label for="location" class="block text-sm font-semibold text-text-primary mb-2">Venue Name *</label>
                         <input type="text" id="location" name="location" required
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                               placeholder="e.g., The Cozy Corner Café">
+                    </div>
+
+                    <div>
+                        <label for="address" class="block text-sm font-semibold text-text-primary mb-2">Address (optional)</label>
+                        <input type="text" id="address" name="address"
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                                placeholder="e.g., 123 Main St, City, State">
                     </div>
 
                     <div>
-                        <label for="date_time" class="block text-sm font-semibold text-text-primary mb-2">Date & Time *</label>
+                        <label for="date_time" class="block text-sm font-semibold text-text-primary mb-2">Start Date & Time *</label>
                         <input type="datetime-local" id="date_time" name="date_time" required
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
                     </div>
 
                     <div>
-                        <label for="price" class="block text-sm font-semibold text-text-primary mb-2">Price (leave empty for free)</label>
-                        <input type="number" id="price" name="price" step="0.01" min="0"
-                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
-                               placeholder="0.00">
+                        <label for="end_time" class="block text-sm font-semibold text-text-primary mb-2">End Time (optional)</label>
+                        <input type="datetime-local" id="end_time" name="end_time"
+                               class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-text-primary mb-2">Energy Exchange (leave empty for free)</label>
+                        <div class="flex gap-2 items-center">
+                            <div class="flex-1">
+                                <input type="number" id="price" name="price" step="0.01" min="0"
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                                       placeholder="Amount (or min)">
+                            </div>
+                            <span class="text-text-accent font-semibold">–</span>
+                            <div class="flex-1">
+                                <input type="number" id="price_max" name="price_max" step="0.01" min="0"
+                                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                                       placeholder="Max (range only)">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Enter just the first field for a single price, or both for a range.</p>
                     </div>
 
                     <div>
@@ -153,10 +177,20 @@
                                             <h4 class="text-xl font-bold text-text-primary mb-2">{{ data.event.title|safe }}</h4>
 
                                             <div class="space-y-1 text-sm text-text-accent mb-3">
-                                                <p><strong>When:</strong> {{ data.event.date_time.strftime('%A, %B %d, %Y at %I:%M %p') }}</p>
-                                                <p><strong>Where:</strong> {{ data.event.location|safe }}</p>
-                                                <p><strong>Price:</strong>
-                                                    {% if data.event.price %}
+                                                <p><strong>When:</strong>
+                                                    {{ data.event.date_time.strftime('%A, %B %d, %Y at %I:%M %p') }}
+                                                    {% if data.event.end_time %}
+                                                        – {{ data.event.end_time.strftime('%I:%M %p') }}
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Venue:</strong> {{ data.event.location|safe }}</p>
+                                                {% if data.event.address %}
+                                                <p><strong>Address:</strong> {{ data.event.address|safe }}</p>
+                                                {% endif %}
+                                                <p><strong>Energy Exchange:</strong>
+                                                    {% if data.event.price and data.event.price_max %}
+                                                        ${{ "%.2f"|format(data.event.price) }} – ${{ "%.2f"|format(data.event.price_max) }}
+                                                    {% elif data.event.price %}
                                                         ${{ "%.2f"|format(data.event.price) }}
                                                     {% else %}
                                                         Free
@@ -177,7 +211,7 @@
                                                 {% endif %}
                                             </div>
 
-                                            <p class="text-text-accent text-sm mb-3">{{ data.event.description|safe }}</p>
+                                            <p class="text-text-accent text-sm mb-3" style="white-space: pre-wrap;">{{ data.event.description|safe }}</p>
 
                                             <div class="mt-4 flex gap-4 flex-wrap">
                                                 {% if data.rsvp_users %}
@@ -191,6 +225,13 @@
                                                     <button onclick="toggleCheckIns({{ data.event.id }})"
                                                             class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
                                                         View Check-Ins ({{ data.check_in_count }})
+                                                    </button>
+                                                {% endif %}
+
+                                                {% if data.energy_exchanges %}
+                                                    <button onclick="toggleEnergyExchanges({{ data.event.id }})"
+                                                            class="text-purple-600 font-semibold text-sm hover:text-purple-800 transition-colors">
+                                                        View Energy Exchanges ({{ data.energy_exchanges|length }})
                                                     </button>
                                                 {% endif %}
                                             </div>
@@ -251,6 +292,60 @@
                                                                 <span class="text-xs text-gray-500">
                                                                     {{ checkin.checked_in_at.strftime('%I:%M %p') }}
                                                                 </span>
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if data.energy_exchanges %}
+                                                <div id="exchanges-{{ data.event.id }}" class="hidden mt-3 bg-purple-50 rounded-lg p-4">
+                                                    <h5 class="font-semibold text-text-primary mb-3">Energy Exchanges:</h5>
+                                                    <p class="text-xs text-gray-500 mb-3">These records persist even if someone cancels their RSVP. Check Venmo @threeofcupsllc to verify payments.</p>
+                                                    <ul class="space-y-3">
+                                                        {% for item in data.energy_exchanges %}
+                                                            <li class="bg-white rounded-lg p-3 shadow-sm border border-purple-100" id="ee-row-{{ item.exchange.id }}">
+                                                                <div class="flex items-start justify-between gap-4">
+                                                                    <div>
+                                                                        <p class="text-sm font-semibold text-text-primary">
+                                                                            {{ item.user.first_name }} {{ item.user.last_name }}
+                                                                        </p>
+                                                                        <p class="text-xs text-gray-500">{{ item.user.email }}</p>
+                                                                        <p class="text-xs text-gray-500 mt-1">
+                                                                            Indicated: {{ item.exchange.indicated_at.strftime('%b %d, %Y at %I:%M %p') }}
+                                                                        </p>
+                                                                        {% if item.exchange.confirmed %}
+                                                                            <span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded-full font-semibold">
+                                                                                Confirmed: ${{ "%.2f"|format(item.exchange.amount_confirmed) if item.exchange.amount_confirmed else "amount not set" }}
+                                                                            </span>
+                                                                            {% if item.exchange.admin_notes %}
+                                                                                <p class="text-xs text-gray-500 mt-1">Notes: {{ item.exchange.admin_notes }}</p>
+                                                                            {% endif %}
+                                                                        {% else %}
+                                                                            <span class="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full">
+                                                                                Pending confirmation
+                                                                            </span>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    {% if not item.exchange.confirmed %}
+                                                                        <div class="flex-shrink-0">
+                                                                            <div class="flex flex-col gap-1">
+                                                                                <input type="number" step="0.01" min="0"
+                                                                                       id="ee-amount-{{ item.exchange.id }}"
+                                                                                       placeholder="Amount $"
+                                                                                       class="w-28 px-2 py-1 text-sm border border-gray-300 rounded">
+                                                                                <input type="text"
+                                                                                       id="ee-notes-{{ item.exchange.id }}"
+                                                                                       placeholder="Notes (opt)"
+                                                                                       class="w-28 px-2 py-1 text-sm border border-gray-300 rounded">
+                                                                                <button onclick="confirmEnergyExchange({{ data.event.id }}, {{ item.user.id }}, {{ item.exchange.id }})"
+                                                                                        class="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold rounded transition-all">
+                                                                                    Confirm
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    {% endif %}
+                                                                </div>
                                                             </li>
                                                         {% endfor %}
                                                     </ul>
@@ -336,6 +431,36 @@
     function toggleCheckIns(eventId) {
         const checkInsDiv = document.getElementById(`checkins-${eventId}`);
         checkInsDiv.classList.toggle('hidden');
+    }
+
+    function toggleEnergyExchanges(eventId) {
+        const div = document.getElementById(`exchanges-${eventId}`);
+        div.classList.toggle('hidden');
+    }
+
+    function confirmEnergyExchange(eventId, userId, eeId) {
+        const amount = document.getElementById(`ee-amount-${eeId}`).value;
+        const notes = document.getElementById(`ee-notes-${eeId}`).value;
+
+        if (!amount) {
+            alert('Please enter the confirmed amount.');
+            return;
+        }
+
+        fetch(`/api/admin/event/${eventId}/energy-exchange/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, amount: parseFloat(amount), notes: notes })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Failed to confirm');
+            }
+        })
+        .catch(() => alert('Error confirming energy exchange'));
     }
 
     function generateKioskLink(eventId) {

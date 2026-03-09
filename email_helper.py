@@ -245,6 +245,112 @@ def send_email_change_verification(mail, sender, new_email, user_first_name, ver
         return False
 
 
+def send_rsvp_admin_notification(mail, sender, admin_email, user, event, energy_exchange_amount=None):
+    """
+    Notify admin when a user finalizes an RSVP (with energy exchange confirmation).
+
+    Args:
+        mail: Flask-Mail instance
+        sender: Email sender address
+        admin_email: Admin recipient email
+        user: User who RSVPd
+        event: Event object
+        energy_exchange_amount: String describing the energy exchange amount (e.g. "$25" or "$20-$35")
+
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        subject = f"New RSVP: {user.first_name} {user.last_name} for {event.title}"
+
+        body_text = (
+            f"A new RSVP has been submitted!\n\n"
+            f"Event: {event.title}\n"
+            f"Date: {event.date_time.strftime('%A, %B %d, %Y at %I:%M %p')}\n\n"
+            f"Attendee: {user.first_name} {user.last_name}\n"
+            f"Email: {user.email}\n\n"
+        )
+
+        if energy_exchange_amount:
+            body_text += (
+                f"Energy Exchange: {energy_exchange_amount}\n"
+                f"The attendee has indicated they sent their energy exchange via Venmo @threeofcupsllc.\n\n"
+                f"Please check Venmo, verify the transaction, and update their payment status in the admin events page.\n"
+            )
+
+        body_html = (
+            f"<h2>New RSVP!</h2>"
+            f"<p><strong>Event:</strong> {event.title}</p>"
+            f"<p><strong>Date:</strong> {event.date_time.strftime('%A, %B %d, %Y at %I:%M %p')}</p>"
+            f"<hr>"
+            f"<p><strong>Attendee:</strong> {user.first_name} {user.last_name}</p>"
+            f"<p><strong>Email:</strong> {user.email}</p>"
+        )
+
+        if energy_exchange_amount:
+            body_html += (
+                f"<p><strong>Energy Exchange:</strong> {energy_exchange_amount}</p>"
+                f"<p>The attendee has indicated they sent their energy exchange via Venmo @threeofcupsllc.</p>"
+                f"<p><strong>Please check Venmo, verify the transaction, and update their payment status "
+                f"in the admin events page (View Energy Exchanges).</strong></p>"
+            )
+
+        msg = Message(subject, sender=sender, recipients=[admin_email])
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending RSVP admin notification: {e}")
+        return False
+
+
+def send_rsvp_cancellation_admin_notification(mail, sender, admin_email, user, event):
+    """
+    Notify admin when a user cancels their RSVP.
+
+    Args:
+        mail: Flask-Mail instance
+        sender: Email sender address
+        admin_email: Admin recipient email
+        user: User who cancelled
+        event: Event object
+
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        subject = f"RSVP Cancelled: {user.first_name} {user.last_name} for {event.title}"
+
+        body_text = (
+            f"An RSVP has been cancelled.\n\n"
+            f"Event: {event.title}\n"
+            f"Date: {event.date_time.strftime('%A, %B %d, %Y at %I:%M %p')}\n\n"
+            f"Attendee: {user.first_name} {user.last_name}\n"
+            f"Email: {user.email}\n"
+        )
+
+        body_html = (
+            f"<h2>RSVP Cancelled</h2>"
+            f"<p><strong>Event:</strong> {event.title}</p>"
+            f"<p><strong>Date:</strong> {event.date_time.strftime('%A, %B %d, %Y at %I:%M %p')}</p>"
+            f"<hr>"
+            f"<p><strong>Attendee:</strong> {user.first_name} {user.last_name}</p>"
+            f"<p><strong>Email:</strong> {user.email}</p>"
+        )
+
+        msg = Message(subject, sender=sender, recipients=[admin_email])
+        msg.body = sanitize_email_content(body_text)
+        msg.html = sanitize_email_content(body_html)
+        msg.charset = 'utf-8'
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending RSVP cancellation admin notification: {e}")
+        return False
+
+
 def send_walk_in_welcome_email(mail, sender, user, event_title, profile_completion_url):
     """
     Send welcome email to walk-in attendee with profile completion link.
