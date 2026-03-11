@@ -33,7 +33,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # HTTPS only in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to session cookie
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour session timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = 10800  # 3 hour session timeout
 
 # Email configuration
 # NOTE: Update these with your actual email credentials in .env file
