@@ -81,23 +81,26 @@
             </select>
         </div>
 
-        <!-- Filter Options -->
-        <div class="mb-6 flex justify-center">
-            <div class="bg-white rounded-xl shadow-md p-1 flex space-x-1">
-                <a href="{{ url_for('admin_assessments', filter='unreviewed') }}"
-                   class="px-4 py-2 {% if filter_status == 'unreviewed' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
-                    Unreviewed
-                </a>
-                <a href="{{ url_for('admin_assessments', filter='reviewed') }}"
-                   class="px-4 py-2 {% if filter_status == 'reviewed' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
-                    Reviewed
-                </a>
-                <a href="{{ url_for('admin_assessments', filter='all') }}"
-                   class="px-4 py-2 {% if filter_status == 'all' %}bg-gradient-to-r from-primary to-secondary text-white{% else %}text-gray-600 hover:bg-gray-100{% endif %} rounded-lg font-medium transition-all duration-300">
-                    All
-                </a>
+        <!-- Quick Search -->
+        <form id="assessmentSearchForm" method="GET" action="{{ url_for('admin_assessments') }}" class="mb-4">
+            <input type="hidden" name="filter" value="{{ filter_status }}">
+            <div class="relative">
+                <input type="text" id="assessmentSearchInput" name="search" value="{{ search_query or '' }}"
+                       placeholder="Quick search by name or email..."
+                       autocomplete="off"
+                       class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 pl-11 pr-10 text-sm shadow focus:outline-none focus:ring-2 focus:ring-primary">
+                <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button type="button" id="assessmentSearchClear"
+                        onclick="document.getElementById('assessmentSearchInput').value=''; document.getElementById('assessmentSearchForm').submit();"
+                        class="absolute right-3 top-3 text-gray-300 hover:text-gray-500 transition-colors {% if not search_query %}hidden{% endif %}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-        </div>
+        </form>
 
         <!-- Advanced Filters -->
         <div class="mb-6 bg-white rounded-2xl shadow-lg p-6">
@@ -454,6 +457,16 @@
                                         </svg>
                                     </div>
 
+                                    <!-- Event RSVP Filter -->
+                                    <select id="user-event-{{ item.assessment.id }}"
+                                            onchange="filterAndRenderUsers('{{ item.assessment.id }}')"
+                                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                        <option value="">All users (no event filter)</option>
+                                        {% for ev in all_events %}
+                                            <option value="{{ ev.id }}">{{ ev.date_time.strftime('%b %d, %Y') }} – {{ ev.title }}</option>
+                                        {% endfor %}
+                                    </select>
+
                                     <div id="user-grid-{{ item.assessment.id }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {% for user in users %}
                                             {% if user.id != item.assessment.user_id and not user.is_admin %}
@@ -463,7 +476,8 @@
                                                     <!-- Already Matched with This User - Display Only -->
                                                     <div class="user-card-item relative"
                                                          data-name="{{ (user.first_name ~ ' ' ~ user.last_name)|lower }}"
-                                                         data-email="{{ user.email|lower }}">
+                                                         data-email="{{ user.email|lower }}"
+                                                         data-rsvp-events="{{ user_rsvp_events.get(user.id, [])|join(',') }}">
                                                         <div class="p-3 border-2 border-gray-300 rounded-lg bg-gray-100 opacity-60 cursor-not-allowed">
                                                             <div class="flex items-center space-x-3">
                                                                 {% if user.profile_picture %}
@@ -487,7 +501,8 @@
                                                     <!-- Available User -->
                                                     <div class="user-card-item relative"
                                                          data-name="{{ (user.first_name ~ ' ' ~ user.last_name)|lower }}"
-                                                         data-email="{{ user.email|lower }}">
+                                                         data-email="{{ user.email|lower }}"
+                                                         data-rsvp-events="{{ user_rsvp_events.get(user.id, [])|join(',') }}">
                                                         <label for="user_{{ item.assessment.id }}_{{ user.id }}" class="cursor-pointer block">
                                                             <input type="radio"
                                                                    name="matched_user_id"
@@ -1173,6 +1188,20 @@ document.getElementById('comparisonModal').addEventListener('click', function(e)
     }
 });
 
+// ── Quick search: debounced auto-submit + live clear button ─────────────────
+(function() {
+    var input = document.getElementById('assessmentSearchInput');
+    var clearBtn = document.getElementById('assessmentSearchClear');
+    var form = document.getElementById('assessmentSearchForm');
+    if (!input) return;
+    var timer;
+    input.addEventListener('input', function() {
+        clearBtn.classList.toggle('hidden', this.value === '');
+        clearTimeout(timer);
+        timer = setTimeout(function() { form.submit(); }, 400);
+    });
+}());
+
 // ── User grid search & pagination ──────────────────────────────────────────
 const USER_PAGE_SIZE = 12;
 const userPaginationState = {};
@@ -1187,16 +1216,21 @@ function filterAndRenderUsers(assessmentId) {
 
 function renderUsers(assessmentId) {
     const searchInput = document.getElementById('user-search-' + assessmentId);
+    const eventSelect = document.getElementById('user-event-' + assessmentId);
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const eventFilter = eventSelect ? eventSelect.value : '';
     const grid = document.getElementById('user-grid-' + assessmentId);
     if (!grid) return;
 
     const allCards = Array.from(grid.querySelectorAll('.user-card-item'));
 
     const filtered = allCards.filter(card => {
-        if (!query) return true;
-        return (card.dataset.name || '').includes(query) ||
-               (card.dataset.email || '').includes(query);
+        const matchesSearch = !query ||
+            (card.dataset.name || '').includes(query) ||
+            (card.dataset.email || '').includes(query);
+        const matchesEvent = !eventFilter ||
+            (card.dataset.rsvpEvents || '').split(',').includes(eventFilter);
+        return matchesSearch && matchesEvent;
     });
 
     allCards.forEach(card => { card.style.display = 'none'; });

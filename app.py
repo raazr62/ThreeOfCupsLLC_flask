@@ -1160,7 +1160,7 @@ def admin_assessments():
     per_page = request.args.get('per_page', 10, type=int)
 
     # Filter parameters
-    filter_status = request.args.get('filter', 'unreviewed')
+    filter_status = request.args.get('filter', 'all')
     search_query = request.args.get('search', '').strip()
     age_min = request.args.get('age_min', type=int)
     age_max = request.args.get('age_max', type=int)
@@ -1268,6 +1268,11 @@ def admin_assessments():
 
     users = User.query.order_by(User.last_name, User.first_name).all()
 
+    # Build user -> RSVPed event IDs mapping for match-with-user event filter
+    user_rsvp_events = {}
+    for rsvp in EventRSVP.query.all():
+        user_rsvp_events.setdefault(rsvp.user_id, []).append(rsvp.event_id)
+
     # Count how many matches each user has by querying the Match table
     # Also track which users are matched with each assessment's user (to prevent duplicate matches)
     # And track which users were previously matched but are now unmatched (for warnings)
@@ -1356,7 +1361,8 @@ def admin_assessments():
                          recharge_style=recharge_style,
                          payment_status_filter=payment_status_filter,
                          all_events=all_events,
-                         rsvp_event_filter=rsvp_event_filter)
+                         rsvp_event_filter=rsvp_event_filter,
+                         user_rsvp_events=user_rsvp_events)
 
 # Admin matches page
 @app.route('/admin/matches')
@@ -1366,22 +1372,50 @@ def admin_matches():
         flash('Access denied.')
         return redirect(url_for('login'))
 
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    search_query = request.args.get('search', '').strip()
+
     # Get finalized matches from Match table
     finalized_matches = Match.query.filter_by(status='finalized').all()
 
     # Build match data with user information
-    matches_data = []
+    all_matches_data = []
     for match in finalized_matches:
         user1 = User.query.get(match.user1_id)
         user2 = User.query.get(match.user2_id)
         if user1 and user2:
-            matches_data.append({
+            all_matches_data.append({
                 'match': match,
                 'user1': user1,
                 'user2': user2
             })
 
-    return render_template('admin_matches.html', matches_data=matches_data)
+    # Apply search filter
+    if search_query:
+        q = search_query.lower()
+        all_matches_data = [
+            d for d in all_matches_data
+            if q in (d['user1'].first_name + ' ' + d['user1'].last_name).lower()
+            or q in (d['user2'].first_name + ' ' + d['user2'].last_name).lower()
+            or q in d['user1'].first_name.lower()
+            or q in d['user1'].last_name.lower()
+            or q in d['user2'].first_name.lower()
+            or q in d['user2'].last_name.lower()
+        ]
+
+    total_items = len(all_matches_data)
+    total_pages = max(1, (total_items + per_page - 1) // per_page)
+    start_idx = (page - 1) * per_page
+    matches_data = all_matches_data[start_idx:start_idx + per_page]
+
+    return render_template('admin_matches.html',
+                         matches_data=matches_data,
+                         page=page,
+                         per_page=per_page,
+                         total_pages=total_pages,
+                         total_items=total_items,
+                         search_query=search_query)
 
 # Admin unmatch endpoint
 @app.route('/admin/unmatch/<int:match_id>', methods=['POST'])
