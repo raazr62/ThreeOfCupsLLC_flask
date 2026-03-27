@@ -1266,7 +1266,7 @@ def admin_assessments():
     end_idx = start_idx + per_page
     assessments = filtered_assessments[start_idx:end_idx]
 
-    users = User.query.all()
+    users = User.query.order_by(User.last_name, User.first_name).all()
 
     # Count how many matches each user has by querying the Match table
     # Also track which users are matched with each assessment's user (to prevent duplicate matches)

@@ -442,14 +442,28 @@
                                         Match with User:
                                     </label>
 
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-64 overflow-y-auto">
+                                    <!-- Search Input -->
+                                    <div class="relative">
+                                        <input type="text"
+                                               id="user-search-{{ item.assessment.id }}"
+                                               placeholder="Search by name or email..."
+                                               oninput="filterAndRenderUsers('{{ item.assessment.id }}')"
+                                               class="w-full border border-gray-300 rounded-lg px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                        <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                        </svg>
+                                    </div>
+
+                                    <div id="user-grid-{{ item.assessment.id }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {% for user in users %}
                                             {% if user.id != item.assessment.user_id and not user.is_admin %}
                                                 {% set is_already_matched = item.assessment.user_id in user_existing_matches and user.id in user_existing_matches[item.assessment.user_id] %}
 
                                                 {% if is_already_matched %}
                                                     <!-- Already Matched with This User - Display Only -->
-                                                    <div class="relative">
+                                                    <div class="user-card-item relative"
+                                                         data-name="{{ (user.first_name ~ ' ' ~ user.last_name)|lower }}"
+                                                         data-email="{{ user.email|lower }}">
                                                         <div class="p-3 border-2 border-gray-300 rounded-lg bg-gray-100 opacity-60 cursor-not-allowed">
                                                             <div class="flex items-center space-x-3">
                                                                 {% if user.profile_picture %}
@@ -471,7 +485,9 @@
                                                     </div>
                                                 {% else %}
                                                     <!-- Available User -->
-                                                    <div class="relative">
+                                                    <div class="user-card-item relative"
+                                                         data-name="{{ (user.first_name ~ ' ' ~ user.last_name)|lower }}"
+                                                         data-email="{{ user.email|lower }}">
                                                         <label for="user_{{ item.assessment.id }}_{{ user.id }}" class="cursor-pointer block">
                                                             <input type="radio"
                                                                    name="matched_user_id"
@@ -519,6 +535,9 @@
                                             {% endif %}
                                         {% endfor %}
                                     </div>
+
+                                    <!-- User Pagination Controls -->
+                                    <div id="user-pagination-{{ item.assessment.id }}" class="flex items-center justify-between text-sm mt-2"></div>
 
                                     <button type="submit"
                                             class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl">
@@ -1152,6 +1171,92 @@ document.getElementById('comparisonModal').addEventListener('click', function(e)
     if (e.target === this) {
         closeComparison();
     }
+});
+
+// ── User grid search & pagination ──────────────────────────────────────────
+const USER_PAGE_SIZE = 12;
+const userPaginationState = {};
+
+function filterAndRenderUsers(assessmentId) {
+    if (!userPaginationState[assessmentId]) {
+        userPaginationState[assessmentId] = { page: 1 };
+    }
+    userPaginationState[assessmentId].page = 1;
+    renderUsers(assessmentId);
+}
+
+function renderUsers(assessmentId) {
+    const searchInput = document.getElementById('user-search-' + assessmentId);
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const grid = document.getElementById('user-grid-' + assessmentId);
+    if (!grid) return;
+
+    const allCards = Array.from(grid.querySelectorAll('.user-card-item'));
+
+    const filtered = allCards.filter(card => {
+        if (!query) return true;
+        return (card.dataset.name || '').includes(query) ||
+               (card.dataset.email || '').includes(query);
+    });
+
+    allCards.forEach(card => { card.style.display = 'none'; });
+
+    const state = userPaginationState[assessmentId] || { page: 1 };
+    const totalPages = Math.max(1, Math.ceil(filtered.length / USER_PAGE_SIZE));
+    const page = Math.max(1, Math.min(state.page, totalPages));
+    userPaginationState[assessmentId] = { page };
+
+    const start = (page - 1) * USER_PAGE_SIZE;
+    filtered.slice(start, start + USER_PAGE_SIZE).forEach(card => { card.style.display = ''; });
+
+    renderUserPagination(assessmentId, page, totalPages, filtered.length);
+}
+
+function changeUserPage(assessmentId, delta) {
+    if (!userPaginationState[assessmentId]) {
+        userPaginationState[assessmentId] = { page: 1 };
+    }
+    userPaginationState[assessmentId].page += delta;
+    renderUsers(assessmentId);
+}
+
+function renderUserPagination(assessmentId, page, totalPages, total) {
+    const container = document.getElementById('user-pagination-' + assessmentId);
+    if (!container) return;
+
+    if (total === 0) {
+        container.innerHTML = '<span class="text-gray-500 italic">No users match your search.</span>';
+        return;
+    }
+    if (totalPages <= 1) {
+        container.innerHTML = `<span class="text-gray-500">${total} user${total !== 1 ? 's' : ''}</span>`;
+        return;
+    }
+
+    const start = (page - 1) * USER_PAGE_SIZE + 1;
+    const end = Math.min(page * USER_PAGE_SIZE, total);
+    const prevDisabled = page <= 1;
+    const nextDisabled = page >= totalPages;
+
+    container.innerHTML = `
+        <button onclick="changeUserPage('${assessmentId}', -1)" ${prevDisabled ? 'disabled' : ''}
+                class="px-3 py-1 rounded border text-sm ${prevDisabled ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer'}">
+            &laquo; Prev
+        </button>
+        <span class="text-gray-600">${start}–${end} of ${total}</span>
+        <button onclick="changeUserPage('${assessmentId}', 1)" ${nextDisabled ? 'disabled' : ''}
+                class="px-3 py-1 rounded border text-sm ${nextDisabled ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer'}">
+            Next &raquo;
+        </button>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[id^="user-grid-"]').forEach(function(grid) {
+        const assessmentId = grid.id.replace('user-grid-', '');
+        userPaginationState[assessmentId] = { page: 1 };
+        renderUsers(assessmentId);
+    });
 });
 </script>
 
