@@ -177,6 +177,7 @@ class Event(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     kiosk_token = db.Column(db.String(100), nullable=True)
     kiosk_token_expiry = db.Column(db.DateTime, nullable=True)
+    is_matchmaking = db.Column(db.Boolean, default=False)  # Enable matchmaking whiteboard
 
 class EventRSVP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -201,6 +202,37 @@ class EventCheckIn(db.Model):
 
     # Unique constraint - one check-in per user per event
     __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_checkin'),)
+
+class EventBoardCard(db.Model):
+    """A positionable card instance on the matchmaking whiteboard.
+    A user can have multiple instances (duplicates) to aid visual layout."""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id  = db.Column(db.Integer, db.ForeignKey('user.id'),  nullable=False)
+    pos_x    = db.Column(db.Float, default=100.0)
+    pos_y    = db.Column(db.Float, default=100.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class EventMatchmakingDraft(db.Model):
+    """Draft match pairs for an event matchmaking session (whiteboard state)."""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user1_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user2_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    card1_id = db.Column(db.Integer, db.ForeignKey('event_board_card.id'), nullable=True)
+    card2_id = db.Column(db.Integer, db.ForeignKey('event_board_card.id'), nullable=True)
+    notes = db.Column(db.Text, nullable=True)  # JSON: {"similarities": "...", "challenges": "..."}
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class EventUserBoardPosition(db.Model):
+    """Persists user card positions on the matchmaking whiteboard."""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    pos_x = db.Column(db.Float, default=100.0)
+    pos_y = db.Column(db.Float, default=100.0)
+    __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_user_pos'),)
 
 class EventEnergyExchange(db.Model):
     """Tracks energy exchange (payment) indications for paid events.

@@ -422,6 +422,16 @@
                                             Past
                                         {% endif %}
                                     </span>
+                                    <button onclick="toggleMatchmaking({{ data.event.id }}, {{ data.event.is_matchmaking | tojson }})"
+                                            id="matchmaking-btn-{{ data.event.id }}"
+                                            class="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 {% if data.event.is_matchmaking %}bg-pink-500 hover:bg-pink-600 text-white{% else %}bg-gray-100 hover:bg-gray-200 text-gray-600{% endif %}">
+                                        {% if data.event.is_matchmaking %}Matchmaking: On{% else %}Matchmaking: Off{% endif %}
+                                    </button>
+                                    <a href="{{ url_for('admin_event_matchmaking', event_id=data.event.id) }}"
+                                       id="matchmaking-link-{{ data.event.id }}"
+                                       class="px-4 py-2 bg-pink-400 hover:bg-pink-500 text-white text-sm font-semibold rounded-lg transition-all duration-300 text-center {% if not data.event.is_matchmaking %}hidden{% endif %}">
+                                        Open Board →
+                                    </a>
                                     <button onclick="generateKioskLink({{ data.event.id }})"
                                             class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-lg transition-all duration-300">
                                         Generate Kiosk Link
@@ -686,6 +696,23 @@
 
     function closeKioskModal(eventId) {
         document.getElementById(`kioskModal-${eventId}`).classList.add('hidden');
+    }
+
+    async function toggleMatchmaking(eventId, currentState) {
+        const resp = await fetch(`/api/admin/event/${eventId}/toggle-matchmaking`, {method: 'POST'});
+        if (!resp.ok) { alert('Failed to update matchmaking status'); return; }
+        const data = await resp.json();
+        const btn = document.getElementById(`matchmaking-btn-${eventId}`);
+        const link = document.getElementById(`matchmaking-link-${eventId}`);
+        if (data.is_matchmaking) {
+            btn.textContent = 'Matchmaking: On';
+            btn.className = btn.className.replace('bg-gray-100 hover:bg-gray-200 text-gray-600', 'bg-pink-500 hover:bg-pink-600 text-white');
+            link.classList.remove('hidden');
+        } else {
+            btn.textContent = 'Matchmaking: Off';
+            btn.className = btn.className.replace('bg-pink-500 hover:bg-pink-600 text-white', 'bg-gray-100 hover:bg-gray-200 text-gray-600');
+            link.classList.add('hidden');
+        }
     }
 
     // Get current datetime for the datetime-local input

@@ -1,0 +1,1392 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Override base body padding so whiteboard fills the viewport */
+    #matchmaking-root {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 72px);
+        overflow: hidden;
+    }
+
+    #canvas-container {
+        flex: 1;
+        overflow: auto;
+        background-color: #f3f4f6;
+        background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
+        background-size: 28px 28px;
+        position: relative;
+    }
+
+    /* canvas-outer acts as the scroll-size placeholder; it grows with zoom */
+    #canvas-outer {
+        position: relative;
+        width: 3200px;
+        height: 2200px;
+        flex-shrink: 0;
+    }
+
+    #canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3200px;
+        height: 2200px;
+        transform-origin: top left;
+    }
+
+    #connections-svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3200px;
+        height: 2200px;
+        pointer-events: none;
+        overflow: visible;
+    }
+
+    #connections-svg .match-group {
+        pointer-events: all;
+        cursor: pointer;
+    }
+
+    .user-card {
+        position: absolute;
+        width: 210px;
+        background: #ffffff;
+        border-radius: 14px;
+        border: 2px solid #e5e7eb;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        cursor: grab;
+        user-select: none;
+        z-index: 10;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .user-card:active { cursor: grabbing; }
+    .user-card.selected {
+        border-color: #FF9B9B;
+        box-shadow: 0 0 0 3px rgba(255,155,155,0.25), 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .user-card.connect-first {
+        border-color: #FFB88C;
+        box-shadow: 0 0 0 3px rgba(255,184,140,0.3), 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .user-card.connect-target:hover {
+        border-color: #86efac;
+        box-shadow: 0 0 0 3px rgba(134,239,172,0.3), 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #side-panel {
+        width: 300px;
+        min-width: 220px;
+        max-width: 760px;
+        flex-shrink: 0;
+        background: #fff;
+        border-left: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+    }
+
+    #sidebar-resize-handle {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        cursor: col-resize;
+        z-index: 20;
+        background: transparent;
+        transition: background 0.15s;
+    }
+    #sidebar-resize-handle:hover,
+    #sidebar-resize-handle.active {
+        background: rgba(255,155,155,0.5);
+    }
+
+    #side-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 6px 10px 0 10px;
+        flex-shrink: 0;
+        gap: 4px;
+    }
+
+    #side-panel-inner {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 16px 16px 16px;
+    }
+
+    /* Comparison grid: 1-col when narrow, 2-col when sidebar is wide */
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    #side-panel.wide .comparison-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .connect-mode-active #canvas-container {
+        cursor: crosshair;
+    }
+
+    /* Connection line delete button */
+    .match-group .dot-normal   { transition: opacity 0.12s; }
+    .match-group .delete-bg    { opacity: 0; transition: opacity 0.12s; }
+    .match-group .delete-x     { opacity: 0; transition: opacity 0.12s; pointer-events: none; }
+    .match-group:hover .dot-normal  { opacity: 0; }
+    .match-group:hover .delete-bg   { opacity: 1; }
+    .match-group:hover .delete-x    { opacity: 1; }
+</style>
+
+<div id="matchmaking-root">
+
+    <!-- ── Toolbar ─────────────────────────────────────────────────────── -->
+    <div class="bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-3 flex-shrink-0 shadow-sm">
+        <a href="{{ url_for('admin_events') }}"
+           class="text-gray-400 hover:text-gray-600 text-sm font-medium flex items-center gap-1 transition-colors">
+            ← Events
+        </a>
+        <div class="w-px h-5 bg-gray-200"></div>
+        <h1 class="font-semibold text-gray-800 text-sm truncate max-w-xs">{{ event.title }}</h1>
+        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Matchmaking Board</span>
+
+        <div class="ml-auto flex items-center gap-2">
+            <span id="connect-hint" class="text-xs text-gray-400 hidden">Click a card, then another to pair them</span>
+
+            <!-- Zoom controls -->
+            <div class="flex items-center gap-0.5 border border-gray-200 rounded-lg overflow-hidden">
+                <button onclick="zoomOut()"
+                        title="Zoom out (Ctrl+scroll)"
+                        class="px-2.5 py-1.5 text-gray-500 hover:bg-gray-100 transition-colors text-sm font-bold leading-none">−</button>
+                <button id="zoom-display"
+                        onclick="setZoom(1.0)"
+                        title="Click to reset to 100%"
+                        class="px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors min-w-[44px] text-center">100%</button>
+                <button onclick="zoomIn()"
+                        title="Zoom in (Ctrl+scroll)"
+                        class="px-2.5 py-1.5 text-gray-500 hover:bg-gray-100 transition-colors text-sm font-bold leading-none">+</button>
+            </div>
+
+            <!-- Reset board -->
+            <button onclick="resetBoard()"
+                    title="Remove all matches and re-arrange cards in a clean grid"
+                    class="px-3 py-1.5 bg-gray-100 hover:bg-red-50 hover:text-red-500 hover:border-red-200 border border-transparent text-gray-500 text-sm font-medium rounded-lg transition-colors">
+                ↺ Reset Board
+            </button>
+
+            <button id="connect-btn"
+                    onclick="toggleConnectMode()"
+                    class="px-3 py-1.5 bg-pink-400 hover:bg-pink-500 text-white text-sm font-semibold rounded-lg transition-colors">
+                + Connect Users
+            </button>
+        </div>
+    </div>
+
+    <!-- ── How to use (collapsible) ───────────────────────────────────── -->
+    <div class="bg-indigo-50 border-b border-indigo-100 flex-shrink-0">
+        <button onclick="toggleHelp()"
+                class="w-full text-left px-4 py-2.5 flex items-center justify-between text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors">
+            <span>&#9432; How to use this board</span>
+            <span id="help-chevron" class="text-indigo-400 text-xs">▼ expand</span>
+        </button>
+        <div id="help-content" class="hidden px-5 pb-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-indigo-800">
+            <div>
+                <p class="font-semibold mb-0.5">Moving cards</p>
+                <p class="text-indigo-600 text-xs">Drag any user card to rearrange. Positions auto-save after each drop.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Viewing assessments</p>
+                <p class="text-indigo-600 text-xs">Click a user card to see their full assessment in the right panel.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Creating a match</p>
+                <p class="text-indigo-600 text-xs">Click <strong>"+ Connect Users"</strong>, then click card A, then card B. A connection line appears.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Adding notes</p>
+                <p class="text-indigo-600 text-xs">Click any connection line (or its midpoint dot) to open the Similarities &amp; Challenges notes panel.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Removing a match</p>
+                <p class="text-indigo-600 text-xs">Open the match notes panel → "Remove Match", or click × next to the pair in the sidebar list, or hover a connection line and click ×.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Zoom</p>
+                <p class="text-indigo-600 text-xs">Use the <strong>− / +</strong> buttons in the toolbar or <strong>Ctrl+scroll</strong> to zoom. Click the percentage to reset to 100%.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Reset Board</p>
+                <p class="text-indigo-600 text-xs">Click <strong>"↺ Reset Board"</strong> to delete all draft matches and re-arrange cards in a clean grid.</p>
+            </div>
+            <div>
+                <p class="font-semibold mb-0.5">Finalizing</p>
+                <p class="text-indigo-600 text-xs">Click <strong>"Convert to Pending Matches"</strong> when ready. Pairs without an assessment are skipped.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Main area ───────────────────────────────────────────────────── -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Canvas -->
+        <div id="canvas-container">
+            <div id="canvas-outer">
+                <div id="canvas">
+                    <svg id="connections-svg"></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="side-panel">
+            <!-- Drag-to-resize handle on the left edge -->
+            <div id="sidebar-resize-handle" title="Drag to resize panel"
+                 onmousedown="startSidebarResize(event)"></div>
+
+            <!-- Expand / collapse toggle -->
+            <div id="side-panel-header">
+                <button onclick="toggleSidebarWide()"
+                        id="sidebar-expand-btn"
+                        title="Expand / collapse panel"
+                        class="text-gray-300 hover:text-gray-500 transition-colors text-xs px-1.5 py-0.5 rounded border border-gray-200 hover:border-gray-400">
+                    ⇔
+                </button>
+            </div>
+
+            <div id="side-panel-inner">
+                <p class="text-sm text-gray-400">Loading…</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"
+     style="opacity:0; transition: opacity 0.3s;"
+     class="fixed bottom-5 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 bg-gray-800 text-white pointer-events-none">
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants & state
+// ─────────────────────────────────────────────────────────────────────────────
+const EVENT_ID   = {{ event.id }};
+const CARD_W     = 210;
+const CARD_H     = 95;   // approx card height for line midpoint calc
+const CANVAS_W   = 3200;
+const CANVAS_H   = 2200;
+
+// Grid layout (used on first load and reset)
+const GRID_COLS    = 4;
+const GRID_COL_W   = 260;
+const GRID_ROW_H   = 135;
+const GRID_START_X = 60;
+const GRID_START_Y = 60;
+
+// Zoom
+let zoom         = 1.0;
+const ZOOM_MIN   = 0.25;
+const ZOOM_MAX   = 2.0;
+const ZOOM_STEP  = 0.1;
+
+let cards        = [];   // [{cardId, id (=userId), user_id, name, email, profile_picture, has_assessment, x, y, is_rsvp, instance_count}]
+let matches      = [];   // [{id, user1_id, user2_id, notes:{similarities,challenges}}]
+
+let selUserId    = null;
+let selMatchId   = null;
+let connectMode  = false;
+let connectFirst = null;
+
+let dragging     = null; // {cardId, offsetX, offsetY}
+let dragMoved    = false;
+let dragStartX   = 0;
+let dragStartY   = 0;
+const DRAG_THRESHOLD = 5; // px before a drag is considered a drag, not a click
+
+// Sidebar resize state
+let sidebarResizing  = false;
+let sidebarResStartX = 0;
+let sidebarResStartW = 300;
+const SIDEBAR_MIN_W  = 220;
+const SIDEBAR_MAX_W  = 760;
+const SIDEBAR_WIDE_W = 580; // width used by the ⇔ toggle
+
+let assessCache  = {};   // userId → assessment data
+let noteTimer    = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boot
+// ─────────────────────────────────────────────────────────────────────────────
+// Normalise a card object from the server so JS always uses camelCase cardId.
+function normalizeCard(c) { return { ...c, cardId: c.card_id ?? c.cardId }; }
+
+async function init() {
+    const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/data`);
+    if (!resp.ok) { toast('Failed to load board data', 'error'); return; }
+    const data = await resp.json();
+    cards   = data.cards.map(normalizeCard);
+    matches = data.matches;
+
+    // Auto-arrange on first open (all cards at default 100,100)
+    const allDefault = cards.length > 0 && cards.every(c => c.x === 100 && c.y === 100);
+    if (allDefault) {
+        applyGridPositions();
+        await saveAllPositions();
+    }
+
+    renderCards();
+    updateConnections();
+    renderSidebar();
+    setZoom(1.0); // initialise zoom display
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render: cards
+// ─────────────────────────────────────────────────────────────────────────────
+function renderCards() {
+    const canvas = document.getElementById('canvas');
+    canvas.querySelectorAll('.user-card').forEach(el => el.remove());
+    cards.forEach(c => canvas.appendChild(makeCard(c)));
+}
+
+function makeCard(card) {
+    const userId     = card.id; // card.id === card.user_id (backwards-compat)
+    const matchCount = matches.filter(m => m.user1_id === userId || m.user2_id === userId).length;
+    const initials   = card.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const isDupe     = card.instance_count > 1;
+
+    const el = document.createElement('div');
+    el.id        = `card-${card.cardId}`;
+    el.className = 'user-card';
+    el.style.left = `${card.x}px`;
+    el.style.top  = `${card.y}px`;
+
+    if (selUserId === userId)                el.classList.add('selected');
+    if (connectFirst?.cardId === card.cardId) el.classList.add('connect-first');
+    if (connectMode && connectFirst !== null && connectFirst.userId !== userId)
+        el.classList.add('connect-target');
+
+    const avatarHtml = card.profile_picture
+        ? `<img src="/static/${esc(card.profile_picture)}" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="">`
+        : `<div class="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">${esc(initials)}</div>`;
+
+    el.innerHTML = `
+        <div class="p-3">
+            <div class="flex items-center gap-2">
+                ${avatarHtml}
+                <div class="min-w-0 flex-1">
+                    <div class="font-semibold text-sm text-gray-800 truncate">${esc(card.name)}${isDupe ? ' <span class="text-gray-300 font-normal text-xs">(copy)</span>' : ''}</div>
+                    <div class="text-xs text-gray-400 truncate">${esc(card.email)}</div>
+                </div>
+            </div>
+            ${matchCount > 0
+                ? `<div class="mt-1.5 text-xs font-medium text-pink-400">${matchCount} match${matchCount !== 1 ? 'es' : ''}</div>`
+                : ''}
+            ${!card.has_assessment ? `<div class="mt-1 text-xs text-amber-500">⚠ No assessment</div>` : ''}
+            <div class="mt-2 flex gap-1.5 card-actions">
+                <button data-action="dup" title="Duplicate card"
+                        class="flex-1 text-xs py-0.5 rounded border border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors">
+                    ⊕ Duplicate
+                </button>
+                <button data-action="remove" title="Remove card"
+                        class="flex-1 text-xs py-0.5 rounded border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-400 transition-colors">
+                    ✕ Remove
+                </button>
+            </div>
+        </div>`;
+
+    el.addEventListener('mousedown',  e => onCardMouseDown(e, card.cardId));
+    el.addEventListener('touchstart', e => onCardTouchStart(e, card.cardId), {passive: false});
+    el.addEventListener('click',      e => onCardClick(e, card.cardId, userId));
+
+    // Action buttons — stop propagation so they don't trigger card click/drag
+    el.querySelector('[data-action="dup"]').addEventListener('click', e => {
+        e.stopPropagation(); duplicateCard(card.cardId);
+    });
+    el.querySelector('[data-action="remove"]').addEventListener('click', e => {
+        e.stopPropagation(); removeCard(card.cardId, card.instance_count, card.name);
+    });
+    return el;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render: SVG connection lines
+// ─────────────────────────────────────────────────────────────────────────────
+function updateConnections() {
+    const svg = document.getElementById('connections-svg');
+    svg.innerHTML = '';
+
+    matches.forEach(match => {
+        // Use the specific card instance that created the match; fall back to first card for the user
+        const u1 = (match.card1_id ? cards.find(c => c.cardId === match.card1_id) : null)
+                   || cards.find(c => c.id === match.user1_id);
+        const u2 = (match.card2_id ? cards.find(c => c.cardId === match.card2_id) : null)
+                   || cards.find(c => c.id === match.user2_id);
+        if (!u1 || !u2) return;
+
+        const x1 = u1.x + CARD_W / 2,  y1 = u1.y + CARD_H / 2;
+        const x2 = u2.x + CARD_W / 2,  y2 = u2.y + CARD_H / 2;
+
+        // Perpendicular offset for a gentle arc
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.sqrt(dx*dx + dy*dy) || 1;
+        const off = Math.min(len * 0.25, 70);
+        const cx = (x1 + x2) / 2 - (dy / len) * off;
+        const cy = (y1 + y2) / 2 + (dx / len) * off;
+
+        const isSel  = selMatchId === match.id;
+        const stroke = isSel ? '#FF9B9B' : '#FFB88C';
+        const sw     = isSel ? 3 : 2;
+        const d      = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+
+        // Midpoint on quadratic bezier at t=0.5
+        const mx = 0.25*x1 + 0.5*cx + 0.25*x2;
+        const my = 0.25*y1 + 0.5*cy + 0.25*y2;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.classList.add('match-group');
+        g.addEventListener('click', e => { e.stopPropagation(); onMatchClick(match.id); });
+
+        // Visible curve
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('stroke', stroke);
+        path.setAttribute('stroke-width', sw);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke-linecap', 'round');
+
+        // Wide invisible hit area
+        const hit = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        hit.setAttribute('d', d);
+        hit.setAttribute('stroke', 'transparent');
+        hit.setAttribute('stroke-width', '18');
+        hit.setAttribute('fill', 'none');
+
+        // Midpoint dot (fades out on hover)
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', mx); dot.setAttribute('cy', my);
+        dot.setAttribute('r', isSel ? 7 : 5);
+        dot.setAttribute('fill', stroke);
+        dot.classList.add('dot-normal');
+
+        // Notes indicator badge (offset from midpoint)
+        const hasNotes = match.notes?.similarities || match.notes?.challenges;
+        if (hasNotes) {
+            const badge = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            badge.setAttribute('cx', mx + 10); badge.setAttribute('cy', my - 10);
+            badge.setAttribute('r', 4); badge.setAttribute('fill', '#6b7280');
+            badge.classList.add('dot-normal');
+            g.appendChild(badge);
+        }
+
+        // Delete button: white circle + red × (appears on hover)
+        const deleteBg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        deleteBg.setAttribute('cx', mx); deleteBg.setAttribute('cy', my);
+        deleteBg.setAttribute('r', 10);
+        deleteBg.setAttribute('fill', 'white');
+        deleteBg.setAttribute('stroke', '#ef4444');
+        deleteBg.setAttribute('stroke-width', '1.5');
+        deleteBg.classList.add('delete-bg');
+        deleteBg.style.cursor = 'pointer';
+        deleteBg.addEventListener('click', e => { e.stopPropagation(); deleteDraftMatch(match.id); });
+
+        const deleteX = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        deleteX.setAttribute('x', mx); deleteX.setAttribute('y', my);
+        deleteX.setAttribute('text-anchor', 'middle');
+        deleteX.setAttribute('dominant-baseline', 'central');
+        deleteX.setAttribute('fill', '#ef4444');
+        deleteX.setAttribute('font-size', '14');
+        deleteX.setAttribute('font-weight', 'bold');
+        deleteX.textContent = '×';
+        deleteX.classList.add('delete-x');
+
+        g.appendChild(path);
+        g.appendChild(hit);
+        g.appendChild(dot);
+        g.appendChild(deleteBg);
+        g.appendChild(deleteX);
+        svg.appendChild(g);
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Drag (mouse)
+// ─────────────────────────────────────────────────────────────────────────────
+function onCardMouseDown(e, cardId) {
+    dragMoved  = false;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    if (connectMode) return;
+    if (e.target.closest('.card-actions')) return; // let action buttons handle themselves
+    e.preventDefault();
+    const card      = cards.find(c => c.cardId === cardId);
+    const container = document.getElementById('canvas-container');
+    const rect      = container.getBoundingClientRect();
+    // Compute offset in canvas coordinates so zoom doesn't affect drag feel
+    dragging = {
+        cardId,
+        offsetX: (e.clientX - rect.left + container.scrollLeft) / zoom - (card?.x || 0),
+        offsetY: (e.clientY - rect.top  + container.scrollTop)  / zoom - (card?.y || 0),
+    };
+}
+
+document.addEventListener('mousemove', e => {
+    // Sidebar resize
+    if (sidebarResizing) {
+        const dx  = sidebarResStartX - e.clientX; // drag left → wider
+        const newW = Math.min(SIDEBAR_MAX_W, Math.max(SIDEBAR_MIN_W, sidebarResStartW + dx));
+        const panel = document.getElementById('side-panel');
+        panel.style.width = newW + 'px';
+        panel.classList.toggle('wide', newW >= SIDEBAR_WIDE_W);
+        return;
+    }
+    // Card drag
+    if (!dragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (Math.sqrt(dx*dx + dy*dy) > DRAG_THRESHOLD) dragMoved = true;
+    applyDrag(e.clientX, e.clientY);
+});
+
+document.addEventListener('mouseup', () => {
+    if (sidebarResizing) {
+        sidebarResizing = false;
+        document.getElementById('sidebar-resize-handle').classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        return;
+    }
+    if (dragging) {
+        if (dragMoved) savePosition(dragging.cardId);
+        dragging = null;
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Drag (touch)
+// ─────────────────────────────────────────────────────────────────────────────
+function onCardTouchStart(e, cardId) {
+    const touch = e.touches[0];
+    dragMoved  = false;
+    dragStartX = touch.clientX;
+    dragStartY = touch.clientY;
+    if (connectMode) return;
+    if (e.target.closest('.card-actions')) return;
+    e.preventDefault();
+    const card      = cards.find(c => c.cardId === cardId);
+    const container = document.getElementById('canvas-container');
+    const rect      = container.getBoundingClientRect();
+    dragging = {
+        cardId,
+        offsetX: (touch.clientX - rect.left + container.scrollLeft) / zoom - (card?.x || 0),
+        offsetY: (touch.clientY - rect.top  + container.scrollTop)  / zoom - (card?.y || 0),
+    };
+}
+
+document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - dragStartX;
+    const dy = touch.clientY - dragStartY;
+    if (Math.sqrt(dx*dx + dy*dy) > DRAG_THRESHOLD) dragMoved = true;
+    applyDrag(touch.clientX, touch.clientY);
+    e.preventDefault();
+}, {passive: false});
+
+document.addEventListener('touchend', () => {
+    if (dragging) {
+        if (dragMoved) savePosition(dragging.cardId);
+        dragging = null;
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared drag logic
+// ─────────────────────────────────────────────────────────────────────────────
+function applyDrag(clientX, clientY) {
+    const container = document.getElementById('canvas-container');
+    const rect = container.getBoundingClientRect();
+    const card = cards.find(c => c.cardId === dragging.cardId);
+    if (!card) return;
+    // Convert screen coords → canvas coords, then subtract capture offset
+    card.x = Math.max(0, (clientX - rect.left + container.scrollLeft) / zoom - dragging.offsetX);
+    card.y = Math.max(0, (clientY - rect.top  + container.scrollTop)  / zoom - dragging.offsetY);
+    const el = document.getElementById(`card-${dragging.cardId}`);
+    if (el) { el.style.left = `${card.x}px`; el.style.top = `${card.y}px`; }
+    updateConnections();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card click (select / connect)
+// ─────────────────────────────────────────────────────────────────────────────
+function onCardClick(e, cardId, userId) {
+    if (dragMoved) return;
+    if (e.target.closest('.card-actions')) return;
+
+    if (connectMode) {
+        if (connectFirst === null) {
+            connectFirst = { cardId, userId };
+            renderCards();
+        } else if (connectFirst.userId !== userId) {
+            const first = connectFirst;
+            connectFirst = null;
+            toggleConnectMode();
+            createDraftMatch(first.cardId, first.userId, cardId, userId);
+        } else {
+            // Clicked the same user again — deselect
+            connectFirst = null;
+            renderCards();
+        }
+        return;
+    }
+
+    selUserId  = (selUserId === userId) ? null : userId;
+    selMatchId = null;
+    renderCards();
+    updateConnections();
+    renderSidebar();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Match click
+// ─────────────────────────────────────────────────────────────────────────────
+function onMatchClick(matchId) {
+    selMatchId = matchId;
+    selUserId  = null;
+    renderCards();
+    updateConnections();
+    renderSidebar();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Canvas background click — deselect
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('canvas').addEventListener('click', e => {
+    if (e.target.id === 'canvas' || e.target.id === 'connections-svg') {
+        selUserId = null; selMatchId = null;
+        renderCards(); updateConnections(); renderSidebar();
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Connect mode toggle
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleConnectMode() {
+    connectMode  = !connectMode;
+    connectFirst = null;
+    const btn  = document.getElementById('connect-btn');
+    const hint = document.getElementById('connect-hint');
+    const root = document.getElementById('matchmaking-root');
+    if (connectMode) {
+        btn.textContent = '✕ Cancel Connect';
+        btn.classList.replace('bg-pink-400', 'bg-orange-400');
+        btn.classList.replace('hover:bg-pink-500', 'hover:bg-orange-500');
+        hint.classList.remove('hidden');
+        root.classList.add('connect-mode-active');
+    } else {
+        btn.textContent = '+ Connect Users';
+        btn.classList.replace('bg-orange-400', 'bg-pink-400');
+        btn.classList.replace('hover:bg-orange-500', 'hover:bg-pink-500');
+        hint.classList.add('hidden');
+        root.classList.remove('connect-mode-active');
+    }
+    renderCards();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API calls
+// ─────────────────────────────────────────────────────────────────────────────
+async function createDraftMatch(card1Id, user1Id, card2Id, user2Id) {
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/match`, {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:    JSON.stringify({user1_id: user1Id, user2_id: user2Id,
+                                    card1_id: card1Id, card2_id: card2Id}),
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+            matches.push(data);
+            selMatchId = data.id;
+            selUserId  = null;
+            renderCards();
+            updateConnections();
+            renderSidebar();
+            toast('Match created!');
+        } else if (resp.status === 409) {
+            toast('Already matched', 'error');
+            renderCards();
+        } else {
+            toast(data.error || 'Error creating match', 'error');
+        }
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+async function deleteDraftMatch(matchId) {
+    if (!confirm('Remove this draft match?')) return;
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/match/${matchId}`, {method: 'DELETE'});
+        if (resp.ok) {
+            matches = matches.filter(m => m.id !== matchId);
+            if (selMatchId === matchId) selMatchId = null;
+            renderCards();
+            updateConnections();
+            renderSidebar();
+            toast('Match removed');
+        }
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+function onNotesChange(matchId, field, value) {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    if (!match.notes) match.notes = {};
+    match.notes[field] = value;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => saveNotes(matchId), 800);
+}
+
+async function saveNotes(matchId) {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) return;
+    try {
+        await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/match/${matchId}`, {
+            method:  'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body:    JSON.stringify({notes: match.notes}),
+        });
+        toast('Saved', 'success', 1200);
+    } catch(err) {}
+}
+
+async function savePosition(cardId) {
+    const card = cards.find(c => c.cardId === cardId);
+    if (!card) return;
+    try {
+        await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/position`, {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:    JSON.stringify({card_id: cardId, x: card.x, y: card.y}),
+        });
+    } catch(err) {}
+}
+
+async function loadAssessment(userId) {
+    if (assessCache[userId] !== undefined) return assessCache[userId];
+    try {
+        const resp = await fetch(`/api/user_assessment/${userId}`);
+        const data = resp.ok ? await resp.json() : null;
+        assessCache[userId] = data;
+        return data;
+    } catch(err) {
+        assessCache[userId] = null;
+        return null;
+    }
+}
+
+async function finalizeMatches() {
+    if (matches.length === 0) return;
+    if (!confirm('Convert all draft matches to pending Match records?\n\nThey will appear in the Pending Matches section for email drafting.')) return;
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/finalize`, {method: 'POST'});
+        const data = await resp.json();
+        const lines = [];
+        if (data.created?.length)  lines.push(`✓ Created (${data.created.length}):\n  ${data.created.join('\n  ')}`);
+        if (data.errors?.length)   lines.push(`⚠ Issues:\n  ${data.errors.join('\n  ')}`);
+        alert(lines.join('\n\n') || 'Done!');
+        if (data.created?.length) {
+            window.location.href = "{{ url_for('admin_pending_matches') }}";
+        }
+    } catch(err) { alert('Network error during finalization.'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sidebar rendering
+// ─────────────────────────────────────────────────────────────────────────────
+function renderSidebar() {
+    if (selMatchId !== null) {
+        renderMatchPanel(selMatchId);
+    } else if (selUserId !== null) {
+        renderUserPanel(selUserId);
+    } else {
+        renderDefaultPanel();
+    }
+}
+
+function renderDefaultPanel() {
+    const inner = document.getElementById('side-panel-inner');
+    let html = `<h3 class="font-bold text-gray-700 text-sm uppercase tracking-wide mb-3">Draft Matches (${matches.length})</h3>`;
+
+    if (matches.length === 0) {
+        html += `<p class="text-sm text-gray-400 leading-relaxed">No matches yet.<br><br>
+            Click <strong class="text-gray-600">+ Connect Users</strong> in the toolbar, then click two user cards to pair them.</p>`;
+    } else {
+        html += `<div class="space-y-2">`;
+        matches.forEach(m => {
+            const u1 = cards.find(c => c.id === m.user1_id);
+            const u2 = cards.find(c => c.id === m.user2_id);
+            if (!u1 || !u2) return;
+            const hasNotes = m.notes?.similarities || m.notes?.challenges;
+            html += `
+                <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-gray-200
+                            hover:border-pink-300 cursor-pointer transition-colors"
+                     onclick="onMatchClick(${m.id})">
+                    <div class="min-w-0">
+                        <div class="text-sm text-gray-700 font-medium truncate">
+                            ${esc(u1.name.split(' ')[0])}
+                            <span class="text-gray-400 font-normal mx-1">↔</span>
+                            ${esc(u2.name.split(' ')[0])}
+                        </div>
+                        ${hasNotes ? `<div class="text-xs text-gray-400 mt-0.5">Has notes</div>` : ''}
+                    </div>
+                    <button onclick="event.stopPropagation(); deleteDraftMatch(${m.id})"
+                            class="text-gray-300 hover:text-red-400 transition-colors text-xl leading-none ml-2 flex-shrink-0">×</button>
+                </div>`;
+        });
+        html += `</div>
+            <div class="mt-5 pt-4 border-t border-gray-100">
+                <button onclick="finalizeMatches()"
+                        class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors">
+                    Convert to Pending Matches
+                </button>
+                <p class="text-xs text-gray-400 mt-1.5 text-center leading-relaxed">
+                    Creates match records for email drafting.<br>Only pairs with assessments are converted.
+                </p>
+            </div>`;
+    }
+
+    // Add User section — always shown at the bottom
+    html += `
+        <div class="mt-5 pt-4 border-t border-gray-100">
+            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Add User to Board</h4>
+            <div class="flex gap-2">
+                <input id="add-user-search" type="text" placeholder="Search by name…"
+                       oninput="filterAddUserList()"
+                       class="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-pink-300">
+                <button onclick="loadAddUserList()" id="add-user-load-btn"
+                        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition-colors">
+                    Load
+                </button>
+            </div>
+            <div id="add-user-list" class="mt-2 space-y-1 max-h-44 overflow-y-auto hidden"></div>
+        </div>`;
+
+    inner.innerHTML = html;
+}
+
+async function renderUserPanel(userId) {
+    const card = cards.find(c => c.id === userId); // first card for this user
+    if (!card) return;
+
+    const inner      = document.getElementById('side-panel-inner');
+    const initials   = card.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    const avatarHtml = card.profile_picture
+        ? `<img src="/static/${esc(card.profile_picture)}" class="w-11 h-11 rounded-full object-cover flex-shrink-0" alt="">`
+        : `<div class="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-white font-bold flex-shrink-0">${esc(initials)}</div>`;
+
+    const userMatches = matches.filter(m => m.user1_id === userId || m.user2_id === userId);
+
+    inner.innerHTML = `
+        <button onclick="selUserId=null; renderCards(); renderSidebar();"
+                class="text-xs text-gray-400 hover:text-gray-600 mb-3 transition-colors">← All matches</button>
+        <div class="flex items-center gap-3 mb-4">
+            ${avatarHtml}
+            <div class="min-w-0">
+                <h3 class="font-bold text-gray-800 truncate">${esc(card.name)}</h3>
+                <p class="text-xs text-gray-400 truncate">${esc(card.email)}</p>
+            </div>
+        </div>
+        ${userMatches.length > 0 ? `
+            <div class="mb-4 p-3 bg-pink-50 rounded-lg">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Matched with</p>
+                <div class="flex flex-wrap gap-1.5">
+                    ${userMatches.map(m => {
+                        const otherId = m.user1_id === userId ? m.user2_id : m.user1_id;
+                        const other   = cards.find(c => c.id === otherId);
+                        return `<button onclick="onMatchClick(${m.id})"
+                                        class="px-2 py-0.5 bg-pink-200 hover:bg-pink-300 text-pink-700 rounded-full text-xs font-medium transition-colors">
+                                    ${other ? esc(other.name.split(' ')[0]) : '?'}
+                                </button>`;
+                    }).join('')}
+                </div>
+            </div>
+        ` : ''}
+        <div id="assessment-area">
+            <div class="text-sm text-gray-400 py-2 text-center">Loading assessment…</div>
+        </div>`;
+
+    const data = await loadAssessment(userId);
+    if (selUserId !== userId) return;
+
+    const area = document.getElementById('assessment-area');
+    if (!area) return;
+
+    if (!data || !data.assessment || Object.keys(data.assessment).length === 0) {
+        area.innerHTML = `<p class="text-sm text-gray-400">${card.has_assessment ? 'Assessment could not be loaded.' : 'No assessment on file.'}</p>`;
+        return;
+    }
+
+    area.innerHTML = `<h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Assessment</h4>` +
+        renderAssessmentEntries(data.assessment);
+}
+
+function renderMatchPanel(matchId) {
+    const match = matches.find(m => m.id === matchId);
+    if (!match) { renderDefaultPanel(); return; }
+
+    const u1 = cards.find(c => c.id === match.user1_id);
+    const u2 = cards.find(c => c.id === match.user2_id);
+    const similarities = match.notes?.similarities || '';
+    const challenges   = match.notes?.challenges   || '';
+
+    const inner = document.getElementById('side-panel-inner');
+    inner.innerHTML = `
+        <button onclick="selMatchId=null; updateConnections(); renderSidebar();"
+                class="text-xs text-gray-400 hover:text-gray-600 mb-3 transition-colors">← All matches</button>
+        <h3 class="font-bold text-gray-800 mb-3">Match Notes</h3>
+
+        <!-- User pair header -->
+        <div class="flex items-stretch gap-2 mb-3 p-3 bg-pink-50 rounded-lg">
+            <div class="flex-1 text-center">
+                <div class="text-sm font-semibold text-gray-800 mb-0.5">${u1 ? esc(u1.name) : '?'}</div>
+                <button onclick="selMatchId=null; selUserId=${match.user1_id}; renderCards(); updateConnections(); renderSidebar();"
+                        class="text-xs text-pink-500 hover:text-pink-700 transition-colors">View solo</button>
+            </div>
+            <div class="flex items-center text-gray-300 text-lg font-light">↔</div>
+            <div class="flex-1 text-center">
+                <div class="text-sm font-semibold text-gray-800 mb-0.5">${u2 ? esc(u2.name) : '?'}</div>
+                <button onclick="selMatchId=null; selUserId=${match.user2_id}; renderCards(); updateConnections(); renderSidebar();"
+                        class="text-xs text-pink-500 hover:text-pink-700 transition-colors">View solo</button>
+            </div>
+        </div>
+
+        <!-- Compare assessments toggle -->
+        <button id="compare-toggle-${matchId}"
+                onclick="toggleComparison(${matchId}, ${match.user1_id}, ${match.user2_id})"
+                class="w-full mb-4 py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-400 hover:from-purple-600 hover:to-pink-500 text-white text-sm font-semibold rounded-lg transition-all shadow-sm">
+            ↔ Compare Assessments
+        </button>
+
+        <!-- Comparison area (hidden until toggled) -->
+        <div id="comparison-area-${matchId}" class="hidden mb-4"></div>
+
+        <!-- Notes -->
+        <div class="mb-4">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Similarities</label>
+            <textarea
+                id="ta-sim-${matchId}"
+                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
+                rows="4"
+                placeholder="Shared interests, values, energy levels…"
+                oninput="onNotesChange(${matchId}, 'similarities', this.value)"
+            >${esc(similarities)}</textarea>
+        </div>
+
+        <div class="mb-5">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Potential Challenges</label>
+            <textarea
+                id="ta-cha-${matchId}"
+                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-transparent"
+                rows="4"
+                placeholder="Differences to navigate, communication styles…"
+                oninput="onNotesChange(${matchId}, 'challenges', this.value)"
+            >${esc(challenges)}</textarea>
+        </div>
+
+        <button onclick="deleteDraftMatch(${matchId})"
+                class="w-full border border-red-200 text-red-400 hover:bg-red-50 font-medium py-2 px-4 rounded-lg text-sm transition-colors">
+            Remove Match
+        </button>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Side-by-side assessment comparison
+// ─────────────────────────────────────────────────────────────────────────────
+async function toggleComparison(matchId, user1Id, user2Id) {
+    const area   = document.getElementById(`comparison-area-${matchId}`);
+    const btn    = document.getElementById(`compare-toggle-${matchId}`);
+    if (!area) return;
+
+    if (!area.classList.contains('hidden')) {
+        // Hide
+        area.classList.add('hidden');
+        area.innerHTML = '';
+        btn.textContent = '↔ Compare Assessments';
+        return;
+    }
+
+    btn.textContent = 'Loading…';
+    btn.disabled = true;
+
+    // Fetch both assessments (uses cache)
+    const [d1, d2] = await Promise.all([loadAssessment(user1Id), loadAssessment(user2Id)]);
+
+    btn.textContent = '↕ Hide Comparison';
+    btn.disabled = false;
+
+    const u1 = cards.find(c => c.id === user1Id);
+    const u2 = cards.find(c => c.id === user2Id);
+
+    // Auto-widen the sidebar for a comfortable two-column view
+    const panel = document.getElementById('side-panel');
+    if (panel.offsetWidth < SIDEBAR_WIDE_W) {
+        panel.style.width = SIDEBAR_WIDE_W + 'px';
+        panel.classList.add('wide');
+    }
+
+    area.classList.remove('hidden');
+    area.innerHTML = `
+        <div class="comparison-grid">
+            <!-- User 1 -->
+            <div class="bg-purple-50 rounded-xl p-3 border border-purple-200">
+                <h5 class="font-bold text-purple-700 text-sm mb-3 text-center">${esc(u1 ? u1.name : 'User 1')}</h5>
+                <div class="space-y-2 text-sm max-h-80 overflow-y-auto pr-1">
+                    ${d1 && d1.assessment ? renderComparisonEntries(d1.assessment, 'purple') : '<p class="text-gray-400 text-xs">No assessment data</p>'}
+                </div>
+            </div>
+            <!-- User 2 -->
+            <div class="bg-cyan-50 rounded-xl p-3 border border-cyan-200">
+                <h5 class="font-bold text-cyan-700 text-sm mb-3 text-center">${esc(u2 ? u2.name : 'User 2')}</h5>
+                <div class="space-y-2 text-sm max-h-80 overflow-y-auto pr-1">
+                    ${d2 && d2.assessment ? renderComparisonEntries(d2.assessment, 'cyan') : '<p class="text-gray-400 text-xs">No assessment data</p>'}
+                </div>
+            </div>
+        </div>`;
+}
+
+/**
+ * Renders assessment entries for the comparison grid cells.
+ * Uses the same format-detection logic as renderAssessmentEntries().
+ */
+function renderComparisonEntries(assessment, color) {
+    let html = '';
+    const borderColor = color === 'purple' ? 'border-purple-200' : 'border-cyan-200';
+    Object.entries(assessment).forEach(([key, value]) => {
+        let label, answer;
+        if (value && typeof value === 'object' && ('answer' in value || 'question' in value)) {
+            label  = value.question || fieldLabel(key);
+            answer = value.answer   || '';
+        } else {
+            label  = fieldLabel(key);
+            answer = (value != null) ? String(value) : '';
+        }
+        if (!answer.trim()) return;
+        html += `
+            <div class="bg-white rounded-lg p-2.5 shadow-sm border-b ${borderColor}">
+                <p class="font-semibold text-gray-600 text-xs mb-1">${esc(label)}</p>
+                <p class="text-gray-700 text-xs leading-relaxed">${esc(answer)}</p>
+            </div>`;
+    });
+    return html || '<p class="text-gray-400 text-xs">No answers recorded.</p>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card actions: duplicate, remove, add user
+// ─────────────────────────────────────────────────────────────────────────────
+async function duplicateCard(cardId) {
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/duplicate-card`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({card_id: cardId}),
+        });
+        if (!resp.ok) { toast('Could not duplicate card', 'error'); return; }
+        const newCard = normalizeCard(await resp.json());
+        cards.push(newCard);
+        // Update instance_count on all cards for this user
+        cards.forEach(c => { if (c.id === newCard.id) c.instance_count = newCard.instance_count; });
+        renderCards();
+        updateConnections();
+        toast('Card duplicated — drag it to a new position');
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+async function removeCard(cardId, instanceCount, userName) {
+    const isLast = instanceCount === 1;
+    const msg    = isLast
+        ? `Remove ${userName} from the board?\n\nThis is their only card, so they will also be un-RSVP'd from the event.`
+        : `Remove this copy of ${userName}'s card?\n\nTheir other card(s) will remain. Their RSVP will not be affected.`;
+    if (!confirm(msg)) return;
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/card/${cardId}`, {method: 'DELETE'});
+        if (!resp.ok) { toast('Could not remove card', 'error'); return; }
+        // Capture userId before removing the card from the array
+        const removedCard = cards.find(c => c.cardId === cardId);
+        const userId = removedCard?.id;
+        cards = cards.filter(c => c.cardId !== cardId);
+        // Recalculate instance_count for remaining cards of this user
+        const remaining = cards.filter(c => c.id === userId);
+        remaining.forEach(c => c.instance_count = remaining.length);
+        if (selUserId !== null && !cards.find(c => c.id === selUserId)) selUserId = null;
+        renderCards();
+        updateConnections();
+        renderSidebar();
+        toast(isLast ? `${userName} removed and un-RSVP'd` : 'Card removed');
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+let addUserAllUsers = []; // cached list for filtering
+
+async function loadAddUserList() {
+    const btn = document.getElementById('add-user-load-btn');
+    btn.textContent = '…';
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/users-to-add`);
+        addUserAllUsers = resp.ok ? await resp.json() : [];
+    } catch(err) { addUserAllUsers = []; }
+    btn.textContent = 'Load';
+    renderAddUserList(addUserAllUsers);
+    document.getElementById('add-user-list').classList.remove('hidden');
+}
+
+function filterAddUserList() {
+    const q = document.getElementById('add-user-search').value.toLowerCase();
+    renderAddUserList(q ? addUserAllUsers.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) : addUserAllUsers);
+}
+
+function renderAddUserList(list) {
+    const el = document.getElementById('add-user-list');
+    if (!el) return;
+    if (list.length === 0) {
+        el.innerHTML = '<p class="text-xs text-gray-400 py-1">No users found.</p>';
+        return;
+    }
+    el.innerHTML = list.map(u => `
+        <div class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+            <div class="min-w-0">
+                <div class="text-sm font-medium text-gray-700 truncate">${esc(u.name)}</div>
+                <div class="text-xs text-gray-400 truncate">${esc(u.email)}</div>
+            </div>
+            <button onclick="addUserToBoard(${u.id})"
+                    class="ml-2 px-2.5 py-1 bg-pink-400 hover:bg-pink-500 text-white text-xs font-semibold rounded-lg transition-colors flex-shrink-0">
+                Add
+            </button>
+        </div>`).join('');
+}
+
+async function addUserToBoard(userId) {
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/add-user`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({user_id: userId}),
+        });
+        if (!resp.ok) { toast('Could not add user', 'error'); return; }
+        const newCard = normalizeCard(await resp.json());
+        cards.push(newCard);
+        // Remove from the cached add list
+        addUserAllUsers = addUserAllUsers.filter(u => u.id !== userId);
+        filterAddUserList();
+        renderCards();
+        updateConnections();
+        toast(`${newCard.name} added to board`);
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Zoom
+// ─────────────────────────────────────────────────────────────────────────────
+function setZoom(newZoom) {
+    zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(newZoom * 100) / 100));
+    const canvas = document.getElementById('canvas');
+    const outer  = document.getElementById('canvas-outer');
+    canvas.style.transform = `scale(${zoom})`;
+    outer.style.width  = (CANVAS_W * zoom) + 'px';
+    outer.style.height = (CANVAS_H * zoom) + 'px';
+    document.getElementById('zoom-display').textContent = Math.round(zoom * 100) + '%';
+}
+function zoomIn()  { setZoom(zoom + ZOOM_STEP); }
+function zoomOut() { setZoom(zoom - ZOOM_STEP); }
+
+// Ctrl+scroll to zoom
+document.getElementById('canvas-container').addEventListener('wheel', e => {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setZoom(zoom + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP));
+    }
+}, { passive: false });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Grid layout & board reset
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Compute an ordered grid position for every card in `cards`. */
+function computeGridPositions() {
+    // Determine unique users sorted by name, assign a grid slot per user
+    const seenUsers = [];
+    cards.forEach(c => { if (!seenUsers.includes(c.id)) seenUsers.push(c.id); });
+    seenUsers.sort((a, b) => {
+        const na = cards.find(c => c.id === a)?.name || '';
+        const nb = cards.find(c => c.id === b)?.name || '';
+        return na.localeCompare(nb);
+    });
+    const userSlot = {};
+    seenUsers.forEach((uid, idx) => { userSlot[uid] = idx; });
+
+    const positions = {};
+    cards.forEach(card => {
+        const slot = userSlot[card.id] ?? 0;
+        const col  = slot % GRID_COLS;
+        const row  = Math.floor(slot / GRID_COLS);
+        // Duplicate cards are offset within the same cell
+        const dupIdx = cards.filter(c => c.id === card.id && c.cardId < card.cardId).length;
+        positions[card.cardId] = {
+            x: GRID_START_X + col * GRID_COL_W + dupIdx * 22,
+            y: GRID_START_Y + row * GRID_ROW_H + dupIdx * 22,
+        };
+    });
+    return positions;
+}
+
+/** Apply grid positions to the in-memory card array (does NOT save). */
+function applyGridPositions() {
+    const positions = computeGridPositions();
+    cards.forEach(card => {
+        const pos = positions[card.cardId];
+        if (pos) { card.x = pos.x; card.y = pos.y; }
+    });
+}
+
+/** Bulk-save all current card positions to the server. */
+async function saveAllPositions() {
+    const payload = cards.map(c => ({ card_id: c.cardId, x: c.x, y: c.y }));
+    try {
+        await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/positions`, {
+            method:  'POST',
+            headers: {'Content-Type': 'application/json'},
+            body:    JSON.stringify({ positions: payload }),
+        });
+    } catch(err) {}
+}
+
+async function resetBoard() {
+    const matchWord = matches.length === 1 ? 'match' : 'matches';
+    const msg = matches.length > 0
+        ? `Reset the board?\n\nThis will remove all ${matches.length} draft ${matchWord} and re-arrange cards in a clean grid.\n\nThis cannot be undone.`
+        : 'Re-arrange all cards in a clean grid layout?\n\n(There are no draft matches to remove.)';
+    if (!confirm(msg)) return;
+
+    try {
+        const resp = await fetch(`/api/admin/event/${EVENT_ID}/matchmaking/reset`, { method: 'POST' });
+        if (!resp.ok) { toast('Could not reset board', 'error'); return; }
+        matches    = [];
+        selMatchId = null;
+        selUserId  = null;
+        applyGridPositions();
+        renderCards();
+        updateConnections();
+        renderSidebar();
+        await saveAllPositions();
+        toast('Board reset — cards arranged in a clean grid');
+    } catch(err) { toast('Network error', 'error'); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────────────────────────────────────
+
+function toggleHelp() {
+    const content = document.getElementById('help-content');
+    const chevron = document.getElementById('help-chevron');
+    const hidden  = content.classList.toggle('hidden');
+    chevron.textContent = hidden ? '▼ expand' : '▲ collapse';
+}
+
+// ── Sidebar resize ──────────────────────────────────────────────────────────
+function startSidebarResize(e) {
+    sidebarResizing  = true;
+    sidebarResStartX = e.clientX;
+    sidebarResStartW = document.getElementById('side-panel').offsetWidth;
+    document.getElementById('sidebar-resize-handle').classList.add('active');
+    document.body.style.cursor    = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+}
+
+function toggleSidebarWide() {
+    const panel = document.getElementById('side-panel');
+    const isWide = panel.classList.contains('wide');
+    if (isWide) {
+        panel.style.width = '300px';
+        panel.classList.remove('wide');
+    } else {
+        panel.style.width = SIDEBAR_WIDE_W + 'px';
+        panel.classList.add('wide');
+    }
+}
+
+/**
+ * Converts a snake_case / camelCase field name to a readable label.
+ * e.g. "tell_us_more_what_brings_you" → "Tell Us More What Brings You"
+ */
+function fieldLabel(key) {
+    return key
+        .replace(/_/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/**
+ * Renders assessment data into HTML, handling both formats:
+ *   - New flat format:  { "field_name": "answer text", ... }
+ *   - Old keyed format: { "q1": { question: "...", answer: "..." }, ... }
+ */
+function renderAssessmentEntries(assessment) {
+    let html = '';
+    Object.entries(assessment).forEach(([key, value]) => {
+        let label, answer;
+        if (value && typeof value === 'object' && ('answer' in value || 'question' in value)) {
+            // Old keyed format
+            label  = value.question || fieldLabel(key);
+            answer = value.answer   || '';
+        } else {
+            // New flat format
+            label  = fieldLabel(key);
+            answer = (value != null) ? String(value) : '';
+        }
+        if (!answer.trim()) return; // skip blanks
+        html += `
+            <div class="mb-4 pb-3 border-b border-gray-100 last:border-0">
+                <p class="text-xs font-semibold text-gray-500 mb-1">${esc(label)}</p>
+                <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">${esc(answer)}</p>
+            </div>`;
+    });
+    return html || '<p class="text-sm text-gray-400">No answers recorded.</p>';
+}
+
+function esc(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;')
+        .replace(/'/g,  '&#39;');
+}
+
+function toast(msg, type = 'success', duration = 2000) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `fixed bottom-5 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 pointer-events-none ${
+        type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'
+    }`;
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, duration);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Go
+// ─────────────────────────────────────────────────────────────────────────────
+init().catch(err => {
+    console.error(err);
+    toast('Failed to load matchmaking data', 'error');
+});
+</script>
+{% endblock %}

@@ -11,7 +11,7 @@ from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange
+from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange, EventMatchmakingDraft, EventUserBoardPosition, EventBoardCard
 from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email, send_rsvp_admin_notification, send_rsvp_cancellation_admin_notification
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
@@ -3539,6 +3539,346 @@ def complete_profile(token):
     event_title = latest_checkin.event.title if latest_checkin else None
 
     return render_template('complete_profile.html', user=user, event_title=event_title, token=token)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Event Matchmaking Whiteboard Routes
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route('/api/admin/event/<int:event_id>/toggle-matchmaking', methods=['POST'])
+@login_required
+def toggle_event_matchmaking(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    event = Event.query.get_or_404(event_id)
+    event.is_matchmaking = not event.is_matchmaking
+    db.session.commit()
+    return jsonify({'is_matchmaking': event.is_matchmaking})
+
+
+@app.route('/admin/event/<int:event_id>/matchmaking')
+@login_required
+def admin_event_matchmaking(event_id):
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+    event = Event.query.get_or_404(event_id)
+    return render_template('admin_event_matchmaking.html', event=event)
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/data')
+@login_required
+def get_event_matchmaking_data(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    event = Event.query.get_or_404(event_id)
+    rsvps = EventRSVP.query.filter_by(event_id=event_id).all()
+    rsvp_user_ids = {r.user_id for r in rsvps}
+
+    # Ensure every RSVP'd user has at least one board card
+    existing_card_user_ids = {c.user_id for c in EventBoardCard.query.filter_by(event_id=event_id).all()}
+    CARD_W, GAP, COLS = 210, 24, 4
+    grid_idx = len(existing_card_user_ids)
+    for rsvp in rsvps:
+        if rsvp.user_id not in existing_card_user_ids:
+            col = grid_idx % COLS
+            row = grid_idx // COLS
+            db.session.add(EventBoardCard(
+                event_id=event_id, user_id=rsvp.user_id,
+                pos_x=GAP + col * (CARD_W + GAP),
+                pos_y=GAP + row * 119,
+            ))
+            grid_idx += 1
+    db.session.commit()
+
+    board_cards = EventBoardCard.query.filter_by(event_id=event_id).order_by(EventBoardCard.id).all()
+    # Count instances per user for the badge
+    instance_counts = {}
+    for c in board_cards:
+        instance_counts[c.user_id] = instance_counts.get(c.user_id, 0) + 1
+
+    cards_data = []
+    for card in board_cards:
+        user = User.query.get(card.user_id)
+        if not user:
+            continue
+        has_assessment = Assessment.query.filter_by(user_id=user.id).first() is not None
+        cards_data.append({
+            'card_id': card.id,
+            'id':      user.id,   # kept for JS backwards-compat (= user_id)
+            'user_id': user.id,
+            'name':    f"{user.first_name} {user.last_name}",
+            'email':   user.email,
+            'profile_picture': user.profile_picture,
+            'has_assessment':  has_assessment,
+            'x':  card.pos_x,
+            'y':  card.pos_y,
+            'is_rsvp':        user.id in rsvp_user_ids,
+            'instance_count': instance_counts[user.id],
+        })
+
+    drafts = EventMatchmakingDraft.query.filter_by(event_id=event_id).all()
+    matches_data = []
+    for draft in drafts:
+        try:
+            notes = json.loads(draft.notes) if draft.notes else {'similarities': '', 'challenges': ''}
+        except Exception:
+            notes = {'similarities': draft.notes or '', 'challenges': ''}
+        matches_data.append({'id': draft.id, 'user1_id': draft.user1_id,
+                             'user2_id': draft.user2_id, 'notes': notes,
+                             'card1_id': draft.card1_id, 'card2_id': draft.card2_id})
+
+    return jsonify({
+        'event': {'id': event.id, 'title': event.title},
+        'cards': cards_data,
+        'matches': matches_data,
+    })
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/position', methods=['POST'])
+@login_required
+def save_board_position(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data = request.get_json()
+    x = float(data.get('x', 100))
+    y = float(data.get('y', 100))
+    card_id = data.get('card_id')
+    if card_id:
+        card = EventBoardCard.query.filter_by(id=int(card_id), event_id=event_id).first()
+        if card:
+            card.pos_x, card.pos_y = x, y
+            db.session.commit()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/duplicate-card', methods=['POST'])
+@login_required
+def duplicate_board_card(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data    = request.get_json()
+    card_id = int(data.get('card_id'))
+    orig    = EventBoardCard.query.filter_by(id=card_id, event_id=event_id).first_or_404()
+    dup     = EventBoardCard(event_id=event_id, user_id=orig.user_id,
+                             pos_x=orig.pos_x + 234, pos_y=orig.pos_y + 24)
+    db.session.add(dup)
+    db.session.commit()
+    user           = User.query.get(dup.user_id)
+    has_assessment = Assessment.query.filter_by(user_id=dup.user_id).first() is not None
+    instance_count = EventBoardCard.query.filter_by(event_id=event_id, user_id=dup.user_id).count()
+    # Update instance_count on all cards for this user
+    return jsonify({
+        'card_id': dup.id, 'id': user.id, 'user_id': user.id,
+        'name': f"{user.first_name} {user.last_name}", 'email': user.email,
+        'profile_picture': user.profile_picture, 'has_assessment': has_assessment,
+        'x': dup.pos_x, 'y': dup.pos_y, 'is_rsvp': True,
+        'instance_count': instance_count,
+    })
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/card/<int:card_id>', methods=['DELETE'])
+@login_required
+def delete_board_card(event_id, card_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    card    = EventBoardCard.query.filter_by(id=card_id, event_id=event_id).first_or_404()
+    user_id = card.user_id
+    remaining = EventBoardCard.query.filter_by(event_id=event_id, user_id=user_id).count()
+    db.session.delete(card)
+    removed_rsvp = False
+    if remaining == 1:   # this was the last card → remove RSVP too
+        rsvp = EventRSVP.query.filter_by(event_id=event_id, user_id=user_id).first()
+        if rsvp:
+            db.session.delete(rsvp)
+            removed_rsvp = True
+    db.session.commit()
+    return jsonify({'ok': True, 'removed_rsvp': removed_rsvp})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/add-user', methods=['POST'])
+@login_required
+def matchmaking_add_user(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data    = request.get_json()
+    user_id = int(data.get('user_id'))
+    user    = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if not EventRSVP.query.filter_by(event_id=event_id, user_id=user_id).first():
+        db.session.add(EventRSVP(event_id=event_id, user_id=user_id))
+    existing_count = EventBoardCard.query.filter_by(event_id=event_id).count()
+    COLS, CARD_W, GAP = 4, 210, 24
+    col = existing_count % COLS
+    row = existing_count // COLS
+    card = EventBoardCard(event_id=event_id, user_id=user_id,
+                          pos_x=GAP + col * (CARD_W + GAP), pos_y=GAP + row * 119)
+    db.session.add(card)
+    db.session.commit()
+    has_assessment = Assessment.query.filter_by(user_id=user_id).first() is not None
+    instance_count = EventBoardCard.query.filter_by(event_id=event_id, user_id=user_id).count()
+    return jsonify({
+        'card_id': card.id, 'id': user.id, 'user_id': user.id,
+        'name': f"{user.first_name} {user.last_name}", 'email': user.email,
+        'profile_picture': user.profile_picture, 'has_assessment': has_assessment,
+        'x': card.pos_x, 'y': card.pos_y, 'is_rsvp': True,
+        'instance_count': instance_count,
+    })
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/users-to-add')
+@login_required
+def matchmaking_users_to_add(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    on_board = {c.user_id for c in EventBoardCard.query.filter_by(event_id=event_id).all()}
+    all_users = User.query.order_by(User.last_name, User.first_name).all()
+    return jsonify([
+        {'id': u.id, 'name': f"{u.first_name} {u.last_name}", 'email': u.email}
+        for u in all_users if u.id not in on_board
+    ])
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/match', methods=['POST'])
+@login_required
+def create_draft_match(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data = request.get_json()
+    u1 = int(data.get('user1_id'))
+    u2 = int(data.get('user2_id'))
+    c1 = data.get('card1_id')
+    c2 = data.get('card2_id')
+    if u1 == u2:
+        return jsonify({'error': 'Cannot match a user with themselves'}), 400
+    # Canonical ordering so (A,B) and (B,A) are the same pair
+    if u1 > u2:
+        u1, u2 = u2, u1
+        c1, c2 = c2, c1
+    existing = EventMatchmakingDraft.query.filter_by(event_id=event_id, user1_id=u1, user2_id=u2).first()
+    if existing:
+        return jsonify({'error': 'Match already exists', 'id': existing.id}), 409
+    draft = EventMatchmakingDraft(
+        event_id=event_id,
+        user1_id=u1,
+        user2_id=u2,
+        card1_id=int(c1) if c1 is not None else None,
+        card2_id=int(c2) if c2 is not None else None,
+        notes=json.dumps({'similarities': '', 'challenges': ''}),
+    )
+    db.session.add(draft)
+    db.session.commit()
+    return jsonify({'id': draft.id, 'user1_id': u1, 'user2_id': u2,
+                    'card1_id': draft.card1_id, 'card2_id': draft.card2_id,
+                    'notes': {'similarities': '', 'challenges': ''}})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/match/<int:draft_id>', methods=['PUT', 'DELETE'])
+@login_required
+def update_draft_match(event_id, draft_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    draft = EventMatchmakingDraft.query.filter_by(id=draft_id, event_id=event_id).first_or_404()
+    if request.method == 'DELETE':
+        db.session.delete(draft)
+        db.session.commit()
+        return jsonify({'ok': True})
+    # PUT – update notes
+    data = request.get_json()
+    raw = data.get('notes', {})
+    draft.notes = json.dumps({
+        'similarities': sanitize_input(str(raw.get('similarities', '')))[:2000],
+        'challenges': sanitize_input(str(raw.get('challenges', '')))[:2000],
+    })
+    draft.updated_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/finalize', methods=['POST'])
+@login_required
+def finalize_event_matches(event_id):
+    """Convert all draft match pairs into pending Match records."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    drafts = EventMatchmakingDraft.query.filter_by(event_id=event_id).all()
+    created, errors = [], []
+    for draft in drafts:
+        u1 = User.query.get(draft.user1_id)
+        u2 = User.query.get(draft.user2_id)
+        a1 = Assessment.query.filter_by(user_id=draft.user1_id).first()
+        a2 = Assessment.query.filter_by(user_id=draft.user2_id).first()
+        if not a1 or not a2:
+            missing = []
+            if not a1:
+                missing.append(f"{u1.first_name} {u1.last_name}" if u1 else f"User {draft.user1_id}")
+            if not a2:
+                missing.append(f"{u2.first_name} {u2.last_name}" if u2 else f"User {draft.user2_id}")
+            errors.append(f"No assessment for: {', '.join(missing)}")
+            continue
+        # Skip if a Match already exists for this pair
+        already = Match.query.filter(
+            or_(
+                and_(Match.user1_id == draft.user1_id, Match.user2_id == draft.user2_id),
+                and_(Match.user1_id == draft.user2_id, Match.user2_id == draft.user1_id),
+            )
+        ).first()
+        if already:
+            errors.append(f"Match already exists for {u1.first_name} & {u2.first_name}")
+            continue
+        try:
+            notes_obj = json.loads(draft.notes) if draft.notes else {}
+        except Exception:
+            notes_obj = {}
+        admin_notes_parts = []
+        if notes_obj.get('similarities'):
+            admin_notes_parts.append(f"Similarities: {notes_obj['similarities']}")
+        if notes_obj.get('challenges'):
+            admin_notes_parts.append(f"Potential challenges: {notes_obj['challenges']}")
+        match = Match(
+            user1_id=draft.user1_id,
+            user2_id=draft.user2_id,
+            assessment1_id=a1.id,
+            assessment2_id=a2.id,
+            status='pending',
+            admin_notes='\n'.join(admin_notes_parts) or None,
+        )
+        db.session.add(match)
+        name1 = f"{u1.first_name} {u1.last_name}" if u1 else str(draft.user1_id)
+        name2 = f"{u2.first_name} {u2.last_name}" if u2 else str(draft.user2_id)
+        created.append(f"{name1} & {name2}")
+    db.session.commit()
+    return jsonify({'created': created, 'errors': errors})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/positions', methods=['POST'])
+@login_required
+def save_board_positions_bulk(event_id):
+    """Bulk-save card positions (used by arrange/reset)."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data = request.get_json(force=True) or {}
+    positions = data.get('positions', [])
+    for item in positions:
+        card = EventBoardCard.query.filter_by(id=item.get('card_id'), event_id=event_id).first()
+        if card:
+            card.pos_x = float(item.get('x', 100))
+            card.pos_y = float(item.get('y', 100))
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin/event/<int:event_id>/matchmaking/reset', methods=['POST'])
+@login_required
+def reset_matchmaking_board(event_id):
+    """Delete all draft matches and reset card positions to default so the frontend can re-arrange."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    EventMatchmakingDraft.query.filter_by(event_id=event_id).delete()
+    EventBoardCard.query.filter_by(event_id=event_id).update({'pos_x': 100.0, 'pos_y': 100.0})
+    db.session.commit()
+    return jsonify({'ok': True})
+
 
 if __name__ == '__main__':
     app.run()
