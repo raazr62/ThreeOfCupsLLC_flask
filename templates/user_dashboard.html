@@ -313,7 +313,16 @@ function agreeToDisclaimer() {
                                     </div>
                                 </div>
 
-                                <p class="text-sm text-text-accent mb-4 line-clamp-2">{{ event.description|safe }}</p>
+                                <div class="mb-4">
+                                    <p id="event-desc-{{ event.id }}"
+                                       class="text-sm text-text-accent line-clamp-2 whitespace-pre-wrap">{{ event.description|safe }}</p>
+                                    <button id="event-desc-btn-{{ event.id }}"
+                                            type="button"
+                                            onclick="toggleEventDesc({{ event.id }})"
+                                            class="hidden mt-1 text-xs text-primary hover:text-secondary font-medium transition-colors">
+                                        See more
+                                    </button>
+                                </div>
 
                                 <button type="button" onclick="unrsvpEvent({{ event.id }})"
                                         class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-medium px-4 py-2 rounded-lg transition-colors text-sm">
@@ -512,6 +521,23 @@ function togglePastEvents() {
     content.classList.toggle('hidden');
     icon.classList.toggle('rotate-180');
 }
+
+function toggleEventDesc(eventId) {
+    const p = document.getElementById('event-desc-' + eventId);
+    const btn = document.getElementById('event-desc-btn-' + eventId);
+    const collapsed = p.classList.toggle('line-clamp-2');
+    btn.textContent = collapsed ? 'See more' : 'See less';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[id^="event-desc-"]').forEach(function (p) {
+        if (p.scrollHeight > p.clientHeight) {
+            const eventId = p.id.replace('event-desc-', '');
+            const btn = document.getElementById('event-desc-btn-' + eventId);
+            if (btn) btn.classList.remove('hidden');
+        }
+    });
+});
 
 function unrsvpEvent(eventId) {
     if (confirm('Are you sure you want to cancel your RSVP?')) {

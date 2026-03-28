@@ -214,12 +214,10 @@
                                             <p class="text-text-accent text-sm mb-3" style="white-space: pre-wrap;">{{ data.event.description|safe }}</p>
 
                                             <div class="mt-4 flex gap-4 flex-wrap">
-                                                {% if data.rsvp_users %}
-                                                    <button onclick="toggleRSVPs({{ data.event.id }})"
-                                                            class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
-                                                        View RSVPs ({{ data.rsvp_count }})
-                                                    </button>
-                                                {% endif %}
+                                                <button onclick="toggleRSVPs({{ data.event.id }})"
+                                                        class="text-primary font-semibold text-sm hover:text-secondary transition-colors">
+                                                    Manage RSVPs ({{ data.rsvp_count }})
+                                                </button>
 
                                                 {% if data.check_ins %}
                                                     <button onclick="toggleCheckIns({{ data.event.id }})"
@@ -236,18 +234,22 @@
                                                 {% endif %}
                                             </div>
 
-                                            {% if data.rsvp_users %}
-                                                <div id="rsvps-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
-                                                    <h5 class="font-semibold text-text-primary mb-2">RSVPs:</h5>
-                                                    <ul class="space-y-2">
-                                                        {% for user in data.rsvp_users %}
-                                                            <li class="flex items-center gap-2">
+                                            <div id="rsvps-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
+                                                <h5 class="font-semibold text-text-primary mb-3">RSVPs
+                                                    <span id="rsvp-count-badge-{{ data.event.id }}" class="ml-2 text-sm font-normal text-gray-500">({{ data.rsvp_count }})</span>
+                                                </h5>
+
+                                                {% if data.rsvp_users %}
+                                                <ul id="rsvp-list-{{ data.event.id }}" class="space-y-2 mb-4">
+                                                    {% for user in data.rsvp_users %}
+                                                        <li id="rsvp-item-{{ data.event.id }}-{{ user.id }}" class="flex items-center justify-between gap-2">
+                                                            <div class="flex items-center gap-2">
                                                                 {% if user.profile_picture %}
                                                                     <img src="{{ url_for('static', filename=user.profile_picture) }}"
                                                                          alt="{{ user.first_name }}"
                                                                          class="w-8 h-8 rounded-full object-cover">
                                                                 {% else %}
-                                                                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm">
+                                                                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs flex-shrink-0">
                                                                         {{ user.first_name[0] }}{{ user.last_name[0] }}
                                                                     </div>
                                                                 {% endif %}
@@ -255,11 +257,49 @@
                                                                     {{ user.first_name }} {{ user.last_name }}
                                                                     <span class="text-gray-500">({{ user.email }})</span>
                                                                 </span>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
+                                                            </div>
+                                                            <button onclick="adminRemoveRsvp({{ data.event.id }}, {{ user.id }}, '{{ user.first_name }} {{ user.last_name }}')"
+                                                                    class="text-red-500 hover:text-red-700 text-xs font-medium flex-shrink-0 transition-colors">
+                                                                Remove
+                                                            </button>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% else %}
+                                                <p id="rsvp-empty-{{ data.event.id }}" class="text-sm text-gray-500 mb-4">No RSVPs yet.</p>
+                                                {% endif %}
+
+                                                <!-- Add User to RSVP -->
+                                                <div class="border-t border-gray-200 pt-3">
+                                                    <p class="text-xs font-semibold text-gray-600 mb-2">Add user to RSVP list:</p>
+                                                    <div class="flex gap-2 flex-wrap">
+                                                        <div class="flex-1 min-w-0">
+                                                            <input type="text"
+                                                                   id="add-rsvp-filter-{{ data.event.id }}"
+                                                                   placeholder="Filter users..."
+                                                                   oninput="filterAddRsvpSelect({{ data.event.id }})"
+                                                                   class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-1">
+                                                            <select id="add-rsvp-select-{{ data.event.id }}"
+                                                                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                                                                <option value="">-- select a user --</option>
+                                                                {% for user in all_users %}
+                                                                    {% if user.id not in data.rsvp_user_ids %}
+                                                                        <option value="{{ user.id }}"
+                                                                                data-name="{{ user.last_name }}, {{ user.first_name }}"
+                                                                                data-email="{{ user.email }}">
+                                                                            {{ user.last_name }}, {{ user.first_name }} ({{ user.email }})
+                                                                        </option>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <button onclick="adminAddRsvp({{ data.event.id }}, {{ data.event.max_capacity or 'null' }})"
+                                                                class="bg-primary hover:bg-purple-700 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-colors flex-shrink-0 self-end">
+                                                            Add
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            {% endif %}
+                                            </div>
 
                                             {% if data.check_ins %}
                                                 <div id="checkins-{{ data.event.id }}" class="hidden mt-3 bg-gray-50 rounded-lg p-4">
@@ -426,6 +466,135 @@
     function toggleRSVPs(eventId) {
         const rsvpDiv = document.getElementById(`rsvps-${eventId}`);
         rsvpDiv.classList.toggle('hidden');
+    }
+
+    function filterAddRsvpSelect(eventId) {
+        const query = document.getElementById(`add-rsvp-filter-${eventId}`).value.toLowerCase().trim();
+        const select = document.getElementById(`add-rsvp-select-${eventId}`);
+        const currentVal = select.value;
+        const allOptions = Array.from(select.querySelectorAll('option[value]:not([value=""])'));
+
+        allOptions.forEach(opt => {
+            const name = (opt.dataset.name || '').toLowerCase();
+            const email = (opt.dataset.email || '').toLowerCase();
+            const matches = !query || name.includes(query) || email.includes(query);
+            opt.hidden = !matches;
+        });
+
+        // Deselect if current selection is now hidden
+        const selected = select.querySelector(`option[value="${currentVal}"]`);
+        if (selected && selected.hidden) select.value = '';
+    }
+
+    function adminAddRsvp(eventId, maxCapacity) {
+        const select = document.getElementById(`add-rsvp-select-${eventId}`);
+        const userId = parseInt(select.value);
+        if (!userId) { alert('Please select a user to add.'); return; }
+        const userName = select.options[select.selectedIndex].textContent.trim();
+
+        const countBadge = document.getElementById(`rsvp-count-badge-${eventId}`);
+        const currentCount = parseInt((countBadge.textContent.replace(/\D/g, '')) || 0);
+        const wouldExceed = maxCapacity && (currentCount + 1) > maxCapacity;
+        const msg = wouldExceed
+            ? `Add ${userName} to the RSVP list?\n\nThis will bring the total to ${currentCount + 1}, which exceeds the capacity of ${maxCapacity}.`
+            : `Add ${userName} to the RSVP list?`;
+        if (!confirm(msg)) return;
+
+        fetch(`/api/admin/event/${eventId}/rsvp/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the option from the select
+                select.querySelector(`option[value="${userId}"]`)?.remove();
+                select.value = '';
+                document.getElementById(`add-rsvp-filter-${eventId}`).value = '';
+
+                // Update count badge
+                countBadge.textContent = `(${data.new_count})`;
+
+                // Add user to the RSVP list (basic entry without profile picture lookup)
+                const emptyMsg = document.getElementById(`rsvp-empty-${eventId}`);
+                if (emptyMsg) emptyMsg.remove();
+
+                let list = document.getElementById(`rsvp-list-${eventId}`);
+                if (!list) {
+                    list = document.createElement('ul');
+                    list.id = `rsvp-list-${eventId}`;
+                    list.className = 'space-y-2 mb-4';
+                    document.getElementById(`rsvps-${eventId}`).querySelector('.border-t').before(list);
+                }
+                const displayName = userName.includes('(') ? userName.split('(')[0].replace(/^.*?,\s*/, '').trim() + ' ' + userName.split('(')[0].split(',')[0].trim() : userName;
+                const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const li = document.createElement('li');
+                li.id = `rsvp-item-${eventId}-${userId}`;
+                li.className = 'flex items-center justify-between gap-2';
+                li.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs flex-shrink-0">${initials}</div>
+                        <span class="text-sm text-text-accent">${userName}</span>
+                    </div>
+                    <button onclick="adminRemoveRsvp(${eventId}, ${userId}, '${userName.split('(')[0].trim()}')"
+                            class="text-red-500 hover:text-red-700 text-xs font-medium flex-shrink-0 transition-colors">Remove</button>
+                `;
+                list.appendChild(li);
+
+                if (data.over_capacity) alert(`Added. Note: this event is now over capacity.`);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(() => alert('Request failed'));
+    }
+
+    function adminRemoveRsvp(eventId, userId, userName) {
+        if (!confirm(`Remove ${userName} from the RSVP list?`)) return;
+
+        fetch(`/api/admin/event/${eventId}/rsvp/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the list item
+                document.getElementById(`rsvp-item-${eventId}-${userId}`)?.remove();
+
+                // Update count badge
+                document.getElementById(`rsvp-count-badge-${eventId}`).textContent = `(${data.new_count})`;
+
+                // Show empty message if list is now empty
+                const list = document.getElementById(`rsvp-list-${eventId}`);
+                if (list && list.children.length === 0) {
+                    list.remove();
+                    const empty = document.createElement('p');
+                    empty.id = `rsvp-empty-${eventId}`;
+                    empty.className = 'text-sm text-gray-500 mb-4';
+                    empty.textContent = 'No RSVPs yet.';
+                    document.getElementById(`rsvps-${eventId}`).querySelector('.border-t').before(empty);
+                }
+
+                // Add the user back to the add-user select
+                const select = document.getElementById(`add-rsvp-select-${eventId}`);
+                const opt = document.createElement('option');
+                opt.value = userId;
+                opt.textContent = userName;
+                opt.dataset.name = userName.toLowerCase();
+                opt.dataset.email = '';
+                // Insert alphabetically by finding insertion point
+                const opts = Array.from(select.querySelectorAll('option[value]:not([value=""])'));
+                const insertBefore = opts.find(o => o.textContent.localeCompare(userName) > 0);
+                if (insertBefore) select.insertBefore(opt, insertBefore);
+                else select.appendChild(opt);
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(() => alert('Request failed'));
     }
 
     function toggleCheckIns(eventId) {

@@ -2697,6 +2697,7 @@ def admin_events():
             'event': event,
             'rsvp_count': len(rsvps),
             'rsvp_users': rsvp_users,
+            'rsvp_user_ids': {u.id for u in rsvp_users},
             'check_ins': check_ins,
             'check_in_count': check_in_count,
             'check_in_with_rsvp_count': check_in_with_rsvp_count,
@@ -2708,7 +2709,8 @@ def admin_events():
     # Production server runs in UTC, but events are stored in EST
     # Convert UTC to EST by subtracting 5 hours, then subtract 1 hour buffer
     cutoff_time = datetime.now() - timedelta(hours=6)
-    return render_template('admin_events.html', event_data=event_data, now=cutoff_time)
+    all_users = User.query.filter_by(is_admin=False).order_by(User.last_name, User.first_name).all()
+    return render_template('admin_events.html', event_data=event_data, now=cutoff_time, all_users=all_users)
 
 @app.route('/api/event/rsvp/<int:event_id>', methods=['POST'])
 @login_required
@@ -2835,6 +2837,69 @@ def unrsvp_event(event_id):
             print(f"Admin cancellation notification error: {e}")
 
     return jsonify({'success': True, 'message': 'RSVP removed successfully!'})
+
+
+@app.route('/api/admin/event/<int:event_id>/rsvp/add', methods=['POST'])
+@login_required
+def admin_add_rsvp(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    data = request.get_json()
+    user_id = data.get('user_id') if data else None
+    if not user_id:
+        return jsonify({'error': 'user_id required'}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    existing = EventRSVP.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if existing:
+        return jsonify({'error': f'{user.first_name} {user.last_name} is already RSVP\'d to this event'}), 400
+
+    rsvp = EventRSVP(event_id=event_id, user_id=user_id)
+    db.session.add(rsvp)
+    db.session.commit()
+
+    new_count = EventRSVP.query.filter_by(event_id=event_id).count()
+    over_capacity = bool(event.max_capacity and new_count > event.max_capacity)
+    return jsonify({
+        'success': True,
+        'message': f'{user.first_name} {user.last_name} added to RSVP list.',
+        'over_capacity': over_capacity,
+        'new_count': new_count
+    })
+
+
+@app.route('/api/admin/event/<int:event_id>/rsvp/remove', methods=['POST'])
+@login_required
+def admin_remove_rsvp(event_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    event = Event.query.get(event_id)
+    if not event:
+        return jsonify({'error': 'Event not found'}), 404
+
+    data = request.get_json()
+    user_id = data.get('user_id') if data else None
+    if not user_id:
+        return jsonify({'error': 'user_id required'}), 400
+
+    rsvp = EventRSVP.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if not rsvp:
+        return jsonify({'error': 'RSVP not found'}), 404
+
+    db.session.delete(rsvp)
+    db.session.commit()
+
+    new_count = EventRSVP.query.filter_by(event_id=event_id).count()
+    return jsonify({'success': True, 'message': 'RSVP removed.', 'new_count': new_count})
 
 
 @app.route('/api/admin/event/<int:event_id>/energy-exchange/confirm', methods=['POST'])
