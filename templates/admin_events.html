@@ -73,8 +73,20 @@
         </div>
 
         <!-- Create New Event Form -->
-        <div class="dark-card rounded-2xl shadow-2xl p-8 mb-8">
-            <h3 class="text-2xl font-bold text-text-primary mb-6 font-brand">Create New Event</h3>
+        <div class="mb-8">
+            <button type="button" id="toggleCreateEvent"
+                    onclick="(function(){var f=document.getElementById('createEventForm');var icon=document.getElementById('createEventChevron');var open=!f.classList.contains('hidden');f.classList.toggle('hidden',open);icon.style.transform=open?'':'rotate(180deg)';})()"
+                    class="flex items-center gap-3 bg-white text-primary border-2 border-primary font-semibold px-6 py-3 rounded-xl shadow-lg hover:bg-primary hover:text-white transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create New Event
+                <svg id="createEventChevron" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="createEventForm" class="hidden mt-4">
+            <div class="dark-card rounded-2xl shadow-2xl p-8">
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -155,6 +167,8 @@
                     Create Event
                 </button>
             </form>
+            </div>
+            </div>
         </div>
 
         <!-- Existing Events -->
