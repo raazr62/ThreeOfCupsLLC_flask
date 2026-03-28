@@ -83,7 +83,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <button type="button" id="matchesSearchClear"
-                        onclick="document.getElementById('matchesSearchInput').value=''; document.getElementById('matchesSearchForm').submit();"
+                        onclick="document.getElementById('matchesSearchInput').value=''; searchMatches('', 1);"
                         class="absolute right-3 top-3 text-gray-300 hover:text-gray-500 transition-colors {% if not search_query %}hidden{% endif %}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -97,13 +97,14 @@
             <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 shadow-lg">
                 <div class="flex justify-between items-center">
                     <h3 class="text-xl font-semibold text-white">All Completed Matches</h3>
-                    <span class="bg-white/20 text-white text-sm px-3 py-1 rounded-full">
+                    <span id="matches-count-badge" class="bg-white/20 text-white text-sm px-3 py-1 rounded-full">
                         {% if search_query %}{{ total_items }} result{{ 's' if total_items != 1 else '' }}{% else %}{{ total_items }} Total{% endif %}
                     </span>
                 </div>
             </div>
 
             <div class="p-6">
+                <div id="matches-list-container">
                 {% if matches_data %}
                     <div class="space-y-6">
                         {% for data in matches_data %}
@@ -223,10 +224,12 @@
                         {% endif %}
                     </div>
                 {% endif %}
+                </div><!-- /matches-list-container -->
             </div>
         </div>
 
         <!-- Pagination -->
+        <div id="matches-pagination-container">
         {% if total_pages > 1 %}
         <div class="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             {% if page > 1 %}
@@ -274,6 +277,7 @@
             Showing {{ ((page - 1) * per_page) + 1 }}–{{ end_item }} of {{ total_items }} match{{ 'es' if total_items != 1 else '' }}
         </div>
         {% endif %}
+        </div><!-- /matches-pagination-container -->
     </div>
 </div>
 
@@ -880,19 +884,135 @@ document.getElementById('matchEmailsModal')?.addEventListener('click', function(
     }
 });
 
-// ── Search: debounced auto-submit + live clear button ───────────────────────
+// ── Matches AJAX search ──────────────────────────────────────────────────────
 (function() {
     var input = document.getElementById('matchesSearchInput');
     var clearBtn = document.getElementById('matchesSearchClear');
-    var form = document.getElementById('matchesSearchForm');
     if (!input) return;
     var timer;
     input.addEventListener('input', function() {
         clearBtn.classList.toggle('hidden', this.value === '');
         clearTimeout(timer);
-        timer = setTimeout(function() { form.submit(); }, 400);
+        var q = this.value;
+        timer = setTimeout(function() { searchMatches(q, 1); }, 350);
     });
 }());
+
+function searchMatches(q, page) {
+    var listEl = document.getElementById('matches-list-container');
+    var pagEl  = document.getElementById('matches-pagination-container');
+    var badge  = document.getElementById('matches-count-badge');
+    listEl.style.opacity = '0.4';
+
+    fetch('/api/admin/matches/search?q=' + encodeURIComponent(q) + '&page=' + page)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            listEl.style.opacity = '1';
+            badge.textContent = q
+                ? data.total + ' result' + (data.total !== 1 ? 's' : '')
+                : data.total + ' Total';
+            listEl.innerHTML = renderMatchesList(data, q);
+            pagEl.innerHTML  = renderMatchesPagination(data, q);
+        })
+        .catch(function() { listEl.style.opacity = '1'; });
+}
+
+function renderMatchesList(data, q) {
+    if (!data.matches.length) {
+        return '<div class="text-center py-16">' +
+            '<div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">' +
+            '<svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z"/>' +
+            '</svg></div>' +
+            (q ? '<h3 class="text-xl font-medium mb-3">No matches found for \u201c' + escHtml(q) + '\u201d</h3>'
+               : '<h3 class="text-xl font-medium mb-3">No Matches Yet</h3>') +
+            '</div>';
+    }
+    return '<div class="space-y-6">' + data.matches.map(renderMatchCard).join('') + '</div>';
+}
+
+function renderMatchCard(m) {
+    var u1Name = m.user1_first + ' ' + m.user1_last;
+    var u2Name = m.user2_first + ' ' + m.user2_last;
+    var u1Av = m.user1_picture
+        ? '<img src="' + m.user1_picture + '" alt="" class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">'
+        : '<div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-cyan-500 rounded-full flex items-center justify-center border-4 border-white shadow-md"><span class="text-white font-bold text-lg">' + m.user1_first[0] + m.user1_last[0] + '</span></div>';
+    var u2Av = m.user2_picture
+        ? '<img src="' + m.user2_picture + '" alt="" class="w-16 h-16 rounded-full object-cover border-4 border-white shadow-md">'
+        : '<div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-cyan-500 rounded-full flex items-center justify-center border-4 border-white shadow-md"><span class="text-white font-bold text-lg">' + m.user2_first[0] + m.user2_last[0] + '</span></div>';
+
+    return '<div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 shadow-lg hover:shadow-xl transition-shadow">' +
+        '<div class="flex justify-between items-center mb-4">' +
+            '<div class="flex items-center space-x-6">' +
+                '<div class="flex items-center space-x-4">' + u1Av +
+                    '<div><h4 class="font-bold text-lg">' + escHtml(u1Name) + '</h4>' +
+                    '<p class="text-sm text-gray-600">' + escHtml(m.user1_email) + '</p>' +
+                    (m.user1_bio ? '<p class="text-sm text-gray-500 mt-1">' + escHtml(m.user1_bio) + '</p>' : '') + '</div>' +
+                '</div>' +
+                '<div class="flex flex-col items-center px-4">' +
+                    '<div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">' +
+                        '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>' +
+                    '</div><span class="text-xs text-green-600 font-medium mt-2">Matched</span>' +
+                '</div>' +
+                '<div class="flex items-center space-x-4">' + u2Av +
+                    '<div><h4 class="font-bold text-lg">' + escHtml(u2Name) + '</h4>' +
+                    '<p class="text-sm text-gray-600">' + escHtml(m.user2_email) + '</p>' +
+                    (m.user2_bio ? '<p class="text-sm text-gray-500 mt-1">' + escHtml(m.user2_bio) + '</p>' : '') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex items-center space-x-4"><div class="text-right">' +
+                '<span class="bg-green-100 text-green-800 text-sm font-bold px-4 py-2 rounded-full shadow">\u2713 Active Match</span>' +
+                '<p class="text-sm text-gray-600 mt-2">Match #' + m.match_id + '</p>' +
+            '</div></div>' +
+        '</div>' +
+        '<div class="mt-4 pt-4 border-t border-green-200"><div class="flex justify-between items-center">' +
+            '<div class="flex space-x-2">' +
+                '<span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">Match ID: ' + m.match_id + '</span>' +
+                '<span class="bg-white text-green-700 text-xs px-3 py-1 rounded-full border border-green-300">Finalized: ' + m.finalized_at + '</span>' +
+            '</div>' +
+            '<div class="flex space-x-2">' +
+                '<button onclick="viewMatchDetails(' + m.user1_id + ',' + m.user2_id + ')" class="bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">View Details</button>' +
+                '<button onclick="editMatchEmails(' + m.match_id + ',\'' + escJs(u1Name) + '\',\'' + escJs(u2Name) + '\')" class="bg-purple-500 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">Edit Dashboard Content</button>' +
+                '<button onclick="unmatchUsers(' + m.match_id + ',\'' + escJs(u1Name) + '\',\'' + escJs(u2Name) + '\')" class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">Unmatch</button>' +
+            '</div>' +
+        '</div></div>' +
+    '</div>';
+}
+
+function renderMatchesPagination(data, q) {
+    if (data.total_pages <= 1) return '';
+    var p = data.page, tp = data.total_pages, pp = data.per_page, total = data.total;
+    var start = (p - 1) * pp + 1, end = Math.min(p * pp, total);
+
+    function pageBtn(pageNum, label, disabled) {
+        if (disabled) return '<span class="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg border border-gray-300 cursor-not-allowed font-semibold">' + label + '</span>';
+        return '<a href="javascript:void(0)" onclick="searchMatches(' + JSON.stringify(q) + ',' + pageNum + ')" class="bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all font-semibold">' + label + '</a>';
+    }
+    function numBtn(n) {
+        var active = n === p ? 'bg-gradient-to-r from-purple-600 to-cyan-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100';
+        return '<a href="javascript:void(0)" onclick="searchMatches(' + JSON.stringify(q) + ',' + n + ')" class="' + active + ' px-3 py-2 rounded-lg border border-gray-300 transition-all min-w-[40px] text-center font-semibold">' + n + '</a>';
+    }
+
+    var sp = Math.max(1, p - 2), ep = Math.min(tp, p + 2);
+    var nums = '';
+    if (sp > 1) { nums += numBtn(1); if (sp > 2) nums += '<span class="text-gray-500 px-2 py-2">...</span>'; }
+    for (var i = sp; i <= ep; i++) nums += numBtn(i);
+    if (ep < tp) { if (ep < tp - 1) nums += '<span class="text-gray-500 px-2 py-2">...</span>'; nums += numBtn(tp); }
+
+    return '<div class="mt-8 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">' +
+        pageBtn(p - 1, '\u2190 Previous', p <= 1) +
+        '<div class="flex space-x-2">' + nums + '</div>' +
+        pageBtn(p + 1, 'Next \u2192', p >= tp) +
+        '</div>' +
+        '<div class="mt-4 text-center text-sm text-gray-500">Showing ' + start + '\u2013' + end + ' of ' + total + ' match' + (total !== 1 ? 'es' : '') + '</div>';
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escJs(s) {
+    return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
 </script>
 
 {% endblock %}

@@ -1364,6 +1364,98 @@ def admin_assessments():
                          rsvp_event_filter=rsvp_event_filter,
                          user_rsvp_events=user_rsvp_events)
 
+@app.route('/api/admin/matches/search')
+@login_required
+def api_admin_matches_search():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    q = request.args.get('q', '').strip().lower()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+
+    finalized_matches = Match.query.filter_by(status='finalized').all()
+
+    results = []
+    for match in finalized_matches:
+        u1 = User.query.get(match.user1_id)
+        u2 = User.query.get(match.user2_id)
+        if not u1 or not u2:
+            continue
+        if q:
+            haystack = f'{u1.first_name} {u1.last_name} {u2.first_name} {u2.last_name}'.lower()
+            if q not in haystack:
+                continue
+        results.append({
+            'match_id': match.id,
+            'user1_id': u1.id,
+            'user2_id': u2.id,
+            'user1_first': u1.first_name,
+            'user1_last': u1.last_name,
+            'user1_email': u1.email,
+            'user1_bio': (u1.bio[:50] + '…') if u1.bio and len(u1.bio) > 50 else (u1.bio or ''),
+            'user1_picture': url_for('static', filename=u1.profile_picture) if u1.profile_picture else None,
+            'user2_first': u2.first_name,
+            'user2_last': u2.last_name,
+            'user2_email': u2.email,
+            'user2_bio': (u2.bio[:50] + '…') if u2.bio and len(u2.bio) > 50 else (u2.bio or ''),
+            'user2_picture': url_for('static', filename=u2.profile_picture) if u2.profile_picture else None,
+            'finalized_at': match.finalized_at.strftime('%B %d, %Y') if match.finalized_at else 'N/A',
+        })
+
+    total = len(results)
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * per_page
+    return jsonify({
+        'matches': results[start:start + per_page],
+        'total': total,
+        'page': page,
+        'total_pages': total_pages,
+        'per_page': per_page,
+    })
+
+
+@app.route('/api/admin/assessments/search')
+@login_required
+def api_admin_assessments_search():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify({'assessments': [], 'total': 0})
+
+    pattern = f'%{q}%'
+    rows = db.session.query(Assessment, User).join(User, Assessment.user_id == User.id).filter(
+        or_(
+            User.first_name.ilike(pattern),
+            User.last_name.ilike(pattern),
+            User.email.ilike(pattern)
+        )
+    ).all()
+
+    results = []
+    for a, u in rows:
+        results.append({
+            'id': a.id,
+            'user_id': u.id,
+            'user_name': f'{u.first_name} {u.last_name}',
+            'user_email': u.email,
+            'user_age': calculate_age(u.date_of_birth) if u.date_of_birth else None,
+            'user_location': u.location or '',
+            'user_pronouns': u.pronouns or '',
+            'user_picture': url_for('static', filename=u.profile_picture) if u.profile_picture else None,
+            'reviewed': a.reviewed,
+        })
+
+    return jsonify({
+        'assessments': results,
+        'total': len(results),
+        'q': q,
+    })
+
+
 # Admin matches page
 @app.route('/admin/matches')
 @login_required

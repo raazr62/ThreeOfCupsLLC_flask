@@ -82,28 +82,31 @@
         </div>
 
         <!-- Quick Search -->
-        <form id="assessmentSearchForm" method="GET" action="{{ url_for('admin_assessments') }}" class="mb-4">
-            <input type="hidden" name="filter" value="{{ filter_status }}">
+        <div class="mb-4">
             <div class="relative">
-                <input type="text" id="assessmentSearchInput" name="search" value="{{ search_query or '' }}"
+                <input type="text" id="assessmentSearchInput"
                        placeholder="Quick search by name or email..."
                        autocomplete="off"
+                       value="{{ search_query or '' }}"
                        class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 pl-11 pr-10 text-sm shadow focus:outline-none focus:ring-2 focus:ring-primary">
                 <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <button type="button" id="assessmentSearchClear"
-                        onclick="document.getElementById('assessmentSearchInput').value=''; document.getElementById('assessmentSearchForm').submit();"
                         class="absolute right-3 top-3 text-gray-300 hover:text-gray-500 transition-colors {% if not search_query %}hidden{% endif %}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-        </form>
+            <!-- AJAX results panel -->
+            <div id="assessmentAjaxResults" class="hidden mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                <div id="assessmentAjaxResultsInner"></div>
+            </div>
+        </div>
 
         <!-- Advanced Filters -->
-        <div class="mb-6 bg-white rounded-2xl shadow-lg p-6">
+        <div id="advancedFiltersSection" class="mb-6 bg-white rounded-2xl shadow-lg p-6" {% if search_query and not age_min and not age_max and not location_filter and not pronouns_filter and not emotional_availability_min and not recharge_style and not rsvp_event_filter %}style="display:none"{% endif %}>
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Filter Assessments</h3>
                 <button id="toggleFilters" class="text-primary hover:text-secondary font-medium text-sm">
@@ -723,9 +726,9 @@ document.getElementById('toggleFilters').addEventListener('click', function() {
     }
 });
 
-// Auto-expand filters if any filter is active
+// Auto-expand filters if any filter (other than plain search) is active
 document.addEventListener('DOMContentLoaded', function() {
-    {% if search_query or age_min or age_max or location_filter or pronouns_filter or emotional_availability_min or recharge_style %}
+    {% if age_min or age_max or location_filter or pronouns_filter or emotional_availability_min or recharge_style %}
     const filterForm = document.getElementById('filterForm');
     const toggleText = document.getElementById('filterToggleText');
     filterForm.classList.remove('hidden');
@@ -1188,17 +1191,89 @@ document.getElementById('comparisonModal').addEventListener('click', function(e)
     }
 });
 
-// ── Quick search: debounced auto-submit + live clear button ─────────────────
+// ── Quick search: AJAX + live clear button ──────────────────────────────────
 (function() {
     var input = document.getElementById('assessmentSearchInput');
     var clearBtn = document.getElementById('assessmentSearchClear');
-    var form = document.getElementById('assessmentSearchForm');
+    var resultsPanel = document.getElementById('assessmentAjaxResults');
+    var resultsInner = document.getElementById('assessmentAjaxResultsInner');
     if (!input) return;
     var timer;
+
+    function escH(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function searchAssessments(q) {
+        if (!q) {
+            resultsPanel.classList.add('hidden');
+            resultsInner.innerHTML = '';
+            return;
+        }
+        fetch('/api/admin/assessments/search?q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.assessments || data.assessments.length === 0) {
+                    resultsInner.innerHTML = '<p class="text-sm text-gray-500 px-4 py-3">No assessments found for &ldquo;' + escH(q) + '&rdquo;</p>';
+                } else {
+                    var rows = data.assessments.map(function(a) {
+                        var pic = a.user_picture
+                            ? '<img src="' + escH(a.user_picture) + '" class="w-9 h-9 rounded-full object-cover flex-shrink-0">'
+                            : '<div class="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">' + escH((a.user_name || '?')[0].toUpperCase()) + '</div>';
+                        var meta = [];
+                        if (a.user_age) meta.push('Age ' + escH(a.user_age));
+                        if (a.user_location) meta.push(escH(a.user_location));
+                        if (a.user_pronouns) meta.push(escH(a.user_pronouns));
+                        var viewUrl = '/admin/assessments?search=' + encodeURIComponent(a.user_email);
+                        return '<a href="' + viewUrl + '" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors">'
+                            + pic
+                            + '<div class="flex-1 min-w-0">'
+                            +   '<div class="flex items-center gap-2 flex-wrap">'
+                            +     '<span class="font-medium text-sm text-gray-900">' + escH(a.user_name) + '</span>'
+                            +   '</div>'
+                            +   '<div class="text-xs text-gray-500 truncate">' + escH(a.user_email) + (meta.length ? ' &middot; ' + meta.join(' &middot; ') : '') + '</div>'
+                            + '</div>'
+                            + '<svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>'
+                            + '</a>';
+                    }).join('');
+                    var header = '<div class="px-4 py-2 bg-gray-50 border-b border-gray-100 text-xs text-gray-500 font-medium">'
+                        + data.total + ' result' + (data.total !== 1 ? 's' : '') + ' — click to view full assessment'
+                        + '</div>';
+                    resultsInner.innerHTML = header + rows;
+                }
+                resultsPanel.classList.remove('hidden');
+            })
+            .catch(function() {
+                resultsInner.innerHTML = '<p class="text-sm text-red-500 px-4 py-3">Search failed. Please try again.</p>';
+                resultsPanel.classList.remove('hidden');
+            });
+    }
+
     input.addEventListener('input', function() {
-        clearBtn.classList.toggle('hidden', this.value === '');
+        var q = this.value;
+        clearBtn.classList.toggle('hidden', q === '');
         clearTimeout(timer);
-        timer = setTimeout(function() { form.submit(); }, 400);
+        timer = setTimeout(function() { searchAssessments(q); }, 350);
+    });
+
+    clearBtn.addEventListener('click', function() {
+        input.value = '';
+        clearBtn.classList.add('hidden');
+        resultsPanel.classList.add('hidden');
+        resultsInner.innerHTML = '';
+        input.focus();
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !resultsPanel.contains(e.target)) {
+            resultsPanel.classList.add('hidden');
+        }
+    });
+    input.addEventListener('focus', function() {
+        if (this.value && resultsInner.innerHTML) {
+            resultsPanel.classList.remove('hidden');
+        }
     });
 }());
 
