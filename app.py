@@ -1484,8 +1484,8 @@ def admin_matches():
     per_page = 20
     search_query = request.args.get('search', '').strip()
 
-    # Get finalized matches from Match table
-    finalized_matches = Match.query.filter_by(status='finalized').all()
+    # Get finalized matches from Match table, newest first
+    finalized_matches = Match.query.filter_by(status='finalized').order_by(Match.created_at.desc()).all()
 
     # Build match data with user information
     all_matches_data = []
