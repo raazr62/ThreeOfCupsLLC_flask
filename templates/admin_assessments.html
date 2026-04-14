@@ -2,25 +2,6 @@
 
 {% block content %}
 <style>
-    /* Mobile Dropdown Navigation */
-    .admin-nav-desktop {
-        display: flex;
-    }
-
-    .admin-nav-mobile {
-        display: none;
-    }
-
-    @media (max-width: 768px) {
-        .admin-nav-desktop {
-            display: none;
-        }
-
-        .admin-nav-mobile {
-            display: block;
-        }
-    }
-
     /* Assessment card transitions */
     .toggle-icon {
         transition: transform 0.3s ease;
@@ -38,47 +19,40 @@
             <p class="text-sm sm:text-base text-text-accent opacity-90">Review user assessments with scoring analysis</p>
         </div>
 
-        <!-- Navigation - Desktop -->
-        <div class="mb-6 sm:mb-8 admin-nav-desktop justify-center">
-            <div class="bg-white rounded-2xl shadow-lg p-1 flex space-x-1">
+        <!-- Admin Navigation -->
+        <div class="mb-6 sm:mb-8">
+            <div class="grid grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
                 <a href="{{ url_for('admin_dashboard') }}"
-                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
-                    Overview
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Overview</span>
                 </a>
                 <a href="{{ url_for('admin_users') }}"
-                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
-                    Users
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Users</span>
                 </a>
                 <a href="{{ url_for('admin_assessments') }}"
-                   class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold transition-all duration-300">
-                    Assessments
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-md">
+                    <svg class="w-5 h-5 mb-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-white text-center leading-tight">Assessments</span>
                 </a>
                 <a href="{{ url_for('admin_pending_matches') }}"
-                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
-                    Pending Matches
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Pending Matches</span>
                 </a>
                 <a href="{{ url_for('admin_matches') }}"
-                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
-                    Matches
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Matches</span>
                 </a>
                 <a href="{{ url_for('admin_events') }}"
-                   class="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all duration-300">
-                    Events
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Events</span>
                 </a>
             </div>
-        </div>
-
-        <!-- Navigation - Mobile Dropdown -->
-        <div class="mb-6 sm:mb-8 admin-nav-mobile">
-            <select onchange="window.location.href=this.value"
-                    class="w-full bg-white border-2 border-primary rounded-xl px-4 py-3 font-semibold text-gray-700 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="{{ url_for('admin_dashboard') }}">Overview</option>
-                <option value="{{ url_for('admin_users') }}">Users</option>
-                <option value="{{ url_for('admin_assessments') }}" selected>Assessments</option>
-                <option value="{{ url_for('admin_pending_matches') }}">Pending Matches</option>
-                <option value="{{ url_for('admin_matches') }}">Matches</option>
-                <option value="{{ url_for('admin_events') }}">Events</option>
-            </select>
         </div>
 
         <!-- Quick Search -->
