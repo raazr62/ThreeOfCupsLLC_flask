@@ -124,59 +124,75 @@ def sanitize_email_content(text):
 
     return text
 
-def format_draft_email_to_html(plain_text):
+def format_draft_email_to_html(plain_text, bold_words=None, logo_url=None):
     """
-    Convert plain text draft email to formatted HTML with Three of Cups styling.
-    Uses the app's peachy color palette: #FF9B9B (coral), #FFB88C (peach), #FFD97D (yellow)
+    Convert plain text draft email to formatted HTML.
+    Section headers and specified words (e.g. names, pronouns) are bolded.
     """
     if not plain_text:
         return ""
 
+    import html
+
     # Sanitize content to remove all non-ASCII characters for SMTP compatibility
     plain_text = sanitize_email_content(plain_text)
 
-    # Escape any existing HTML to prevent issues
-    import html
+    # Escape HTML
     text = html.escape(plain_text)
 
-    # Split into paragraphs (double newlines)
-    paragraphs = text.split('\n\n')
+    # Bold specified words (names, pronouns) wherever they appear
+    if bold_words:
+        for word in bold_words:
+            if word:
+                escaped_word = html.escape(word)
+                text = text.replace(escaped_word, f'<strong>{escaped_word}</strong>')
 
-    html_parts = []
-    html_parts.append('<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #2C2420;">')
+    # Section headers to bold (matched after escaping)
+    bold_headers = [
+        "Here&#x27;s why I think you two will connect:",
+        "Here's why I think you two will connect:",
+        "Some fun overlaps:",
+        "A gentle awareness:",
+        "Next steps:",
+        "Contact info:",
+        "Here are a few more ideas from the Three of Cups team:",
+    ]
+
+    paragraphs = text.split('\n\n')
+    html_parts = ['<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">']
+
+    if logo_url:
+        html_parts.append(
+            f'<div style="background-color: #FF9B9B; width: 100%; padding: 24px 0; text-align: center; margin-bottom: 24px;">'
+            f'<img src="{logo_url}" alt="Three of Cups" style="max-height: 80px; display: inline-block;">'
+            f'</div>'
+        )
 
     for para in paragraphs:
         if not para.strip():
             continue
 
-        # Check if this looks like a heading (short line, possibly ending with :)
-        if len(para.strip()) < 60 and (para.strip().endswith(':') or para.strip().endswith('!')):
-            html_parts.append(f'<h3 style="color: #FF9B9B; margin-top: 25px; margin-bottom: 15px;">{para.strip()}</h3>')
-        # Check if it's a bulleted list
-        elif '•' in para or para.strip().startswith('-'):
-            items = [line.strip().lstrip('•-').strip() for line in para.split('\n') if line.strip()]
-            if items:
-                html_parts.append('<ul style="margin: 15px 0; padding-left: 20px;">')
-                for item in items:
-                    html_parts.append(f'<li style="margin: 8px 0;">{item}</li>')
-                html_parts.append('</ul>')
-        # Check if it looks like a special callout (contains "awareness" or "note")
-        elif 'awareness' in para.lower() or 'gentle' in para.lower() or 'note:' in para.lower():
-            formatted_para = para.replace('\n', '<br>')
-            html_parts.append(f'<div style="background-color: #FFF7ED; padding: 15px; border-left: 4px solid #FFB88C; border-radius: 4px; margin: 20px 0;">{formatted_para}</div>')
-        # Check if it looks like contact info
-        elif 'contact' in para.lower() and 'info' in para.lower():
-            formatted_para = para.replace('\n', '<br>')
-            html_parts.append(f'<div style="background-color: #FAF7F5; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #FFD97D;">{formatted_para}</div>')
-        # Check if it's the signature (contains "Iris" or ends with emoji)
-        elif 'iris' in para.lower() or '🌟' in para or para.strip().startswith('With '):
-            formatted_para = para.replace('\n', '<br>')
-            html_parts.append(f'<hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;"><p style="font-style: italic; color: #FF9B9B;">{formatted_para}</p>')
-        # Regular paragraph
-        else:
-            formatted_para = para.replace('\n', '<br>')
-            html_parts.append(f'<p style="margin: 15px 0; line-height: 1.6;">{formatted_para}</p>')
+        stripped = para.strip()
 
+        # Check if it's a bulleted list
+        if '•' in para:
+            lines = para.split('\n')
+            html_parts.append('<p style="margin: 15px 0; line-height: 1.8;">')
+            for line in lines:
+                if line.strip():
+                    html_parts.append(f'{line.strip()}<br>')
+            html_parts.append('</p>')
+        else:
+            # Bold any matching section headers at the start of the paragraph
+            for header in bold_headers:
+                if stripped.startswith(header):
+                    para = para.replace(header, f'<strong>{header}</strong>', 1)
+                    break
+            formatted = para.replace('\n', '<br>')
+            html_parts.append(f'<p style="margin: 15px 0; line-height: 1.8;">{formatted}</p>')
+
+    html_parts.append('<hr style="border: none; border-top: 2px solid #FF9B9B; margin: 24px 0;">')
+    html_parts.append('<p style="margin: 0;"><a href="https://linktr.ee/threeofcupsllc" style="color: #FF9B9B;">follow us for more opportunities to connect!</a></p>')
     html_parts.append('</div>')
 
     return ''.join(html_parts)
@@ -1710,81 +1726,52 @@ def admin_pending_matches():
             # Track email sending success
             email_errors = []
             emails_sent = 0
+            logo_url = url_for('static', filename='logo/three-of-cups-logo-new.png', _external=True)
 
             # Use the drafted email if available, otherwise use default template
             if match.draft_email:
-                # Send custom drafted email to both users
-                from flask_mail import Message
-                for user in [user1, user2]:
-                    if user:
-                        try:
-                            # Determine the match's name (the other person)
-                            match_name = user2.first_name if user.id == user1.id else user1.first_name
+                # Send one email to both users
+                try:
+                    from flask_mail import Message as MailMessage
+                    # Replace placeholders in draft email
+                    email_content = match.draft_email.replace('{user1_name}', user1.first_name)
+                    email_content = email_content.replace('{user2_name}', user2.first_name)
+                    email_content = email_content.replace('{user1_pronouns}', user1.pronouns or '')
+                    email_content = email_content.replace('{user2_pronouns}', user2.pronouns or '')
+                    email_content = email_content.replace('{dashboard_url}', dashboard_url)
+                    email_content = sanitize_email_content(email_content)
 
-                            # Replace placeholders in draft email
-                            personalized_email = match.draft_email.replace('{first_name}', user.first_name)
-                            personalized_email = personalized_email.replace('{match_name}', match_name)
-                            personalized_email = personalized_email.replace('{dashboard_url}', dashboard_url)
-                            personalized_email = personalized_email.replace('{user1_name}', user1.first_name)
-                            personalized_email = personalized_email.replace('{user2_name}', user2.first_name)
-
-                            # Aggressively sanitize content to remove ALL non-ASCII characters (including emojis)
-                            personalized_email = sanitize_email_content(personalized_email)
-
-                            msg = Message(
-                                f'Your Three of Cups Match: Meet {match_name}!',
-                                sender=app.config['MAIL_DEFAULT_SENDER'],
-                                recipients=[user.email]
-                            )
-                            # Sanitize both body and HTML to ensure no non-ASCII characters
-                            msg.body = sanitize_email_content(personalized_email)
-                            # Convert to formatted HTML with Three of Cups styling (already sanitized in function)
-                            msg.html = format_draft_email_to_html(personalized_email)
-                            # Set UTF-8 charset for proper Unicode handling
-                            msg.charset = 'utf-8'
-
-                            # Send email first (priority)
-                            mail.send(msg)
-                            emails_sent += 1
-
-                            # Store email content for modal display
-                            if user.id == user1.id:
-                                match.user1_email_content = personalized_email
-                            else:
-                                match.user2_email_content = personalized_email
-                        except Exception as e:
-                            error_msg = f"Failed to send email to {user.email}: {str(e)}"
-                            print(error_msg)
-                            app.logger.error(error_msg)
-                            email_errors.append(error_msg)
+                    msg = MailMessage(
+                        f'Your Three of Cups Match: {user1.first_name} and {user2.first_name}!',
+                        sender=app.config['MAIL_DEFAULT_SENDER'],
+                        recipients=[user1.email, user2.email]
+                    )
+                    msg.body = email_content
+                    bold_words = [user1.first_name, user2.first_name, user1.pronouns or '', user2.pronouns or '']
+                    msg.html = format_draft_email_to_html(email_content, bold_words=bold_words, logo_url=logo_url)
+                    msg.charset = 'utf-8'
+                    mail.send(msg)
+                    emails_sent += 1
+                    match.user1_email_content = email_content
+                    match.user2_email_content = email_content
+                except Exception as e:
+                    error_msg = f"Failed to send email to {user1.email}, {user2.email}: {str(e)}"
+                    print(error_msg)
+                    app.logger.error(error_msg)
+                    email_errors.append(error_msg)
             else:
-                # Use default template
-                if user1:
+                # Use default template — one email to both users
+                if user1 and user2:
                     try:
-                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2.first_name, dashboard_url, user1.first_name, user2.first_name)
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2, dashboard_url, logo_url=logo_url)
                         if success and text_content:
-                            # Store email content for modal display
                             match.user1_email_content = text_content
-                            emails_sent += 1
-                        else:
-                            email_errors.append(f"Failed to send default email to {user1.email}")
-                    except Exception as e:
-                        error_msg = f"Error sending email to {user1.email}: {str(e)}"
-                        print(error_msg)
-                        app.logger.error(error_msg)
-                        email_errors.append(error_msg)
-
-                if user2:
-                    try:
-                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user2, user1.first_name, dashboard_url, user1.first_name, user2.first_name)
-                        if success and text_content:
-                            # Store email content for modal display
                             match.user2_email_content = text_content
                             emails_sent += 1
                         else:
-                            email_errors.append(f"Failed to send default email to {user2.email}")
+                            email_errors.append(f"Failed to send default email to {user1.email}, {user2.email}")
                     except Exception as e:
-                        error_msg = f"Error sending email to {user2.email}: {str(e)}"
+                        error_msg = f"Error sending email to {user1.email}, {user2.email}: {str(e)}"
                         print(error_msg)
                         app.logger.error(error_msg)
                         email_errors.append(error_msg)
@@ -1794,9 +1781,9 @@ def admin_pending_matches():
 
             # Show appropriate flash message
             if email_errors:
-                flash(f'Match finalized. {emails_sent} of 2 emails sent. Errors: {"; ".join(email_errors)}', 'warning')
+                flash(f'Match finalized. Email errors: {"; ".join(email_errors)}', 'warning')
             else:
-                flash('Match finalized successfully! Emails sent to both users.', 'success')
+                flash('Match finalized successfully! Email sent to both users.', 'success')
 
         return redirect(url_for('admin_pending_matches'))
 

@@ -84,38 +84,30 @@ def send_password_reset_email(mail, sender, user, reset_url):
         return False
 
 
-def send_match_notification_email(mail, sender, user, match_name, dashboard_url, user1_name=None, user2_name=None):
+def send_match_notification_email(mail, sender, user1, user2, dashboard_url, logo_url=None):
     """
-    Send a match notification email to a user.
+    Send a single match notification email addressed to both matched users.
 
     Args:
         mail: Flask-Mail instance
         sender: Email sender address
-        user: User object with first_name and email attributes
-        match_name: The first name of the matched user
-        dashboard_url: The URL to the user's dashboard
-        user1_name: First name of user1 (for fixed placeholder)
-        user2_name: First name of user2 (for fixed placeholder)
+        user1: User object for user 1 (first_name, email)
+        user2: User object for user 2 (first_name, email)
+        dashboard_url: The URL to the user dashboard
 
     Returns:
-        tuple: (success: bool, html_content: str or None) - True/HTML if email sent successfully, False/None otherwise
+        tuple: (success: bool, text_content: str or None) - True/text if email sent successfully, False/None otherwise
     """
     try:
-        subject, body_text, body_html = get_match_notification_email(user.first_name, dashboard_url)
+        subject, body_text, body_html = get_match_notification_email()
 
         # Replace placeholders with actual values
-        subject = subject.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
-        body_text = body_text.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
-        body_html = body_html.replace('{first_name}', user.first_name).replace('{match_name}', match_name).replace('{dashboard_url}', dashboard_url)
+        user1_pronouns = user1.pronouns or ''
+        user2_pronouns = user2.pronouns or ''
 
-        if user1_name:
-            subject = subject.replace('{user1_name}', user1_name)
-            body_text = body_text.replace('{user1_name}', user1_name)
-            body_html = body_html.replace('{user1_name}', user1_name)
-        if user2_name:
-            subject = subject.replace('{user2_name}', user2_name)
-            body_text = body_text.replace('{user2_name}', user2_name)
-            body_html = body_html.replace('{user2_name}', user2_name)
+        subject = subject.replace('{user1_name}', user1.first_name).replace('{user2_name}', user2.first_name).replace('{user1_pronouns}', user1_pronouns).replace('{user2_pronouns}', user2_pronouns).replace('{dashboard_url}', dashboard_url)
+        body_text = body_text.replace('{user1_name}', user1.first_name).replace('{user2_name}', user2.first_name).replace('{user1_pronouns}', user1_pronouns).replace('{user2_pronouns}', user2_pronouns).replace('{dashboard_url}', dashboard_url)
+        body_html = body_html.replace('{user1_name}', user1.first_name).replace('{user2_name}', user2.first_name).replace('{user1_pronouns}', user1_pronouns).replace('{user2_pronouns}', user2_pronouns).replace('{dashboard_url}', dashboard_url).replace('{logo_url}', logo_url or '')
 
         # Aggressively sanitize all content to remove non-ASCII characters (including emojis)
         subject = sanitize_email_content(subject)
@@ -125,7 +117,7 @@ def send_match_notification_email(mail, sender, user, match_name, dashboard_url,
         msg = Message(
             subject,
             sender=sender,
-            recipients=[user.email]
+            recipients=[user1.email, user2.email]
         )
         msg.body = body_text
         msg.html = body_html

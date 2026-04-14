@@ -3,11 +3,9 @@ def get_match_notification_email(user_first_name=None, dashboard_url=None):
     Generate match notification email content with dynamic and bracketed placeholders.
 
     Dynamic placeholders (replaced at send time):
-        {first_name} - Recipient's first name (swaps based on who receives the email)
-        {match_name} - Match's first name (swaps based on who receives the email)
-        {user1_name} - Always refers to User 1 (does NOT swap)
-        {user2_name} - Always refers to User 2 (does NOT swap)
-        {dashboard_url} - Link to recipient's dashboard
+        {user1_name} - Always refers to User 1
+        {user2_name} - Always refers to User 2
+        {dashboard_url} - Link to the user dashboard
 
     Bracketed placeholders (customized by admin):
         [values], [shared hobby], [friendship desire], etc. - Match details from assessments
@@ -19,74 +17,72 @@ def get_match_notification_email(user_first_name=None, dashboard_url=None):
     Returns:
         Tuple of (subject, body_text, body_html) with placeholders
     """
-    subject = 'Your Three of Cups Match: Meet {match_name}!'
+    subject = 'Your Three of Cups Match: {user1_name} and {user2_name}!'
 
-    body_text = '''Hi {first_name},
+    body_text = '''Hi {user1_name} and {user2_name},
 
-I'm so excited to introduce you to {match_name}! After carefully reviewing both of your assessments, I have a really good feeling about this match.
+I'm so excited to introduce you both to each other! {user2_name}, meet {user1_name} ({user1_pronouns})! {user1_name}, meet {user2_name} ({user2_pronouns})! After carefully reviewing both of your assessments, I have a really good feeling about this match.
 
 Here's why I think you two will connect:
-
-You both ranked [values] in your top values, and you each expressed a desire for friendships where you can [friendship desire]. I noticed that {user1_name}, you mentioned wanting a friend who "[X]" and {user2_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.
-
-You also have complementary [x such as communication styles]—{user1_name}, you're a thoughtful processor who likes time before difficult conversations, and {user2_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.
+You both ranked [values] in your top values. I noticed that {user1_name}, you mentioned desiring a friend that [user1 friendship desire], and {user2_name}, you mentioned desiring a friendship that [user2 friendship desire]! This feels like a great match.
 
 Some fun overlaps:
-• You both love [shared hobby]
-• You're both exploring [shared interest]
-• You both value [shared value]
+• You both enjoy [shared hobby/interest]
+• You both are seeking [shared friendship goal]
+• You both receive connection best through [shared connection style]
 
-A gentle awareness: {user1_name}, you mentioned needing advance notice for plans, and {user2_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!
+A gentle awareness: {user1_name}, you [user1 preference], while {user2_name}, you [user2 preference]. This could actually work well together with intentionality and communication!
 
 Next steps: I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.
 
-Here are a few ideas from the Three of Cups team:
+Here are a few more ideas from the Three of Cups team:
+• Share a new hobby together
+• Attend a social event or market together
+• [Additional idea]
 
 Contact info:
-[Contact method and details]
+You both are CC'd on this email, so feel free to reach out individually!
 
 I'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.
 
 With so much hope for beautiful connection,
-Iris
+The Three of Cups Team
 '''
 
     body_html = '''
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-    <h2 style="color: #8B5CF6;">Your Three of Cups Match: Meet {match_name}!</h2>
-    <p>Hi {first_name},</p>
-    <p>I'm so excited to introduce you to <strong>{match_name}</strong>! After carefully reviewing both of your assessments, I have a really good feeling about this match.</p>
-
-    <h3 style="color: #06B6D4; margin-top: 25px;">Here's why I think you two will connect:</h3>
-    <p>You both ranked <strong>[values]</strong> in your top values, and you each expressed a desire for friendships where you can <strong>[friendship desire]</strong>. I noticed that {user1_name}, you mentioned wanting a friend who "[X]" and {user2_name}, you described yourself as someone who "[X]." That feels like a beautiful alignment.</p>
-
-    <p>You also have complementary <strong>[x such as communication styles]</strong>—{user1_name}, you're a thoughtful processor who likes time before difficult conversations, and {user2_name}, you're patient and prefer to understand someone's perspective before responding. I think you'll navigate conflict together with a lot of grace.</p>
-
-    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h4 style="color: #8B5CF6; margin-top: 0;">Some fun overlaps:</h4>
-        <ul style="margin: 10px 0;">
-            <li>You both love <strong>[shared hobby]</strong></li>
-            <li>You're both exploring <strong>[shared interest]</strong></li>
-            <li>You both value <strong>[shared value]</strong></li>
-        </ul>
+    <div style="background-color: #FF9B9B; width: 100%; padding: 24px 0; text-align: center; margin-bottom: 24px;">
+        <img src="{logo_url}" alt="Three of Cups" style="max-height: 80px; display: inline-block;">
     </div>
+    <p>Hi <strong>{user1_name}</strong> and <strong>{user2_name}</strong>,</p>
+    <p>I'm so excited to introduce you both to each other! <strong>{user2_name}</strong>, meet <strong>{user1_name}</strong> (<strong>{user1_pronouns}</strong>)! <strong>{user1_name}</strong>, meet <strong>{user2_name}</strong> (<strong>{user2_pronouns}</strong>)! After carefully reviewing both of your assessments, I have a really good feeling about this match.</p>
 
-    <p style="background-color: #fff7ed; padding: 12px; border-left: 4px solid #f59e0b; border-radius: 4px;"><strong>A gentle awareness:</strong> {user1_name}, you mentioned needing advance notice for plans, and {user2_name}, you tend to be more spontaneous. This could actually be a beautiful balance if you both communicate openly about your needs!</p>
+    <p><strong>Here's why I think you two will connect:</strong><br>
+    You both ranked [values] in your top values. I noticed that {user1_name}, you mentioned desiring a friend that [user1 friendship desire], and {user2_name}, you mentioned desiring a friendship that [user2 friendship desire]! This feels like a great match.</p>
 
-    <h3 style="color: #06B6D4; margin-top: 25px;">Next steps:</h3>
-    <p>I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.</p>
+    <p><strong>Some fun overlaps:</strong><br>
+    • You both enjoy [shared hobby/interest]<br>
+    • You both are seeking [shared friendship goal]<br>
+    • You both receive connection best through [shared connection style]</p>
 
-    <p><strong>Here are a few ideas from the Three of Cups team:</strong></p>
+    <p><strong>A gentle awareness:</strong> {user1_name}, you [user1 preference], while {user2_name}, you [user2 preference]. This could actually work well together with intentionality and communication!</p>
 
-    <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h4 style="color: #06B6D4; margin-top: 0;">Contact info:</h4>
-        <p>[Contact method and details]</p>
-    </div>
+    <p><strong>Next steps:</strong> I've sent this same message to both of you with each other's contact info. I encourage you to reach out within the next few days to set up a casual first meeting—coffee, a walk, whatever feels right.</p>
+
+    <p>Here are a few more ideas from the Three of Cups team:<br>
+    • Share a new hobby together<br>
+    • Attend a social event or market together<br>
+    • [Additional idea]</p>
+
+    <p><strong>Contact info:</strong><br>
+    You both are CC'd on this email, so feel free to reach out individually!</p>
 
     <p>I'm rooting for you both! Remember, not every match will become a lifelong friendship, and that's okay. Stay open, be yourselves, and see what unfolds.</p>
 
-    <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-    <p style="font-style: italic;">With so much hope for beautiful connection,<br>Iris</p>
+    <p>With so much hope for beautiful connection,<br>The Three of Cups Team</p>
+
+    <hr style="border: none; border-top: 2px solid #FF9B9B; margin: 24px 0;">
+    <p><a href="https://linktr.ee/threeofcupsllc" style="color: #FF9B9B;">follow us for more opportunities to connect!</a></p>
 </div>
 '''
 
