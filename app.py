@@ -3803,8 +3803,9 @@ def finalize_event_matches(event_id):
                 missing.append(f"{u2.first_name} {u2.last_name}" if u2 else f"User {draft.user2_id}")
             errors.append(f"No assessment for: {', '.join(missing)}")
             continue
-        # Skip if a Match already exists for this pair
+        # Skip if an active Match already exists for this pair (allow re-matching previously unmatched pairs)
         already = Match.query.filter(
+            Match.status.in_(['pending', 'finalized']),
             or_(
                 and_(Match.user1_id == draft.user1_id, Match.user2_id == draft.user2_id),
                 and_(Match.user1_id == draft.user2_id, Match.user2_id == draft.user1_id),
