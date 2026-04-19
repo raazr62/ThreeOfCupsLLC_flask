@@ -45,11 +45,34 @@
             </div>
         </div>
 
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <div class="relative">
+                <input type="text" id="pendingSearchInput"
+                       placeholder="Search by name or email..."
+                       autocomplete="off"
+                       oninput="filterPendingMatches(this.value)"
+                       class="w-full border border-gray-300 bg-white rounded-xl px-4 py-3 pl-11 pr-10 text-sm shadow focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <svg class="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <button type="button" id="pendingSearchClear"
+                        onclick="document.getElementById('pendingSearchInput').value=''; filterPendingMatches('');"
+                        class="absolute right-3 top-3 text-gray-300 hover:text-gray-500 transition-colors hidden">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <p id="pendingSearchCount" class="text-sm text-gray-500 mt-2 hidden"></p>
+        </div>
+
         <!-- Pending Matches List -->
         {% if matches_data %}
             <div class="space-y-8">
                 {% for data in matches_data %}
-                    <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden">
+                    <div class="dark-card rounded-2xl shadow-2xl animate-glow overflow-hidden pending-match-card"
+                         data-search="{{ data.user1.first_name|lower }} {{ data.user1.last_name|lower }} {{ data.user1.email|lower }} {{ data.user2.first_name|lower }} {{ data.user2.last_name|lower }} {{ data.user2.email|lower }}">
                         <!-- Match Header -->
                         <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
                             <div class="flex justify-between items-center">
@@ -306,6 +329,33 @@ function confirmFinalizeNoEmail(matchId) {
 
 function confirmCancelMatch(matchId) {
     return confirm('Are you sure you want to CANCEL this pending match?\n\nBoth assessments will be returned to review status and the match will be deleted. This action cannot be undone.');
+}
+
+function filterPendingMatches(query) {
+    const q = query.toLowerCase().trim();
+    const cards = document.querySelectorAll('.pending-match-card');
+    const clearBtn = document.getElementById('pendingSearchClear');
+    const countEl = document.getElementById('pendingSearchCount');
+    let visible = 0;
+
+    cards.forEach(card => {
+        const haystack = card.getAttribute('data-search') || '';
+        if (!q || haystack.includes(q)) {
+            card.style.display = '';
+            visible++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    if (q) {
+        clearBtn.classList.remove('hidden');
+        countEl.classList.remove('hidden');
+        countEl.textContent = visible + ' result' + (visible !== 1 ? 's' : '') + ' for "' + query + '"';
+    } else {
+        clearBtn.classList.add('hidden');
+        countEl.classList.add('hidden');
+    }
 }
 </script>
 {% endblock %}
