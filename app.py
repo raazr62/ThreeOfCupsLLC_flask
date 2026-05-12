@@ -1019,27 +1019,43 @@ def admin_users():
         flash('Access denied.')
         return redirect(url_for('login'))
 
-    # Get filter parameter
+    # Get filter/search/pagination parameters
     filter_type = request.args.get('filter', 'all')
+    search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
 
-    # Get all non-admin users
+    # Build base query
     users_query = User.query.filter_by(is_admin=False)
 
     # Apply filter
     if filter_type == 'has_assessment':
-        # Get users who have completed an assessment
         user_ids_with_assessment = db.session.query(Assessment.user_id).distinct()
         users_query = users_query.filter(User.id.in_(user_ids_with_assessment))
     elif filter_type == 'no_assessment':
-        # Get users who have NOT completed an assessment
         user_ids_with_assessment = db.session.query(Assessment.user_id).distinct()
         users_query = users_query.filter(~User.id.in_(user_ids_with_assessment))
     elif filter_type == 'not_paid':
-        # Get users who have not paid
         users_query = users_query.filter(User.has_paid == False)
 
-    # Order by ID (registration order)
-    users = users_query.order_by(User.id.desc()).all()
+    # Apply search
+    if search_query:
+        search_pattern = f'%{search_query}%'
+        users_query = users_query.filter(
+            or_(
+                User.first_name.ilike(search_pattern),
+                User.last_name.ilike(search_pattern),
+                User.email.ilike(search_pattern),
+                User.username.ilike(search_pattern)
+            )
+        )
+
+    # Order and paginate
+    users_query = users_query.order_by(User.id.desc())
+    total_items = users_query.count()
+    total_pages = max(1, (total_items + per_page - 1) // per_page)
+    page = min(page, total_pages)
+    users = users_query.offset((page - 1) * per_page).limit(per_page).all()
 
     # For each user, check if they have an assessment
     user_data = []
@@ -1053,7 +1069,12 @@ def admin_users():
 
     return render_template('admin_users.html',
                          user_data=user_data,
-                         filter_type=filter_type)
+                         filter_type=filter_type,
+                         search_query=search_query,
+                         page=page,
+                         per_page=per_page,
+                         total_pages=total_pages,
+                         total_items=total_items)
 
 # Admin complete assessment on behalf of user
 @app.route('/admin/complete_assessment/<int:user_id>', methods=['GET', 'POST'])
