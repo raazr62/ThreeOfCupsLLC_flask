@@ -234,6 +234,15 @@ class EventUserBoardPosition(db.Model):
     pos_y = db.Column(db.Float, default=100.0)
     __table_args__ = (db.UniqueConstraint('event_id', 'user_id', name='unique_event_user_pos'),)
 
+class Service(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    price_display = db.Column(db.String(200), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class EventEnergyExchange(db.Model):
     """Tracks energy exchange (payment) indications for paid events.
     Persists even if the user later cancels their RSVP."""
