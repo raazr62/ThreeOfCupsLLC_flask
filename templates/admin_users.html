@@ -11,7 +11,7 @@
 
         <!-- Admin Navigation -->
         <div class="mb-6 sm:mb-8">
-            <div class="grid grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+            <div class="grid grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
                 <a href="{{ url_for('admin_dashboard') }}"
                    class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
                     <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
@@ -41,6 +41,11 @@
                    class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
                     <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                     <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Events</span>
+                </a>
+                <a href="{{ url_for('admin_services') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Services</span>
                 </a>
             </div>
         </div>

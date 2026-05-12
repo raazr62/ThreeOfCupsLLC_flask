@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-6 sm:mb-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-text-primary mb-2">Services Management</h2>
+            <p class="text-sm sm:text-base text-text-accent opacity-90">Manage the services displayed on the public services page</p>
+        </div>
+
+        <!-- Admin Navigation -->
+        <div class="mb-6 sm:mb-8">
+            <div class="grid grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+                <a href="{{ url_for('admin_dashboard') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Users</span>
+                </a>
+                <a href="{{ url_for('admin_assessments') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Assessments</span>
+                </a>
+                <a href="{{ url_for('admin_pending_matches') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Pending Matches</span>
+                </a>
+                <a href="{{ url_for('admin_matches') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Matches</span>
+                </a>
+                <a href="{{ url_for('admin_events') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md border-2 border-transparent hover:border-primary transition-all duration-200 group">
+                    <svg class="w-5 h-5 mb-1.5 text-gray-400 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-600 group-hover:text-primary transition-colors text-center leading-tight">Events</span>
+                </a>
+                <a href="{{ url_for('admin_services') }}"
+                   class="flex flex-col items-center justify-center p-3 sm:p-4 bg-gradient-to-br from-primary to-secondary rounded-xl shadow-md">
+                    <svg class="w-5 h-5 mb-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <span class="text-xs sm:text-sm font-semibold text-white text-center leading-tight">Services</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Create New Service -->
+        <div class="mb-8">
+            <button type="button"
+                    onclick="(function(){var f=document.getElementById('createServiceForm');var icon=document.getElementById('createServiceChevron');var open=!f.classList.contains('hidden');f.classList.toggle('hidden',open);icon.style.transform=open?'':'rotate(180deg)';})()"
+                    class="flex items-center gap-3 bg-white text-primary border-2 border-primary font-semibold px-6 py-3 rounded-xl shadow-lg hover:bg-primary hover:text-white transition-all duration-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add New Service
+                <svg id="createServiceChevron" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="createServiceForm" class="hidden mt-4">
+                <div class="dark-card rounded-2xl shadow-2xl p-6 sm:p-8">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">New Service</h3>
+                    <form method="POST" action="{{ url_for('admin_services_create') }}" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-text-primary mb-1">Service Name *</label>
+                            <input type="text" name="name" required
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                   placeholder="e.g., basic reading via voice recording">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-text-primary mb-1">Price Display</label>
+                            <input type="text" name="price_display"
+                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                   placeholder="e.g., $15  or  $60 – 2 questions each  or  (to be offered soon!)">
+                            <p class="text-xs text-gray-500 mt-1">Leave blank to hide the price line.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-text-primary mb-1">Description</label>
+                            <textarea name="description" rows="6"
+                                      class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                      placeholder="Separate paragraphs with a blank line."></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Separate paragraphs with a blank line — each becomes its own &lt;p&gt; on the page.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="is_active" id="new-is-active" checked
+                                   class="w-4 h-4 text-primary border-gray-300 rounded">
+                            <label for="new-is-active" class="text-sm font-semibold text-text-primary">Visible on services page</label>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-primary hover:bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-300 shadow-md">
+                                Create Service
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services List -->
+        <div class="dark-card rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">All Services</h3>
+                <span class="text-white/80 text-sm">Drag to reorder</span>
+            </div>
+
+            {% if services %}
+            <ul id="servicesList" class="divide-y divide-gray-100">
+                {% for service in services %}
+                <li class="service-item bg-white hover:bg-gray-50 transition-colors" data-id="{{ service.id }}">
+                    <div class="flex items-start gap-4 p-4 sm:p-5">
+                        <!-- Drag handle -->
+                        <div class="drag-handle flex-shrink-0 mt-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                            </svg>
+                        </div>
+
+                        <!-- Service info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <span class="font-semibold text-text-primary">{{ service.name }}</span>
+                                {% if not service.is_active %}
+                                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">hidden</span>
+                                {% endif %}
+                            </div>
+                            {% if service.price_display %}
+                            <p class="text-sm text-primary font-medium">{{ service.price_display }}</p>
+                            {% endif %}
+                            {% if service.description %}
+                            <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ service.description[:150] }}{% if service.description|length > 150 %}…{% endif %}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex-shrink-0 flex items-center gap-2">
+                            <button class="edit-btn text-sm bg-white border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-medium px-3 py-1.5 rounded-lg transition-all"
+                                    data-id="{{ service.id }}"
+                                    data-name="{{ service.name }}"
+                                    data-price="{{ service.price_display or '' }}"
+                                    data-description="{{ service.description or '' }}"
+                                    data-active="{{ 'true' if service.is_active else 'false' }}">
+                                Edit
+                            </button>
+                            <button class="delete-btn text-sm bg-white border border-gray-300 hover:border-red-400 hover:text-red-500 text-gray-600 font-medium px-3 py-1.5 rounded-lg transition-all"
+                                    data-id="{{ service.id }}"
+                                    data-name="{{ service.name }}">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="p-8 text-center text-gray-500">
+                No services yet. Add your first service above.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-black/50 items-center justify-center p-4" style="display:none; z-index: 20000;">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-gradient-to-r from-primary to-secondary px-6 py-4 rounded-t-2xl">
+            <h3 class="text-lg font-semibold text-white">Edit Service</h3>
+        </div>
+        <form id="editForm" method="POST" class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-text-primary mb-1">Service Name *</label>
+                <input type="text" id="editName" name="name" required
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-text-primary mb-1">Price Display</label>
+                <input type="text" id="editPrice" name="price_display"
+                       class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all">
+                <p class="text-xs text-gray-500 mt-1">Leave blank to hide the price line.</p>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-text-primary mb-1">Description</label>
+                <textarea id="editDescription" name="description" rows="8"
+                          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Separate paragraphs with a blank line.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="is_active" id="editIsActive"
+                       class="w-4 h-4 text-primary border-gray-300 rounded">
+                <label for="editIsActive" class="text-sm font-semibold text-text-primary">Visible on services page</label>
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeEditModal()"
+                        class="border border-gray-300 text-gray-600 font-semibold px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-all">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="bg-primary hover:bg-secondary text-white font-semibold px-6 py-2.5 rounded-lg transition-all shadow-md">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete confirmation form (hidden) -->
+<form id="deleteForm" method="POST" style="display:none;"></form>
+
+<script>
+// ── Edit modal ────────────────────────────────────────────────────────────────
+function openEditModal(id, name, price, description, isActive) {
+    document.getElementById('editForm').action = '/admin/services/' + id + '/edit';
+    document.getElementById('editName').value = name;
+    document.getElementById('editPrice').value = price;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editIsActive').checked = (isActive === 'true');
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+
+// Wire up edit buttons via event delegation
+document.addEventListener('click', function(e) {
+    const editBtn = e.target.closest('.edit-btn');
+    if (editBtn) {
+        openEditModal(
+            editBtn.dataset.id,
+            editBtn.dataset.name,
+            editBtn.dataset.price,
+            editBtn.dataset.description,
+            editBtn.dataset.active
+        );
+        return;
+    }
+
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+        const name = deleteBtn.dataset.name;
+        const id = deleteBtn.dataset.id;
+        if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+        const form = document.getElementById('deleteForm');
+        form.action = '/admin/services/' + id + '/delete';
+        form.submit();
+    }
+});
+
+// ── Drag-to-reorder ───────────────────────────────────────────────────────────
+(function() {
+    const list = document.getElementById('servicesList');
+    if (!list) return;
+
+    let dragging = null;
+
+    list.querySelectorAll('.service-item').forEach(item => {
+        item.setAttribute('draggable', 'true');
+
+        item.addEventListener('dragstart', function(e) {
+            dragging = this;
+            setTimeout(() => this.classList.add('opacity-50'), 0);
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        item.addEventListener('dragend', function() {
+            this.classList.remove('opacity-50');
+            dragging = null;
+            saveOrder();
+        });
+
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            if (!dragging || dragging === this) return;
+            const rect = this.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            if (e.clientY < midY) {
+                list.insertBefore(dragging, this);
+            } else {
+                list.insertBefore(dragging, this.nextSibling);
+            }
+        });
+    });
+
+    function saveOrder() {
+        const order = Array.from(list.querySelectorAll('.service-item')).map(el => parseInt(el.dataset.id));
+        fetch('/api/admin/services/reorder', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({order: order})
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -11,7 +11,7 @@ from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
-from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange, EventMatchmakingDraft, EventUserBoardPosition, EventBoardCard
+from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange, EventMatchmakingDraft, EventUserBoardPosition, EventBoardCard, Service
 from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email, send_rsvp_admin_notification, send_rsvp_cancellation_admin_notification
 from security_utils import (
     sanitize_input, sanitize_email, sanitize_username,
@@ -437,7 +437,8 @@ def about():
 @app.route('/services')
 @beta_access_required
 def services():
-    return render_template('services.html')
+    services = Service.query.filter_by(is_active=True).order_by(Service.sort_order, Service.id).all()
+    return render_template('services.html', services=services)
 
 # Privacy Policy route
 @app.route('/privacy')
@@ -3885,6 +3886,86 @@ def reset_matchmaking_board(event_id):
         return jsonify({'error': 'Access denied'}), 403
     EventMatchmakingDraft.query.filter_by(event_id=event_id).delete()
     EventBoardCard.query.filter_by(event_id=event_id).update({'pos_x': 100.0, 'pos_y': 100.0})
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
+# ── Admin: Services ──────────────────────────────────────────────────────────
+
+@app.route('/admin/services')
+@login_required
+def admin_services():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+    services = Service.query.order_by(Service.sort_order, Service.id).all()
+    return render_template('admin_services.html', services=services)
+
+
+@app.route('/admin/services/create', methods=['POST'])
+@login_required
+def admin_services_create():
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+    name = sanitize_input(request.form.get('name', ''), max_length=200, allow_newlines=False)
+    price_display = sanitize_input(request.form.get('price_display', ''), max_length=200, allow_newlines=False)
+    description = sanitize_input(request.form.get('description', ''), max_length=5000, allow_newlines=True)
+    is_active = request.form.get('is_active') == 'on'
+    max_order = db.session.query(db.func.max(Service.sort_order)).scalar() or 0
+    service = Service(
+        name=name,
+        price_display=price_display,
+        description=description,
+        is_active=is_active,
+        sort_order=max_order + 1,
+    )
+    db.session.add(service)
+    db.session.commit()
+    flash('Service created successfully.')
+    return redirect(url_for('admin_services'))
+
+
+@app.route('/admin/services/<int:service_id>/edit', methods=['POST'])
+@login_required
+def admin_services_edit(service_id):
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+    service = Service.query.get_or_404(service_id)
+    service.name = sanitize_input(request.form.get('name', ''), max_length=200, allow_newlines=False)
+    service.price_display = sanitize_input(request.form.get('price_display', ''), max_length=200, allow_newlines=False)
+    service.description = sanitize_input(request.form.get('description', ''), max_length=5000, allow_newlines=True)
+    service.is_active = request.form.get('is_active') == 'on'
+    db.session.commit()
+    flash('Service updated successfully.')
+    return redirect(url_for('admin_services'))
+
+
+@app.route('/admin/services/<int:service_id>/delete', methods=['POST'])
+@login_required
+def admin_services_delete(service_id):
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('login'))
+    service = Service.query.get_or_404(service_id)
+    db.session.delete(service)
+    db.session.commit()
+    flash('Service deleted.')
+    return redirect(url_for('admin_services'))
+
+
+@app.route('/api/admin/services/reorder', methods=['POST'])
+@login_required
+def admin_services_reorder():
+    if not current_user.is_admin:
+        return jsonify({'error': 'Access denied'}), 403
+    data = request.get_json(force=True) or {}
+    order = data.get('order', [])
+    for idx, service_id in enumerate(order):
+        service = Service.query.get(service_id)
+        if service:
+            service.sort_order = idx
     db.session.commit()
     return jsonify({'ok': True})
 
