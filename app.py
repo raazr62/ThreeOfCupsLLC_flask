@@ -11,6 +11,7 @@ from sqlalchemy import or_, and_
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_mail import Mail
 from dotenv import load_dotenv
+from pathlib import Path
 from models import db, User, Assessment, ReviewerAssessment, Match, Event, EventRSVP, EventCheckIn, EventEnergyExchange, EventMatchmakingDraft, EventUserBoardPosition, EventBoardCard, Service
 from email_helper import send_password_reset_email, send_match_notification_email, send_verification_email, send_email_change_notification, send_email_change_verification, send_walk_in_welcome_email, send_rsvp_admin_notification, send_rsvp_cancellation_admin_notification
 from security_utils import (
@@ -24,7 +25,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')  # Use environment variable in production
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///friendship.db'
+# SQLite DB lives under Flask's instance folder.
+# Use an absolute path (Windows-safe) to avoid "unable to open database file" errors.
+instance_db_path = Path(app.instance_path) / 'friendship.db'
+instance_db_path.parent.mkdir(parents=True, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{instance_db_path.as_posix()}"
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['TEMPLATES_AUTO_RELOAD'] = True

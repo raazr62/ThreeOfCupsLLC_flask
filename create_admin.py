@@ -1,7 +1,12 @@
 from app import app, db
 from models import User
+from migrate_user_table import migrate_user_table
 
 def create_admin_user():
+    # Ensure legacy databases have the columns expected by models.User.
+    # Without this, any ORM query can fail with "no such column".
+    migrate_user_table()
+
     with app.app_context():
         # Create all database tables if they don't exist
         db.create_all()
