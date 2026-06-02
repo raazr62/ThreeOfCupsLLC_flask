@@ -33,6 +33,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{instance_db_path.as_posix()
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+# Default URL scheme for external links (useful when behind proxies)
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 # Security configurations
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('FLASK_ENV') == 'production'  # HTTPS only in production
@@ -640,8 +642,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        # Send verification email
-        verification_url = url_for('verify_email', token=token, _external=True)
+        # Send verification email (force HTTPS scheme for external URLs)
+        verification_url = url_for('verify_email', token=token, _external=True, _scheme='https')
         send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url)
 
         # Log in the user immediately
@@ -865,8 +867,8 @@ def resend_verification():
     token = current_user.generate_verification_token()
     db.session.commit()
 
-    # Send verification email
-    verification_url = url_for('verify_email', token=token, _external=True)
+    # Send verification email (force HTTPS scheme for external URLs)
+    verification_url = url_for('verify_email', token=token, _external=True, _scheme='https')
     send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], current_user, verification_url)
 
     flash('Verification email sent! Please check your inbox.')
