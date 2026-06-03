@@ -643,7 +643,7 @@ def register():
         db.session.commit()
 
         # Send verification email (force HTTPS scheme for external URLs)
-        verification_url = url_for('verify_email', token=token, _external=True, _scheme='https')
+        verification_url = url_for('verify_email', token=token, _external=True,     )
         send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url)
 
         # Log in the user immediately
@@ -753,7 +753,7 @@ def forgot_password():
                 db.session.commit()
 
                 # Send profile completion email
-                profile_completion_url = url_for('complete_profile', token=token, _external=True)
+                profile_completion_url = url_for('complete_profile', token=token, _external=True, _scheme='https')
                 # Get the event they checked into
                 latest_checkin = EventCheckIn.query.filter_by(user_id=user.id, is_walk_in=True).order_by(EventCheckIn.checked_in_at.desc()).first()
                 event_title = latest_checkin.event.title if latest_checkin else "our event"
@@ -764,7 +764,7 @@ def forgot_password():
                 db.session.commit()
 
                 # Send email
-                reset_url = url_for('reset_password', token=token, _external=True)
+                reset_url = url_for('reset_password', token=token, _external=True, _scheme='https')
                 send_password_reset_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, reset_url)
                 # Note: Intentionally not checking return value for security reasons
                 # (don't reveal whether email exists)
@@ -1792,7 +1792,7 @@ def admin_pending_matches():
                 # Use default template — one email to both users
                 if user1 and user2:
                     try:
-                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2, dashboard_url, logo_url=logo_url)
+                        success, text_content = send_match_notification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user1, user2, dashboard_url, logo_url=logo_url, _schema='https')
                         if success and text_content:
                             match.user1_email_content = text_content
                             match.user2_email_content = text_content
@@ -1945,11 +1945,12 @@ def account_settings():
                         app.config['MAIL_DEFAULT_SENDER'],
                         old_email,
                         current_user.first_name,
-                        email
+                        email,
+                        _schema='https'
                     )
 
                     # Send verification email to new email
-                    verification_url = url_for('verify_email_change', token=token, _external=True)
+                    verification_url = url_for('verify_email_change', token=token, _external=True, _schema='https')
                     send_email_change_verification(
                         mail,
                         app.config['MAIL_DEFAULT_SENDER'],
@@ -3461,8 +3462,8 @@ def checkin_walkin(event_id):
     db.session.commit()
 
     # Send welcome email
-    profile_completion_url = url_for('complete_profile', token=token_str, _external=True)
-    send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, event.title, profile_completion_url)
+    profile_completion_url = url_for('complete_profile', token=token_str, _external=True, _scheme='https')
+    send_walk_in_welcome_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, event.title, profile_completion_url, _scheme='https')
 
     return jsonify({
         'success': True,
@@ -3534,8 +3535,8 @@ def complete_profile(token):
         db.session.commit()
 
         # Send verification email
-        verification_url = url_for('verify_email', token=verification_token, _external=True)
-        send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url)
+        verification_url = url_for('verify_email', token=verification_token, _external=True, _scheme='https')
+        send_verification_email(mail, app.config['MAIL_DEFAULT_SENDER'], user, verification_url, _scheme='https')
 
         # Log user in
         login_user(user)
