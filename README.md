@@ -1,87 +1,93 @@
 # Three of Cups, LLC
 
-A full-stack Flask application that helps adults build meaningful, lasting friendships through intentional human matchmaking—not algorithms.
+A friendship matchmaking platform where meaningful connections are formed through intentional pairings by a community weaver and therapist—not an algorithm.
 
-## 🌟 About the Project
-
-Three of Cups, LLC is a friendship matchmaking platform where meaningful connections are formed through intentional pairings by a community weaver and therapist rather than automated algorithms.
-
-In an age where digital connectivity has increased but genuine human connection has declined, Three of Cups exists to help people create authentic friendships based on compatibility, shared values, and life circumstances.
-
-Unlike traditional social networking or dating platforms, every friendship match is thoughtfully curated by a human expert who understands relationship dynamics and community building.
+🌐 **Live Website:** https://threeofcupsllc.com
 
 ---
 
-## 🎯 Mission
+## About the Project
 
-Our mission is to combat loneliness by creating intentional, meaningful friendships through personalized human matchmaking.
+Three of Cups, LLC was created to address one of today's biggest social challenges: loneliness.
 
-We believe that genuine connection is a fundamental human need, and building lasting friendships requires empathy, understanding, and thoughtful curation—not machine learning algorithms.
+While technology has made it easier than ever to connect online, genuine and lasting friendships have become increasingly difficult to build. Three of Cups offers a more intentional approach by matching individuals through human insight rather than automated algorithms.
 
----
+Instead of relying solely on data, every friendship match is thoughtfully curated by a community weaver and therapist who considers emotional compatibility, shared values, life circumstances, interests, and personal intentions.
 
-## ✨ Features
+The goal is simple:
 
-- User Registration & Authentication
-- User Profile Management
-- Friendship Matchmaking
-- Human-Curated Pairing Process
-- Community Member Management
-- Secure Authentication
-- Responsive User Interface
-- Admin Dashboard
-- Email Notifications
-- Contact & Support System
+> **Help people move from surface-level interactions to meaningful, long-lasting friendships.**
 
 ---
 
-## 🛠 Tech Stack
+## Mission
+
+Our mission is to build authentic communities by creating intentional friendships through human-centered matchmaking.
+
+We believe that genuine connection isn't a luxury—it's a fundamental human need.
+
+---
+
+## Features
+
+- Human-curated friendship matching
+- Therapist-guided compatibility approach
+- User registration and authentication
+- Friendship application process
+- Personalized user profiles
+- Secure account management
+- Contact and inquiry forms
+- Responsive design for desktop and mobile
+- Admin dashboard for managing users and matchmaking
+- Email notifications
+- Secure backend architecture
+
+---
+
+## Tech Stack
 
 ### Backend
 
 - Flask
-- Flask SQLAlchemy
-- Flask Migrate
-- Flask Login / JWT Authentication
-- WTForms (if applicable)
-- RESTful APIs
+- Python
+- SQLAlchemy
+- Flask-Login
+- Flask-WTF
+- Jinja2
 
 ### Frontend
 
 - HTML5
 - CSS3
-- Bootstrap
 - JavaScript
+- Bootstrap
 
 ### Database
 
-- PostgreSQL / MySQL / SQLite
+- SQLite (Development)
+- PostgreSQL / MySQL (Production, if applicable)
 
-### Other Tools
+### Deployment
 
-- Jinja2 Templates
-- Gunicorn (Production)
+- Gunicorn
 - Nginx
-- Docker (Optional)
+- Linux Server
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
-three-of-cups/
+project/
 │
 ├── app/
-│   ├── auth/
-│   ├── users/
-│   ├── matchmaking/
-│   ├── admin/
+│   ├── models/
+│   ├── routes/
 │   ├── templates/
 │   ├── static/
-│   ├── models/
-│   ├── services/
-│   ├── routes/
-│   └── utils/
+│   ├── forms/
+│   ├── utils/
+│   └── __init__.py
 │
 ├── migrations/
 ├── config.py
@@ -92,17 +98,16 @@ three-of-cups/
 
 ---
 
-## ⚙️ Installation
+## Installation
 
-### 1. Clone the Repository
+### Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/three-of-cups.git
-
-cd three-of-cups
+git clone https://github.com/yourusername/threeofcups.git
+cd threeofcups
 ```
 
-### 2. Create Virtual Environment
+### Create a virtual environment
 
 ```bash
 python -m venv venv
@@ -116,41 +121,41 @@ Activate it:
 venv\Scripts\activate
 ```
 
-**Linux / macOS**
+**Linux/macOS**
 
 ```bash
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### Configure environment variables
 
-Create a `.env` file:
+Create a `.env` file and configure the required variables.
+
+Example:
 
 ```env
-FLASK_APP=run.py
-FLASK_ENV=development
-
 SECRET_KEY=your_secret_key
-
 DATABASE_URL=your_database_url
+MAIL_USERNAME=your_email
+MAIL_PASSWORD=your_password
 ```
 
-### 5. Run Database Migrations
-
-```bash
-flask db upgrade
-```
-
-### 6. Run the Application
+### Run the application
 
 ```bash
 flask run
+```
+
+or
+
+```bash
+python run.py
 ```
 
 The application will be available at:
@@ -161,59 +166,58 @@ http://127.0.0.1:5000
 
 ---
 
-## 🔒 Authentication
+## Screenshots
 
-The application includes secure authentication features such as:
+You can add screenshots here.
 
-- User Registration
-- Login
-- Logout
-- Password Security
-- Session Management
-- Protected Routes
+```
+screenshots/
+├── home.png
+├── profile.png
+├── dashboard.png
+```
 
 ---
 
-## ❤️ How Matchmaking Works
+## Why Three of Cups?
 
-Unlike platforms powered by recommendation algorithms, Three of Cups takes a human-first approach.
+Unlike traditional social networking or friendship apps that depend on algorithms, Three of Cups focuses on intentional human connection.
 
-Each friendship match is thoughtfully curated by a community weaver and therapist who considers:
+Every match is thoughtfully created by a community weaver and therapist who understands that lasting friendships require:
 
 - Shared values
-- Personal interests
-- Communication styles
 - Emotional compatibility
-- Life stage
-- Individual intentions
-- Community goals
+- Similar life stages
+- Mutual intentions
+- Authentic connection
 
-This intentional process creates opportunities for deeper, more authentic friendships.
-
----
-
-## 📌 Future Enhancements
-
-- Messaging System
-- Event Management
-- Group Communities
-- Video Introductions
-- Calendar Integration
-- Notifications
-- Mobile Application
-- AI-assisted Admin Tools (without replacing human matchmaking)
+This human-first approach creates stronger and more meaningful relationships.
 
 ---
 
-## 🤝 Contributing
+## Future Improvements
 
-Contributions are welcome!
+- Advanced user dashboard
+- Video introductions
+- Event management
+- Community groups
+- Messaging system
+- Match history
+- Notification center
+- AI-assisted administrative tools
+- Improved analytics
+
+---
+
+## Contributing
+
+Contributions, suggestions, and improvements are welcome.
 
 1. Fork the repository
 2. Create a feature branch
 
 ```bash
-git checkout -b feature/new-feature
+git checkout -b feature-name
 ```
 
 3. Commit your changes
@@ -222,24 +226,30 @@ git checkout -b feature/new-feature
 git commit -m "Add new feature"
 ```
 
-4. Push to your branch
+4. Push the branch
 
 ```bash
-git push origin feature/new-feature
+git push origin feature-name
 ```
 
 5. Open a Pull Request
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License.
+This project is proprietary software developed for **Three of Cups, LLC**.
+
+Unauthorized copying, modification, distribution, or commercial use without permission is prohibited.
 
 ---
 
-## 💙 Philosophy
+## Contact
 
-> Meaningful friendships aren't created by algorithms—they're cultivated through empathy, intention, and genuine human understanding.
+**Three of Cups, LLC**
 
-Three of Cups exists to help people move beyond surface-level interactions and build authentic relationships that enrich their lives, one intentional pairing at a time.
+🌐 Website: https://threeofcupsllc.com
+
+---
+
+*"Meaningful friendships begin with intentional connection."*
